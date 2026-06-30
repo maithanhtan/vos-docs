@@ -8,13 +8,26 @@ Operation contains account administration, risk rules, approvals, reference acti
 
 ## Workspace overview
 
-![Operation workspace overview](/images/vero-oms-ui/operation-full.png)
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-full.png" alt="Operation workspace overview" />
+  </div>
+  <div className="guide-split-copy">
+
+The workspace overview shows account administration, risk rules, approvals, and the selected account detail panel.
+
+  </div>
+</div>
 
 ## Tabs and actions
 
-The action bar contains Accounts, Risk Rules, Approvals, search, New Group, Add Account, Reference Data, and Refresh.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-tabs-actions.png" alt="Operation tabs and actions" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation tabs and actions](/images/vero-oms-ui/operation-tabs-actions.png)
+The action bar contains Accounts, Risk Rules, Approvals, search, New Group, Add Account, Reference Data, and Refresh.
 
 | Area | Behavior |
 |---|---|
@@ -27,13 +40,23 @@ The action bar contains Accounts, Risk Rules, Approvals, search, New Group, Add 
 | Reference Data | Opens the account and counterparty reference values available to the user. |
 | Refresh | Reloads the current operational data set. |
 
+  </div>
+</div>
+
 ## Account Table
+
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-account-table.png" alt="Operation account table" />
+  </div>
+  <div className="guide-split-copy">
 
 The account table displays account id, name, type, group, margin, short sell, users, and rules.
 
-![Operation account table](/images/vero-oms-ui/operation-account-table.png)
-
 Account rows can be sorted by account, name, type, group, margin, short-sell rule state, user count, and rule count. Row checkboxes enable bulk `ASSIGN USER` and `ADD TO GROUP`; each bulk action runs one governed operation per selected account and reports progress.
+
+  </div>
+</div>
 
 ## Account Detail
 
@@ -61,9 +84,13 @@ Reference Data groups account and counterparty values by user-facing function. U
 
 ## Risk Rules
 
-Risk Rules contains the rule catalog, filters by engine/scope/kind, rules list, and rule detail panel.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-risk-rules.png" alt="Operation risk rules" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation risk rules](/images/vero-oms-ui/operation-risk-rules.png)
+Risk Rules contains the rule catalog, filters by engine/scope/kind, rules list, and rule detail panel.
 
 | Risk rule action | Behavior |
 |---|---|
@@ -74,11 +101,18 @@ Risk Rules contains the rule catalog, filters by engine/scope/kind, rules list, 
 | Update Rule | Submits a change request; the rule does not apply until approved. |
 | Delete Rule | Submits a delete request; removal does not apply until approved. |
 
+  </div>
+</div>
+
 ## Approvals
 
-Approvals contains review queues, request state, and the selected approval detail panel.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-approvals.png" alt="Operation approvals" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation approvals](/images/vero-oms-ui/operation-approvals.png)
+Approvals contains review queues, request state, and the selected approval detail panel.
 
 | Approval action | Behavior |
 |---|---|
@@ -89,3 +123,6 @@ Approvals contains review queues, request state, and the selected approval detai
 | Approve / Reject | Available only to reviewers on other users' pending requests. |
 | Cancel Request | Available to the requester while the request is pending. |
 | Bulk approve / reject | Processes eligible pending requests and reports success/failure count. |
+
+  </div>
+</div>

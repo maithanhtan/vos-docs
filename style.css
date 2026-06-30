@@ -533,6 +533,11 @@ img {
   min-width: 0;
 }
 
+.guide-split-copy > span {
+  display: block;
+  margin: 0 0 1rem;
+}
+
 .guide-split-copy > :first-child {
   margin-top: 0 !important;
 }

@@ -8,13 +8,26 @@ Orders là workspace theo dõi trạng thái lệnh, fills, latency và market q
 
 ## Tổng quan workspace
 
-![Tổng quan Orders workspace](/images/vero-oms-ui/orders-full.png)
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/orders-full.png" alt="Tổng quan Orders workspace" />
+  </div>
+  <div className="guide-split-copy">
+
+Tổng quan workspace hiển thị Orders blotter, panel chi tiết lệnh, fill progress chart và market quality table.
+
+  </div>
+</div>
 
 ## Order Blotter
 
-Bảng Orders liệt kê account, symbol, side, quantity, price, status và thông tin thời gian cho từng lệnh.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/orders-blotter.png" alt="Orders blotter" />
+  </div>
+  <div className="guide-split-copy">
 
-![Orders blotter](/images/vero-oms-ui/orders-blotter.png)
+Bảng Orders liệt kê account, symbol, side, quantity, price, status và thông tin thời gian cho từng lệnh.
 
 | Control | Hành vi |
 |---|---|
@@ -27,6 +40,9 @@ Bảng Orders liệt kê account, symbol, side, quantity, price, status và thô
 | Checkbox / Select all | Chọn một hoặc nhiều dòng cho bulk action. |
 
 Khi có dòng được chọn, bulk action bar hiển thị số dòng chọn, số lệnh có thể cancel và estimated notional. `MODIFY ORDER` chỉ bật khi có đúng một lệnh cancellable. `CANCEL ALL` mở confirmation để cancel remaining working quantity.
+
+  </div>
+</div>
 
 ## Order Detail
 
@@ -62,8 +78,15 @@ Modify và cancel bị disable khi lệnh đang chọn không ở trạng thái 
 
 ## Market Quality
 
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/orders-market-quality.png" alt="Orders market quality" />
+  </div>
+  <div className="guide-split-copy">
+
 Khu vực cuối màn hình hiển thị fill progress và market quality theo market.
 
-![Orders market quality](/images/vero-oms-ui/orders-market-quality.png)
-
 Fill progress chart so sánh sent quantity và filled quantity trong intraday series. Hover chart hiển thị timestamp, sent quantity và filled quantity tại điểm gần nhất. Market quality table tổng hợp fill ratio, rejection rate, order count và trade count theo market.
+
+  </div>
+</div>

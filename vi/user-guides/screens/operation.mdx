@@ -8,13 +8,26 @@ Operation chứa quản trị account, risk rules, approvals, reference actions 
 
 ## Tổng quan workspace
 
-![Tổng quan Operation workspace](/images/vero-oms-ui/operation-full.png)
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-full.png" alt="Tổng quan Operation workspace" />
+  </div>
+  <div className="guide-split-copy">
+
+Tổng quan workspace hiển thị quản trị account, risk rules, approvals và panel chi tiết account đang chọn.
+
+  </div>
+</div>
 
 ## Tabs và actions
 
-Thanh thao tác chứa Accounts, Risk Rules, Approvals, search, New Group, Add Account, Reference Data và Refresh.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-tabs-actions.png" alt="Operation tabs and actions" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation tabs and actions](/images/vero-oms-ui/operation-tabs-actions.png)
+Thanh thao tác chứa Accounts, Risk Rules, Approvals, search, New Group, Add Account, Reference Data và Refresh.
 
 | Khu vực | Hành vi |
 |---|---|
@@ -27,13 +40,23 @@ Thanh thao tác chứa Accounts, Risk Rules, Approvals, search, New Group, Add A
 | Reference Data | Mở các giá trị tham chiếu account và counterparty khả dụng cho user. |
 | Refresh | Reload dữ liệu vận hành hiện tại. |
 
+  </div>
+</div>
+
 ## Account Table
+
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-account-table.png" alt="Operation account table" />
+  </div>
+  <div className="guide-split-copy">
 
 Bảng account hiển thị account id, name, type, group, margin, short sell, users và rules.
 
-![Operation account table](/images/vero-oms-ui/operation-account-table.png)
-
 Account rows có thể sort theo account, name, type, group, trạng thái margin/short-sell rule, user count và rule count. Checkbox từng dòng dùng cho bulk `ASSIGN USER` và `ADD TO GROUP`; mỗi bulk action chạy một governed operation cho từng account được chọn và báo progress.
+
+  </div>
+</div>
 
 ## Account Detail
 
@@ -61,9 +84,13 @@ Reference Data gom các giá trị account và counterparty theo chức năng ng
 
 ## Risk Rules
 
-Risk Rules chứa rule catalog, filter theo engine/scope/kind, danh sách rules và rule detail panel.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-risk-rules.png" alt="Operation risk rules" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation risk rules](/images/vero-oms-ui/operation-risk-rules.png)
+Risk Rules chứa rule catalog, filter theo engine/scope/kind, danh sách rules và rule detail panel.
 
 | Risk rule action | Hành vi |
 |---|---|
@@ -74,11 +101,18 @@ Risk Rules chứa rule catalog, filter theo engine/scope/kind, danh sách rules 
 | Update Rule | Submit change request; rule chưa apply cho tới khi được approve. |
 | Delete Rule | Submit delete request; removal chưa apply cho tới khi được approve. |
 
+  </div>
+</div>
+
 ## Approvals
 
-Approvals chứa review queues, trạng thái request và panel chi tiết approval đang chọn.
+<div className="guide-split guide-split--wide">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-approvals.png" alt="Operation approvals" />
+  </div>
+  <div className="guide-split-copy">
 
-![Operation approvals](/images/vero-oms-ui/operation-approvals.png)
+Approvals chứa review queues, trạng thái request và panel chi tiết approval đang chọn.
 
 | Approval action | Hành vi |
 |---|---|
@@ -89,3 +123,6 @@ Approvals chứa review queues, trạng thái request và panel chi tiết appro
 | Approve / Reject | Chỉ available cho reviewer trên pending request của user khác. |
 | Cancel Request | Available cho requester khi request còn pending. |
 | Bulk approve / reject | Xử lý các pending request eligible và báo số success/failure. |
+
+  </div>
+</div>
