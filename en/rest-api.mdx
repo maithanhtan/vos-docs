@@ -1,11 +1,8 @@
 ---
 title: 'REST API'
-description: 'Public REST API reference for api-oms.verolabs.co'
+description: 'Public REST API reference for Vero OMS'
 mode: 'wide'
 ---
-
-The REST API is served from `https://api-oms.verolabs.co`.
-Authenticated endpoints require the JWT returned by `POST https://platform.verolabs.co/api/auth/login` as `Authorization: Bearer <jwt>`.
 
 <CardGroup cols={3}>
   <Card title="Trading" icon="arrow-right-arrow-left" href="/en/apis/rest/trading/post-api-v1-orders-new">
@@ -16,6 +13,9 @@ Authenticated endpoints require the JWT returned by `POST https://platform.verol
   </Card>
   <Card title="Administration" icon="user-shield" href="/en/apis/rest/administration/get-api-v1-util-permissions">
     Permissions, groups, maker-checker workflow, reference data, and audit.
+  </Card>
+  <Card title="Recovery" icon="key" href="/en/apis/rest/auth/post-api-auth-recovery-start">
+    Recovery code issuance, verification, and password reset.
   </Card>
   <Card title="System & Diagnostics" icon="stethoscope" href="/en/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics">
     Health endpoints, latency metrics, latency records, and API reference documents.

@@ -1,26 +1,18 @@
 ---
 title: 'Overview'
-description: 'VOS documentation for REST APIs and streaming integration'
+description: 'Vero OMS Docs for REST API, Streaming API, and FIX API'
 mode: 'wide'
 ---
 
-## Current scope
-
-| Area | Included docs | Purpose |
-|---|---|---|
-| Authentication | `POST /api/auth/login` on `platform.verolabs.co` | Defines terminal login and JWT bootstrap. |
-| REST API | Public endpoints via `api-oms.verolabs.co` | Defines exposed REST endpoints, request parameters, request bodies, response schemas, and role gates. |
-| Streaming API | Streaming transports and channel messages via `streaming-oms.verolabs.co` | Defines connection endpoints, channel names, and live payload structures. |
-
 <CardGroup cols={3}>
-  <Card title="Authentication" icon="key" href="/en/apis/rest/auth/post-api-auth-login">
-    Terminal password login, session token, and JWT response contract.
-  </Card>
   <Card title="REST API" icon="server" href="/en/rest-api">
-    Public REST endpoints grouped by feature.
+    HTTP endpoints, request and response schemas, and documented errors.
   </Card>
   <Card title="Streaming API" icon="tower-broadcast" href="/en/apis/streaming/overview">
     Connection transports, subscription channels, and message payloads.
+  </Card>
+  <Card title="FIX API" icon="arrow-right-arrow-left" href="/en/fix-api">
+    FIX sessions, message types, fields, and workflows.
   </Card>
 </CardGroup>
 
@@ -30,7 +22,7 @@ mode: 'wide'
   <Step title="Authentication">
     Call the terminal login API and use the returned JWT as `Authorization: Bearer <jwt>` for REST API calls.
   </Step>
-  <Step title="REST and streaming APIs">
-    Review REST and Streaming API docs for request parameters, response schemas, channel names, and live payloads.
+  <Step title="API references">
+    Review the REST API, Streaming API, and FIX API documentation for the supported contracts and workflows.
   </Step>
 </Steps>

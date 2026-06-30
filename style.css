@@ -506,6 +506,10 @@ img {
   grid-template-columns: minmax(180px, 30%) minmax(0, 1fr);
 }
 
+.guide-split--wide {
+  grid-template-columns: minmax(320px, 56%) minmax(0, 1fr);
+}
+
 .guide-split--compact .guide-split-media img {
   width: auto !important;
   max-width: 100%;

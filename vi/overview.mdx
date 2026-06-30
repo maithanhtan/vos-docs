@@ -1,26 +1,18 @@
 ---
 title: 'Tổng quan'
-description: 'Tài liệu VOS cho REST API và streaming'
+description: 'Vero OMS Docs cho REST API, Streaming API và FIX API'
 mode: 'wide'
 ---
 
-## Phạm vi hiện tại
-
-| Nhóm | Tài liệu | Mục đích |
-|---|---|---|
-| Authentication | `POST /api/auth/login` trên `platform.verolabs.co` | Mô tả login terminal và JWT bootstrap. |
-| REST API | Public endpoints qua `api-oms.verolabs.co` | Mô tả endpoint đang expose, params, request body, response schema và role gate. |
-| Streaming API | Streaming transports và channel messages qua `streaming-oms.verolabs.co` | Mô tả connection endpoints, channel names và live payload structures. |
-
 <CardGroup cols={3}>
-  <Card title="Authentication" icon="key" href="/vi/apis/rest/auth/post-api-auth-login">
-    Contract login, session token và JWT response.
-  </Card>
   <Card title="REST API" icon="server" href="/vi/rest-api">
-    Public REST endpoints được gom theo feature.
+    Endpoint HTTP, cấu trúc yêu cầu, phản hồi và lỗi được tài liệu hóa.
   </Card>
   <Card title="Streaming API" icon="tower-broadcast" href="/vi/apis/streaming/overview">
-    Connection transports, subscription channels và message payloads.
+    Phương thức kết nối, kênh đăng ký và payload thông điệp.
+  </Card>
+  <Card title="FIX API" icon="arrow-right-arrow-left" href="/vi/fix-api">
+    Phiên kết nối, loại thông điệp, trường dữ liệu và quy trình FIX.
   </Card>
 </CardGroup>
 
@@ -30,7 +22,7 @@ mode: 'wide'
   <Step title="Authentication">
     Gọi terminal login API và dùng JWT trả về làm `Authorization: Bearer <jwt>` cho REST API.
   </Step>
-  <Step title="REST và streaming APIs">
-    Xem REST API và Streaming API để kiểm tra request parameters, response schemas, channel names và live payloads.
+  <Step title="Tài liệu API">
+    Xem tài liệu REST API, Streaming API và FIX API để kiểm tra các hợp đồng và quy trình được hỗ trợ.
   </Step>
 </Steps>

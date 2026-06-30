@@ -161,44 +161,34 @@
                 "pages": [
                   "en/rest-api",
                   {
-                    "group": "Trading",
+                    "group": "Trading - Normal Order",
                     "icon": "arrow-right-arrow-left",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Order Entry",
-                        "expanded": false,
-                        "pages": [
-                          {
-                            "group": "Normal order",
-                            "expanded": false,
-                            "pages": [
-                              "en/apis/rest/trading/post-api-v1-orders-new",
-                              "en/apis/rest/trading/post-api-v1-orders-cancel",
-                              "en/apis/rest/trading/post-api-v1-orders-replace",
-                              "en/apis/rest/trading/get-api-v1-util-orders"
-                            ]
-                          },
-                          {
-                            "group": "IOI",
-                            "expanded": false,
-                            "pages": [
-                              "en/apis/rest/trading/post-api-v1-orders-ioi",
-                              "en/apis/rest/trading/get-api-v1-util-ioi-advertisements"
-                            ]
-                          },
-                          {
-                            "group": "PT",
-                            "expanded": false,
-                            "pages": [
-                              "en/apis/rest/trading/post-api-v1-orders-quote",
-                              "en/apis/rest/trading/post-api-v1-orders-quote-response",
-                              "en/apis/rest/trading/post-api-v1-orders-kquote",
-                              "en/apis/rest/trading/post-api-v1-orders-kquote-cancel"
-                            ]
-                          }
-                        ]
-                      }
+                      "en/apis/rest/trading/post-api-v1-orders-new",
+                      "en/apis/rest/trading/post-api-v1-orders-cancel",
+                      "en/apis/rest/trading/post-api-v1-orders-replace",
+                      "en/apis/rest/trading/get-api-v1-util-orders"
+                    ]
+                  },
+                  {
+                    "group": "Trading - IOI",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/trading/post-api-v1-orders-ioi",
+                      "en/apis/rest/trading/get-api-v1-util-ioi-advertisements"
+                    ]
+                  },
+                  {
+                    "group": "Trading - PT",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/trading/post-api-v1-orders-quote",
+                      "en/apis/rest/trading/post-api-v1-orders-quote-response",
+                      "en/apis/rest/trading/post-api-v1-orders-kquote",
+                      "en/apis/rest/trading/post-api-v1-orders-kquote-cancel"
                     ]
                   },
                   {
@@ -215,55 +205,52 @@
                     ]
                   },
                   {
-                    "group": "Administration",
+                    "group": "Administration - Permissions & Groups",
                     "icon": "user-shield",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Permissions & Groups",
-                        "expanded": false,
-                        "pages": [
-                          "en/apis/rest/administration/get-api-v1-util-admin-permissions",
-                          "en/apis/rest/administration/post-api-v1-util-admin-permissions",
-                          "en/apis/rest/administration/delete-api-v1-util-admin-permissions",
-                          "en/apis/rest/administration/get-api-v1-util-groups",
-                          "en/apis/rest/administration/post-api-v1-util-groups",
-                          "en/apis/rest/administration/get-api-v1-util-groups-members",
-                          "en/apis/rest/administration/delete-api-v1-util-groups-members",
-                          "en/apis/rest/administration/post-api-v1-util-groups-move",
-                          "en/apis/rest/administration/get-api-v1-util-permissions",
-                          "en/apis/rest/administration/get-api-v1-util-search"
-                        ]
-                      },
-                      {
-                        "group": "Workflow & Audit",
-                        "expanded": false,
-                        "pages": [
-                          "en/apis/rest/administration/get-api-v1-util-audit",
-                          "en/apis/rest/administration/get-api-v1-util-requests",
-                          "en/apis/rest/administration/post-api-v1-util-requests",
-                          "en/apis/rest/administration/get-api-v1-util-requests-requestid",
-                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
-                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
-                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
-                        ]
-                      },
-                      {
-                        "group": "Reference Data",
-                        "expanded": false,
-                        "pages": [
-                          "en/apis/rest/administration/get-api-v1-util-firms-traders",
-                          "en/apis/rest/administration/post-api-v1-util-firms-traders",
-                          "en/apis/rest/administration/delete-api-v1-util-firms-traders",
-                          "en/apis/rest/administration/get-api-v1-util-reference",
-                          "en/apis/rest/administration/post-api-v1-util-reference",
-                          "en/apis/rest/administration/delete-api-v1-util-reference"
-                        ]
-                      }
+                      "en/apis/rest/administration/get-api-v1-util-admin-permissions",
+                      "en/apis/rest/administration/post-api-v1-util-admin-permissions",
+                      "en/apis/rest/administration/delete-api-v1-util-admin-permissions",
+                      "en/apis/rest/administration/get-api-v1-util-groups",
+                      "en/apis/rest/administration/post-api-v1-util-groups",
+                      "en/apis/rest/administration/get-api-v1-util-groups-members",
+                      "en/apis/rest/administration/delete-api-v1-util-groups-members",
+                      "en/apis/rest/administration/post-api-v1-util-groups-move",
+                      "en/apis/rest/administration/get-api-v1-util-permissions",
+                      "en/apis/rest/administration/get-api-v1-util-search"
+                    ]
+                  },
+                  {
+                    "group": "Administration - Workflow & Audit",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/administration/get-api-v1-util-audit",
+                      "en/apis/rest/administration/get-api-v1-util-requests",
+                      "en/apis/rest/administration/post-api-v1-util-requests",
+                      "en/apis/rest/administration/get-api-v1-util-requests-requestid",
+                      "en/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
+                      "en/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
+                      "en/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
+                    ]
+                  },
+                  {
+                    "group": "Administration - Reference Data",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/administration/get-api-v1-util-firms-traders",
+                      "en/apis/rest/administration/post-api-v1-util-firms-traders",
+                      "en/apis/rest/administration/delete-api-v1-util-firms-traders",
+                      "en/apis/rest/administration/get-api-v1-util-reference",
+                      "en/apis/rest/administration/post-api-v1-util-reference",
+                      "en/apis/rest/administration/delete-api-v1-util-reference"
                     ]
                   },
                   {
                     "group": "Recovery",
+                    "icon": "key",
                     "expanded": false,
                     "pages": [
                       "en/apis/rest/auth/post-api-auth-recovery-start",
@@ -272,28 +259,23 @@
                     ]
                   },
                   {
-                    "group": "System & Diagnostics",
+                    "group": "System & Diagnostics - Health",
                     "icon": "stethoscope",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Health",
-                        "expanded": false,
-                        "pages": [
-                          "en/apis/rest/system-diagnostics/get-api-v1-oms-health",
-                          "en/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
-                          "en/apis/rest/system-diagnostics/get-api-v1-util-health"
-                        ]
-                      },
-                      {
-                        "group": "Latency",
-                        "expanded": false,
-                        "pages": [
-                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
-                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
-                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
-                        ]
-                      }
+                      "en/apis/rest/system-diagnostics/get-api-v1-oms-health",
+                      "en/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
+                      "en/apis/rest/system-diagnostics/get-api-v1-util-health"
+                    ]
+                  },
+                  {
+                    "group": "System & Diagnostics - Latency",
+                    "icon": "stethoscope",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
+                      "en/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
+                      "en/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
                     ]
                   }
                 ]
@@ -343,44 +325,34 @@
                 "pages": [
                   "vi/rest-api",
                   {
-                    "group": "Trading",
+                    "group": "Trading - Normal Order",
                     "icon": "arrow-right-arrow-left",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Order Entry",
-                        "expanded": false,
-                        "pages": [
-                          {
-                            "group": "Normal order",
-                            "expanded": false,
-                            "pages": [
-                              "vi/apis/rest/trading/post-api-v1-orders-new",
-                              "vi/apis/rest/trading/post-api-v1-orders-cancel",
-                              "vi/apis/rest/trading/post-api-v1-orders-replace",
-                              "vi/apis/rest/trading/get-api-v1-util-orders"
-                            ]
-                          },
-                          {
-                            "group": "IOI",
-                            "expanded": false,
-                            "pages": [
-                              "vi/apis/rest/trading/post-api-v1-orders-ioi",
-                              "vi/apis/rest/trading/get-api-v1-util-ioi-advertisements"
-                            ]
-                          },
-                          {
-                            "group": "PT",
-                            "expanded": false,
-                            "pages": [
-                              "vi/apis/rest/trading/post-api-v1-orders-quote",
-                              "vi/apis/rest/trading/post-api-v1-orders-quote-response",
-                              "vi/apis/rest/trading/post-api-v1-orders-kquote",
-                              "vi/apis/rest/trading/post-api-v1-orders-kquote-cancel"
-                            ]
-                          }
-                        ]
-                      }
+                      "vi/apis/rest/trading/post-api-v1-orders-new",
+                      "vi/apis/rest/trading/post-api-v1-orders-cancel",
+                      "vi/apis/rest/trading/post-api-v1-orders-replace",
+                      "vi/apis/rest/trading/get-api-v1-util-orders"
+                    ]
+                  },
+                  {
+                    "group": "Trading - IOI",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/trading/post-api-v1-orders-ioi",
+                      "vi/apis/rest/trading/get-api-v1-util-ioi-advertisements"
+                    ]
+                  },
+                  {
+                    "group": "Trading - PT",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/trading/post-api-v1-orders-quote",
+                      "vi/apis/rest/trading/post-api-v1-orders-quote-response",
+                      "vi/apis/rest/trading/post-api-v1-orders-kquote",
+                      "vi/apis/rest/trading/post-api-v1-orders-kquote-cancel"
                     ]
                   },
                   {
@@ -397,55 +369,52 @@
                     ]
                   },
                   {
-                    "group": "Administration",
+                    "group": "Administration - Permissions & Groups",
                     "icon": "user-shield",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Permissions & Groups",
-                        "expanded": false,
-                        "pages": [
-                          "vi/apis/rest/administration/get-api-v1-util-admin-permissions",
-                          "vi/apis/rest/administration/post-api-v1-util-admin-permissions",
-                          "vi/apis/rest/administration/delete-api-v1-util-admin-permissions",
-                          "vi/apis/rest/administration/get-api-v1-util-groups",
-                          "vi/apis/rest/administration/post-api-v1-util-groups",
-                          "vi/apis/rest/administration/get-api-v1-util-groups-members",
-                          "vi/apis/rest/administration/delete-api-v1-util-groups-members",
-                          "vi/apis/rest/administration/post-api-v1-util-groups-move",
-                          "vi/apis/rest/administration/get-api-v1-util-permissions",
-                          "vi/apis/rest/administration/get-api-v1-util-search"
-                        ]
-                      },
-                      {
-                        "group": "Workflow & Audit",
-                        "expanded": false,
-                        "pages": [
-                          "vi/apis/rest/administration/get-api-v1-util-audit",
-                          "vi/apis/rest/administration/get-api-v1-util-requests",
-                          "vi/apis/rest/administration/post-api-v1-util-requests",
-                          "vi/apis/rest/administration/get-api-v1-util-requests-requestid",
-                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
-                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
-                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
-                        ]
-                      },
-                      {
-                        "group": "Reference Data",
-                        "expanded": false,
-                        "pages": [
-                          "vi/apis/rest/administration/get-api-v1-util-firms-traders",
-                          "vi/apis/rest/administration/post-api-v1-util-firms-traders",
-                          "vi/apis/rest/administration/delete-api-v1-util-firms-traders",
-                          "vi/apis/rest/administration/get-api-v1-util-reference",
-                          "vi/apis/rest/administration/post-api-v1-util-reference",
-                          "vi/apis/rest/administration/delete-api-v1-util-reference"
-                        ]
-                      }
+                      "vi/apis/rest/administration/get-api-v1-util-admin-permissions",
+                      "vi/apis/rest/administration/post-api-v1-util-admin-permissions",
+                      "vi/apis/rest/administration/delete-api-v1-util-admin-permissions",
+                      "vi/apis/rest/administration/get-api-v1-util-groups",
+                      "vi/apis/rest/administration/post-api-v1-util-groups",
+                      "vi/apis/rest/administration/get-api-v1-util-groups-members",
+                      "vi/apis/rest/administration/delete-api-v1-util-groups-members",
+                      "vi/apis/rest/administration/post-api-v1-util-groups-move",
+                      "vi/apis/rest/administration/get-api-v1-util-permissions",
+                      "vi/apis/rest/administration/get-api-v1-util-search"
+                    ]
+                  },
+                  {
+                    "group": "Administration - Workflow & Audit",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/administration/get-api-v1-util-audit",
+                      "vi/apis/rest/administration/get-api-v1-util-requests",
+                      "vi/apis/rest/administration/post-api-v1-util-requests",
+                      "vi/apis/rest/administration/get-api-v1-util-requests-requestid",
+                      "vi/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
+                      "vi/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
+                      "vi/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
+                    ]
+                  },
+                  {
+                    "group": "Administration - Reference Data",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/administration/get-api-v1-util-firms-traders",
+                      "vi/apis/rest/administration/post-api-v1-util-firms-traders",
+                      "vi/apis/rest/administration/delete-api-v1-util-firms-traders",
+                      "vi/apis/rest/administration/get-api-v1-util-reference",
+                      "vi/apis/rest/administration/post-api-v1-util-reference",
+                      "vi/apis/rest/administration/delete-api-v1-util-reference"
                     ]
                   },
                   {
                     "group": "Recovery",
+                    "icon": "key",
                     "expanded": false,
                     "pages": [
                       "vi/apis/rest/auth/post-api-auth-recovery-start",
@@ -454,28 +423,23 @@
                     ]
                   },
                   {
-                    "group": "System & Diagnostics",
+                    "group": "System & Diagnostics - Health",
                     "icon": "stethoscope",
                     "expanded": false,
                     "pages": [
-                      {
-                        "group": "Health",
-                        "expanded": false,
-                        "pages": [
-                          "vi/apis/rest/system-diagnostics/get-api-v1-oms-health",
-                          "vi/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
-                          "vi/apis/rest/system-diagnostics/get-api-v1-util-health"
-                        ]
-                      },
-                      {
-                        "group": "Latency",
-                        "expanded": false,
-                        "pages": [
-                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
-                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
-                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
-                        ]
-                      }
+                      "vi/apis/rest/system-diagnostics/get-api-v1-oms-health",
+                      "vi/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
+                      "vi/apis/rest/system-diagnostics/get-api-v1-util-health"
+                    ]
+                  },
+                  {
+                    "group": "System & Diagnostics - Latency",
+                    "icon": "stethoscope",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
+                      "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
+                      "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
                     ]
                   }
                 ]
