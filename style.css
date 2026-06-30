@@ -493,6 +493,50 @@ img {
   border-radius: 16px;
 }
 
+/* Documentation sections for narrow, vertically oriented interface panels. */
+.guide-split {
+  display: grid;
+  grid-template-columns: minmax(220px, 36%) minmax(0, 1fr);
+  align-items: start;
+  gap: 1.5rem;
+  margin: 1rem 0 1.75rem;
+}
+
+.guide-split--compact {
+  grid-template-columns: minmax(180px, 30%) minmax(0, 1fr);
+}
+
+.guide-split--compact .guide-split-media img {
+  width: auto !important;
+  max-width: 100%;
+}
+
+.guide-split-media {
+  min-width: 0;
+}
+
+.guide-split-media img {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-height: 48rem;
+  object-fit: contain;
+  object-position: top left;
+  border-radius: 8px;
+}
+
+.guide-split-copy {
+  min-width: 0;
+}
+
+.guide-split-copy > :first-child {
+  margin-top: 0 !important;
+}
+
+.guide-split-copy > :last-child {
+  margin-bottom: 0 !important;
+}
+
 /* Video border radius */
 video,
 iframe {
@@ -540,6 +584,16 @@ body:has(.intro-shell) iframe {
 }
 
 @media (max-width: 900px) {
+  .guide-split,
+  .guide-split--compact {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .guide-split-media {
+    max-width: 28rem;
+  }
+
   .intro-content {
     justify-content: flex-start;
     padding: 3.25rem 1rem 2rem;

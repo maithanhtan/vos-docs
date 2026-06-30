@@ -1,14 +1,14 @@
 ---
 title: 'Orders'
-description: 'Orders page visual reference and component documentation'
+description: 'Order monitoring, detail, fill progress, latency, and market quality'
 mode: 'wide'
 ---
 
 Orders is the workspace for monitoring order state, fills, latency, and market quality.
 
-## Full page
+## Workspace overview
 
-![Orders full page](/images/vero-oms-ui/orders-full.png)
+![Orders workspace overview](/images/vero-oms-ui/orders-full.png)
 
 ## Order Blotter
 
@@ -16,14 +16,54 @@ The Orders blotter lists account, symbol, side, quantity, price, status, and tim
 
 ![Orders blotter](/images/vero-oms-ui/orders-blotter.png)
 
+| Control | Behavior |
+|---|---|
+| Status / side filters | Narrows the blotter to the selected order state and side. |
+| Account and symbol filters | Narrows the blotter to one account or one symbol, with `ALL` as the reset state. |
+| From / To date-time | Updates the visible order range and the shared order time range. |
+| Export | Downloads the visible sorted rows to an XLSX file. |
+| Header sort | Sorts by id, date/time, account, symbol, side, quantity, fill percentage, price, market, or status. |
+| Row click | Selects the order and updates the right-side detail panel. |
+| Checkbox / Select all | Stages one or more rows for bulk actions. |
+
+When rows are selected, the bulk action bar shows selected count, cancellable count, and estimated notional. `MODIFY ORDER` is enabled only for a single cancellable order. `CANCEL ALL` opens a bulk cancel confirmation for remaining working quantity.
+
 ## Order Detail
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/orders-detail-panel.png" alt="Orders detail panel" />
+  </div>
+  <div className="guide-split-copy">
 
 The right-side detail panel displays order summary, latency breakdown, child fills, and actions for the selected order.
 
-![Orders detail panel](/images/vero-oms-ui/orders-detail-panel.png)
+| Detail action | Behavior |
+|---|---|
+| Parent link | Opens the order-chain modal when the order has a parent or child relationship. |
+| Modify | Opens a dialog that allows either price or quantity modification, not both in the same request. |
+| Cancel Order | Opens a confirmation dialog for the remaining working quantity. |
+| Latency breakdown | Loads timing details for the selected order and displays the latency breakdown. |
+
+Modify and cancel actions are disabled when the selected order is not in an actionable working, pending, or armed state.
+
+  </div>
+</div>
+
+## Order relationships and fills
+
+| Area | Behavior |
+|---|---|
+| Order chain | Shows the selected order, its parent, child orders, and sibling orders when available. |
+| Child fills | Lists executed fills with quantity, price, value, and execution time. |
+| Empty fill state | Indicates that no execution has been reported for the selected order. |
+| Bulk cancel summary | Shows selected, cancellable, and skipped orders before confirmation. |
+| Action feedback | Displays request-sent or failure feedback while the order list remains the source of the current state. |
 
 ## Market Quality
 
 The bottom area displays fill progress and market quality by market.
 
 ![Orders market quality](/images/vero-oms-ui/orders-market-quality.png)
+
+The fill progress chart compares sent quantity and filled quantity over the intraday series. Hovering the chart shows the timestamp, sent quantity, and filled quantity for the nearest point. The market quality table summarizes fill ratio, rejection rate, order count, and trade count by market.

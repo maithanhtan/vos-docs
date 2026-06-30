@@ -1,0 +1,23 @@
+---
+title: 'REST API'
+description: 'REST API public thông qua api-oms.verolabs.co'
+mode: 'wide'
+---
+
+REST API chạy tại `https://api-oms.verolabs.co`.
+Các endpoint cần đăng nhập sử dụng JWT trả về từ `POST https://platform.verolabs.co/api/auth/login` trong header `Authorization: Bearer <jwt>`.
+
+<CardGroup cols={3}>
+  <Card title="Trading" icon="arrow-right-arrow-left" href="/vi/apis/rest/trading/post-api-v1-orders-new">
+    Order entry, cancel/replace, quotes, IOI, order history và IOI board data.
+  </Card>
+  <Card title="Portfolio & Risk" icon="wallet" href="/vi/apis/rest/portfolio-risk/get-api-v1-oms-risk-accounts">
+    Account balances, holdings, mappings và risk-rule reads.
+  </Card>
+  <Card title="Administration" icon="user-shield" href="/vi/apis/rest/administration/get-api-v1-util-permissions">
+    Permissions, groups, maker-checker workflow, reference data và audit.
+  </Card>
+  <Card title="System & Diagnostics" icon="stethoscope" href="/vi/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics">
+    Health endpoints, latency metrics, latency records và API reference documents.
+  </Card>
+</CardGroup>

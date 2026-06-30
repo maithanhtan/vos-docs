@@ -1,0 +1,36 @@
+---
+title: 'Khôi phục tài khoản'
+description: 'Khôi phục truy cập Vero OMS bằng mã dùng một lần'
+mode: 'wide'
+---
+
+Dùng account recovery khi không thể đăng nhập bằng password hiện tại.
+
+![Trang khôi phục tài khoản Vero OMS](/images/vero-oms-ui/auth-reset-access.png)
+
+## Quy trình khôi phục
+
+<Steps>
+  <Step title="Nhập email tài khoản">
+    Nhập email liên kết với tài khoản Vero OMS rồi chọn **Send Code**.
+  </Step>
+  <Step title="Kiểm tra inbox">
+    Lấy one-time recovery code được gửi tới email tài khoản.
+  </Step>
+  <Step title="Nhập recovery code">
+    Nhập code rồi chọn **Verify & Continue**.
+  </Step>
+  <Step title="Tiếp tục vào Vero OMS">
+    Code hợp lệ sẽ khôi phục truy cập và mở application workspace.
+  </Step>
+</Steps>
+
+## Controls và states
+
+| Control hoặc state | Hành vi |
+|---|---|
+| Send Code | Yêu cầu one-time code cho email đã nhập. |
+| Verify & Continue | Xác minh code do user nhập. |
+| Use a different email | Quay lại bước nhập email. |
+| Back to sign in | Quay lại trang [Đăng nhập](/vi/user-guides/sign-in). |
+| Invalid or expired code | Nhập code còn hiệu lực hoặc yêu cầu code mới. |

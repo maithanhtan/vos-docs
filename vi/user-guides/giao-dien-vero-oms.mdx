@@ -1,73 +1,52 @@
 ---
-title: 'Hướng dẫn giao diện Vero OMS'
-description: 'Tài liệu tham chiếu cho các màn hình chính và quy trình vận hành trên Vero OMS'
+title: 'Vero OMS User Guide'
+description: 'Tổng quan workspace và khu vực vận hành trên Vero OMS'
 mode: 'wide'
 ---
 
-Trang này đối chiếu các màn hình chính của Vero OMS với quy trình vận hành tiêu chuẩn.
-Tên màn hình và quyền truy cập có thể khác nhau theo cấu hình tài khoản. Cấu trúc vận hành vẫn xoay quanh giao dịch, quản lý tài khoản, kiểm soát và hỗ trợ.
+Vero OMS là workspace dành cho order entry, order monitoring, portfolio review, market monitoring, operational control và administration.
+Giao diện sử dụng navigation shell, account context, status indicators và role-based controls dùng chung giữa các workspace.
 
-Xem thêm [bộ ảnh tham chiếu giao diện Vero OMS](/vi/user-guides/vero-oms-interface-reference) để đối chiếu bố cục từng màn hình và component chính.
+## Nhóm workspace
+
+| Nhóm | Workspace | Mục đích |
+|---|---|---|
+| Trader | Dashboard, Orders, Portfolios, Put Through, Price Board | Hỗ trợ giao dịch, market review, order monitoring và portfolio oversight. |
+| Operation | Accounts, Risk Rules, Approvals | Hỗ trợ account administration, governed changes và review workflows. |
+| Admin | Latency, Users, Audit | Hỗ trợ operational monitoring, user access và activity review. |
+
+## Các phần User Guide
 
 <CardGroup cols={2}>
-  <Card title="Bộ ảnh tham chiếu giao diện" icon="images" href="/vi/user-guides/vero-oms-interface-reference">
-    Danh mục page đã chụp và detail page theo từng nhóm component.
+  <Card title="Global shell và menu chung" icon="window" href="/vi/user-guides/screens/global-shell">
+    Navigation, account context, settings, language, time zone, status và layout controls dùng chung.
   </Card>
-  <Card title="Chi tiết Dashboard" icon="chart-line" href="/vi/user-guides/screens/dashboard">
-    Tài liệu Dashboard với ảnh full page và ảnh crop theo component.
+  <Card title="Dashboard" icon="chart-line" href="/vi/user-guides/screens/dashboard">
+    Order entry, market depth, chart, widgets và order monitoring.
+  </Card>
+  <Card title="Orders" icon="list-check" href="/vi/user-guides/screens/orders">
+    Order filters, detail, actions, relationships, fills và market quality.
+  </Card>
+  <Card title="Portfolios" icon="briefcase" href="/vi/user-guides/screens/portfolios">
+    Cash, positions, valuation, allocation, concentration và scenario review.
+  </Card>
+  <Card title="Put Through" icon="handshake" href="/vi/user-guides/screens/put-through">
+    Workspace filters, advertisements, quote entry và order tracking.
+  </Card>
+  <Card title="Price Board" icon="table-cells" href="/vi/user-guides/screens/price-board">
+    Market groups, symbol filtering, configurable columns và symbol detail.
+  </Card>
+  <Card title="Operation" icon="sliders" href="/vi/user-guides/screens/operation">
+    Account administration, risk rules, approvals và reference actions.
+  </Card>
+  <Card title="System" icon="server" href="/vi/user-guides/screens/system">
+    Latency, user access, login activity và audit history.
   </Card>
 </CardGroup>
 
-## Các khu vực chính trên giao diện
+## Context vận hành
 
-| Khu vực | Người dùng thao tác | Cần kiểm tra |
-|---|---|---|
-| Đăng nhập | Xác thực và vào workspace terminal. | Đúng user, ngôn ngữ, múi giờ và context phiên làm việc. |
-| Chọn tài khoản | Chọn tài khoản trước khi xem số dư hoặc đặt lệnh. | Tài khoản, nhóm, quyền truy cập và workspace đang chọn. |
-| Thị trường | Tìm mã, xem watchlist, depth và chart. | Mã giao dịch, trạng thái thị trường, spread, depth và giao dịch gần nhất. |
-| Phiếu đặt lệnh | Nhập mã, chiều lệnh, giá, khối lượng và loại lệnh trước khi gửi. | Buying power, giới hạn giá, khối lượng và mode đặt lệnh. |
-| Quản lý lệnh | Theo dõi lệnh live, fill, latency và trạng thái. | Chi tiết lệnh, tiến độ khớp, latency và cảnh báo vận hành. |
-| Danh mục | Xem vị thế, exposure, P&L, allocation và concentration. | Tài khoản đang chọn, thời điểm định giá và mức tập trung rủi ro. |
-| Operation và System | Quản lý account, rule, approval, user, audit và latency. | Filter, record đang chọn, sức khỏe service và audit trail. |
-
-## Trình tự vận hành tiêu chuẩn
-
-<Steps>
-  <Step title="Đăng nhập và kiểm tra context">
-    Bắt đầu từ màn hình đăng nhập, hoàn tất xác thực rồi kiểm tra ngôn ngữ, múi giờ, user context và workspace.
-  </Step>
-  <Step title="Chọn tài khoản">
-    Chọn tài khoản giao dịch trước khi mở phiếu đặt lệnh hoặc xem dữ liệu theo tài khoản.
-  </Step>
-  <Step title="Kiểm tra bối cảnh thị trường">
-    Kiểm tra watchlist, tìm kiếm mã, price depth và chart để xác nhận mã giao dịch trước khi chuẩn bị lệnh.
-  </Step>
-  <Step title="Gửi và theo dõi lệnh">
-    Đặt lệnh từ ticket hoặc drawer, sau đó theo dõi trạng thái lệnh, fill, latency và thông báo.
-  </Step>
-  <Step title="Đối soát sau giao dịch">
-    Kiểm tra exposure danh mục, lịch sử lệnh, approval vận hành và audit record theo khoảng thời gian cần đối soát.
-  </Step>
-</Steps>
-
-## Checklist phiếu đặt lệnh
-
-| Trường | Cần kiểm tra trước khi gửi |
-|---|---|
-| Tài khoản | Tài khoản đang chọn đúng với tài khoản muốn giao dịch. |
-| Mã | Mã tồn tại trên giao diện thị trường và đúng sản phẩm người dùng muốn giao dịch. |
-| Chiều lệnh | Chiều mua/bán đúng với ý định giao dịch. |
-| Giá | Giá phù hợp bước giá của sản phẩm và ý định đặt lệnh. |
-| Khối lượng | Khối lượng phù hợp giới hạn tài khoản, quy tắc sản phẩm và loại lệnh. |
-| Loại lệnh | Mode lệnh thường, stop hoặc bracket đúng với chiến lược giao dịch. |
-
-## Gỡ lỗi từ giao diện
-
-| Hiện tượng | Kiểm tra đầu tiên |
-|---|---|
-| Không đăng nhập được | Kiểm tra thông tin đăng nhập, môi trường đang chọn và trạng thái phiên. |
-| Không thấy dữ liệu tài khoản | Tải lại account selector và kiểm tra user có quyền với tài khoản đó. |
-| Không tìm thấy mã | Tìm lại theo đúng mã giao dịch và kiểm tra nhóm thị trường đang chọn. |
-| Gửi lệnh lỗi | Đối chiếu input trên UI với message validation và order summary. |
-| Trạng thái lệnh chưa cập nhật | Refresh order blotter và kiểm tra trạng thái streaming hoặc service health. |
-| Không rõ audit context | Mở panel chi tiết record đang chọn và kiểm tra filter, time range, request id. |
+- Kiểm tra active account hoặc group trước khi xem dữ liệu hoặc chuẩn bị action.
+- Kiểm tra required fields, validation messages và confirmation dialogs trước khi submit thay đổi.
+- Dùng page status, selected record và activity history để xác nhận trạng thái hiện hành.
+- Control khả dụng phụ thuộc access được gán cho user hiện tại.

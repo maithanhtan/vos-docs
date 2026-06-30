@@ -1,12 +1,12 @@
-# VOS Docs
+# Vero OMS Docs
 
-Mintlify documentation for Vero OMS interface operations and VOS API v2.
+Mintlify documentation for Vero OMS interface operations, REST API, and Streaming API.
 
 ## Included
 
 - Bilingual overview pages in English and Vietnamese
-- API v2 documentation for `POST /api/v2/chat/api/id-card`
-- Filtered OpenAPI specifications in `openapi.v2.en.json` and `openapi.v2.vi.json`
+- REST API and Streaming API documentation
+- Filtered REST API OpenAPI specifications in `openapi.oms.en.json` and `openapi.oms.vi.json`
 - Vero OMS interface operation guides
 - MacBook Pro interface captures and component crops under `images/vero-oms-ui`
 - Vero logo, favicon, landing page video, and Mintlify styling

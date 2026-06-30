@@ -1,14 +1,14 @@
 ---
 title: 'Operation'
-description: 'Ảnh và tài liệu component của Operation page'
+description: 'Hướng dẫn quản trị account, risk rules, approvals và operational actions'
 mode: 'wide'
 ---
 
 Operation chứa quản trị account, risk rules, approvals, reference actions và operational search.
 
-## Toàn màn hình
+## Tổng quan workspace
 
-![Operation full page](/images/vero-oms-ui/operation-full.png)
+![Tổng quan Operation workspace](/images/vero-oms-ui/operation-full.png)
 
 ## Tabs và actions
 
@@ -16,17 +16,48 @@ Thanh thao tác chứa Accounts, Risk Rules, Approvals, search, New Group, Add A
 
 ![Operation tabs and actions](/images/vero-oms-ui/operation-tabs-actions.png)
 
+| Khu vực | Hành vi |
+|---|---|
+| Accounts | Mở workflow account mapping, group, access và request. |
+| Risk Rules | Mở cấu hình rule có maker-checker approval. |
+| Approvals | Mở queue review maker-checker. |
+| Search | Lọc account rows theo account, name, email, phone, comp id hoặc group. |
+| New Group | Tạo group trực tiếp khi user có quyền. |
+| Add Account | Mở request form tạo account. |
+| Reference Data | Mở các giá trị tham chiếu account và counterparty khả dụng cho user. |
+| Refresh | Reload dữ liệu vận hành hiện tại. |
+
 ## Account Table
 
 Bảng account hiển thị account id, name, type, group, margin, short sell, users và rules.
 
 ![Operation account table](/images/vero-oms-ui/operation-account-table.png)
 
+Account rows có thể sort theo account, name, type, group, trạng thái margin/short-sell rule, user count và rule count. Checkbox từng dòng dùng cho bulk `ASSIGN USER` và `ADD TO GROUP`; mỗi bulk action chạy một governed operation cho từng account được chọn và báo progress.
+
 ## Account Detail
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-account-detail.png" alt="Operation account detail" />
+  </div>
+  <div className="guide-split-copy">
 
 Panel account bên phải hiển thị và quản lý account đang chọn.
 
-![Operation account detail](/images/vero-oms-ui/operation-account-detail.png)
+| Detail action | Hành vi |
+|---|---|
+| Edit Account | Mở update-account request form đã prefill từ account đang chọn. |
+| Deposit / Withdraw | Mở request form cash movement để approval. |
+| Add Rule | Mở create-risk-rule request được seed theo account đang chọn. |
+| Move / Remove from group | Đổi group membership của account khi có quyền. |
+| Grant / Revoke | Grant hoặc revoke access level cho user trên account đang chọn. |
+| Applied Rules | Hiển thị system/account rules đang ảnh hưởng account. |
+
+Reference Data gom các giá trị account và counterparty theo chức năng người dùng. User có quyền manage có thể add value, confirm delete, refresh list và close dialog.
+
+  </div>
+</div>
 
 ## Risk Rules
 
@@ -34,8 +65,27 @@ Risk Rules chứa rule catalog, filter theo engine/scope/kind, danh sách rules 
 
 ![Operation risk rules](/images/vero-oms-ui/operation-risk-rules.png)
 
+| Risk rule action | Hành vi |
+|---|---|
+| Search target rail | Lọc rules theo target hoặc match value. |
+| Category / scope / kind filters | Lọc rule table theo một rule family. |
+| New Rule | Mở dialog maker-checker cho rule mới. |
+| Select rule | Load editable rule detail ở panel bên phải. |
+| Update Rule | Submit change request; rule chưa apply cho tới khi được approve. |
+| Delete Rule | Submit delete request; removal chưa apply cho tới khi được approve. |
+
 ## Approvals
 
 Approvals chứa review queues, trạng thái request và panel chi tiết approval đang chọn.
 
 ![Operation approvals](/images/vero-oms-ui/operation-approvals.png)
+
+| Approval action | Hành vi |
+|---|---|
+| All / Mine | Chuyển giữa toàn bộ requests và requests do user hiện tại tạo. |
+| Status filter | Lọc theo pending, approved, applied, rejected, failed hoặc cancelled. |
+| Search | Search id, request type, status, requester hoặc reviewer. |
+| Select row | Mở request detail, changed values và review controls trong detail panel. |
+| Approve / Reject | Chỉ available cho reviewer trên pending request của user khác. |
+| Cancel Request | Available cho requester khi request còn pending. |
+| Bulk approve / reject | Xử lý các pending request eligible và báo số success/failure. |

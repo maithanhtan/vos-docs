@@ -1,0 +1,205 @@
+---
+title: 'Streaming API'
+description: 'Streaming connection endpoints, subscription channels, and message payloads'
+mode: 'wide'
+---
+
+The Streaming API is available at `https://streaming-oms.verolabs.co`.
+The terminal connects once, then creates one ref-counted subscription per channel.
+
+## Connection endpoints
+
+| Transport | Endpoint |
+|---|---|
+| WebSocket | `wss://streaming-oms.verolabs.co/connection/websocket` |
+| HTTP stream | `https://streaming-oms.verolabs.co/connection/http_stream` |
+| SSE fallback | `https://streaming-oms.verolabs.co/connection/sse` |
+
+The terminal configures transports in this order: WebSocket, HTTP stream, then SSE fallback.
+
+## Subscribe request
+
+After connecting, subscribe to each required channel. Conceptually, each subscription identifies a channel:
+
+```json
+{
+  "channel": "mkt:productInfo:FPT-G1"
+}
+```
+
+## Message payload
+
+Each channel update contains the message payload.
+The payload may be a JSON value or a JSON-encoded string. Parse strings before applying the channel schema.
+
+```ts
+type ChannelMessage<T> = {
+  channel: string;
+  data: T | string;
+};
+```
+
+## Market channels
+
+| Channel | Payload |
+|---|---|
+| `mkt:vnIndex:{indexCode}` | Index update. Examples: `VN30`, `VNINDEX`, `HNX30`. |
+| `mkt:productInfo:{symbol}-{board}` | `ProductInfo` quote payload. Default board is `G1`. |
+| `mkt:productStat:{symbol}-{board}` | Product trading statistics. |
+| `mkt:depth:{symbol}-{board}` | `Depth` order book payload. |
+| `mkt:tradeLog:{symbol}-{board}` | `TradeLog` print payload. |
+| `mkt:ProductTrend:{symbol}-{board}` | `TrendMaster` buy/sell pressure payload. |
+| `mkt:OhlcvDTO:{symbol}:{resolution}` | `OhlcvBar` payload. Resolution is seconds. |
+
+## Trading channels
+
+| Channel | Payload |
+|---|---|
+| `order:OrderExecutionReport:{accountId}` | `OrderExecutionReport` order state change. |
+| `order:Account:{accountId}` | `AccountCashReport` or `AccountHoldingReport`. |
+
+Clients subscribe to one `order:` channel per account they can access. Account lists and snapshots are loaded through the authenticated REST API before stream subscriptions are opened.
+
+## ProductInfo
+
+```ts
+type ProductInfo = {
+  id: string;
+  seq: number;
+  time: number;
+  symbol: string;
+  boardID: string;
+  currFR: number;
+  totalFR: number;
+  totBuyFR: number;
+  totSellFR: number;
+  nomiPrc: number;
+  ceilPrc: number;
+  floorPrc: number;
+  lsPrc: number;
+  lsVol: number;
+  AucEstPrc: number;
+  AucEstVol: number;
+  isAuction: boolean;
+  openPrc: number;
+  closePrc: number;
+  highPrc: number;
+  lowPrc: number;
+  vWAP: number;
+  totVol: number;
+  totVal: number;
+  totVolPT: number;
+  totValPT: number;
+  lsWay: number;
+  dynInfo: string;
+  marketMakingPossible: string;
+  halt: string;
+  liquidationTrading: string;
+  tradingSession: string;
+  boardEventID: string;
+  sessionOpenCloseCode: string;
+  openInterest: number;
+};
+```
+
+## Depth
+
+```ts
+type PriceDepth = {
+  prc: number;
+  vol: number;
+};
+
+type Depth = {
+  seq: number;
+  time: number;
+  symbol: string;
+  boardID: string;
+  bidPriceDepth: PriceDepth[];
+  askPriceDepth: PriceDepth[];
+};
+```
+
+## TradeLog and OHLCV
+
+```ts
+type TradeLog = {
+  id: string;
+  seq: number;
+  symbol: string;
+  unixTime: number;
+  price: number;
+  volume: number;
+  change: number;
+  way: number;
+  boardID: string;
+};
+
+type OhlcvBar = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+```
+
+## OrderExecutionReport
+
+```ts
+type OrderExecutionReport = {
+  user: string;
+  orderID?: string;
+  originalReqID: string;
+  internalOrderID: string;
+  refOrderID: string;
+  origClOrdID: string;
+  externalOrderID: string;
+  externalSecondOrderID: string;
+  accountID: string;
+  symbol: string;
+  marketID?: string;
+  orderSide: string;
+  orderStatus: string;
+  orderType: string;
+  originalPrice: number;
+  originalQty: number;
+  orderCurrentPrice: number;
+  orderCurrentQty: number;
+  filledQty: number;
+  avgFillPrice: number;
+  cancelledQty: number;
+  orderText: string;
+  unixUTCTimeMs: number;
+  createunixUTCTimeMs: number;
+  persisState: string;
+  algoID: string;
+  positionID: string;
+  parentOrderId: string;
+};
+```
+
+## AccountStateReport
+
+```ts
+type AccountCashReport = {
+  type: "account";
+  account_id: string;
+  cash_available: number;
+  cash_hold: number;
+  bypass_cash: boolean;
+  bypass_stock: boolean;
+  ts_ns: number;
+};
+
+type AccountHoldingReport = {
+  type: "holding";
+  account_id: string;
+  symbol: string;
+  sellable_qty: number;
+  hold_qty: number;
+  avg_price: number;
+  ts_ns: number;
+};
+```

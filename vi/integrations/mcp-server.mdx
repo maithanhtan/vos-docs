@@ -1,0 +1,97 @@
+---
+title: 'MCP server'
+description: 'Kết nối công cụ AI với MCP server của Vero OMS Docs'
+---
+
+Dùng MCP server của Vero OMS Docs để cho phép công cụ AI được hỗ trợ tìm kiếm tài liệu hiện tại và lấy thông tin về API endpoint.
+
+## Server URL
+
+Dùng MCP server URL này:
+
+```text
+https://docs.vos.verolabs.co/mcp
+```
+
+## MCP server đọc được gì
+
+MCP server tìm kiếm nội dung được lập chỉ mục từ Vero OMS Docs:
+
+- Các trang tham chiếu REST API
+- Tài liệu Streaming API
+- Hướng dẫn giao diện Vero OMS
+- Tài liệu tích hợp
+
+Đây là MCP server dùng để tìm kiếm và đọc tài liệu. MCP server không phải API giao dịch và không thể đặt lệnh hoặc gọi API trực tiếp.
+
+## Kết nối công cụ AI
+
+### Codex
+
+Chạy lệnh sau:
+
+```bash
+codex mcp add vero-oms-docs --url https://docs.vos.verolabs.co/mcp
+```
+
+Codex lưu cấu hình MCP này trong `config.toml`. Codex CLI và IDE extension dùng chung cấu hình.
+
+Trong giao diện terminal của Codex, nhập `/mcp` để xác nhận server đang hoạt động.
+
+### ChatGPT
+
+Nếu workspace ChatGPT của bạn hỗ trợ ứng dụng MCP tùy chỉnh:
+
+1. Bật **Developer mode** trong **Settings** > **Apps** > **Advanced Settings**.
+2. Chọn **Settings** > **Apps** > **Create**.
+3. Nhập `Vero OMS Docs` làm tên và `https://docs.vos.verolabs.co/mcp` làm MCP server URL.
+4. Chọn **Scan Tools**, sau đó chọn **Create**.
+
+<Note>
+  Quyền truy cập ứng dụng MCP tùy chỉnh phụ thuộc vào gói ChatGPT và cấu hình workspace.
+</Note>
+
+### Claude Code
+
+Chạy lệnh sau:
+
+```bash
+claude mcp add --transport http vero-oms-docs https://docs.vos.verolabs.co/mcp
+```
+
+### Cursor
+
+Thêm server vào `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "vero-oms-docs": {
+      "url": "https://docs.vos.verolabs.co/mcp"
+    }
+  }
+}
+```
+
+### VS Code
+
+Thêm server vào `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "vero-oms-docs": {
+      "type": "http",
+      "url": "https://docs.vos.verolabs.co/mcp"
+    }
+  }
+}
+```
+
+## Prompt khuyến nghị
+
+```text
+Use the Vero OMS Docs MCP server to find the relevant endpoint or guide.
+Use the OpenAPI spec as source of truth for method, path, parameters, auth, request body, and response schema.
+Do not invent fields. If a live response conflicts with the spec, report the mismatch before implementing.
+```

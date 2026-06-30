@@ -1,14 +1,22 @@
 ---
 title: 'Portfolios'
-description: 'Portfolios page visual reference and component documentation'
+description: 'Portfolio valuation, exposure, positions, allocation, and concentration'
 mode: 'wide'
 ---
 
 Portfolios provides valuation, exposure, positions, allocation, and concentration data for the selected account context.
 
-## Full page
+## Workspace overview
 
-![Portfolios full page](/images/vero-oms-ui/portfolios-full.png)
+![Portfolios workspace overview](/images/vero-oms-ui/portfolios-full.png)
+
+## Portfolio tabs
+
+| Tab | Purpose |
+|---|---|
+| Cash Balance | Reviews account cash, holds, exposure, and cash/stock check status. |
+| Positions | Reviews holdings, live marks, P&L, allocation, concentration, and movers. |
+| What-if · stress | Runs scenario, Monte Carlo, and historical VaR views against the current book. |
 
 ## KPI Summary
 
@@ -22,14 +30,40 @@ The positions table lists symbol, account, quantity, sellable quantity, average 
 
 ![Portfolio positions table](/images/vero-oms-ui/portfolios-positions-table.png)
 
+| Control | Behavior |
+|---|---|
+| Asset-class tabs | Filters positions by all holdings, equities, derivatives, cash-like assets, or other configured classes. |
+| Account search | Narrows positions to one account. |
+| Sector selector | Narrows positions to one sector. |
+| Header sort | Sorts visible rows by symbol, name, class, sector, account, quantity, sellable, cost, mark, value, P&L, or weight. |
+| Table footer | Shows the displayed range and total matching positions. |
+
 ## Allocation
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/portfolios-allocation.png" alt="Portfolio allocation" />
+  </div>
+  <div className="guide-split-copy">
 
 The allocation panel displays exposure by asset class, account, sector, and top concentration.
 
-![Portfolio allocation](/images/vero-oms-ui/portfolios-allocation.png)
+  </div>
+</div>
 
 ## Treemaps
 
 Treemaps classify top decliners and top gainers for the selected portfolio context.
 
 ![Portfolio treemaps](/images/vero-oms-ui/portfolios-treemaps.png)
+
+## What-if and cash states
+
+| Area | Behavior |
+|---|---|
+| Cash Balance | Sorts account rows by account, cash balance, cash hold, stock exposure, and risk-check flags. |
+| Scenario mode | Switches among limit-down, limit-up, uniform shock, sector shock, Monte Carlo, and historical VaR. |
+| Uniform shock | Applies preset percentage moves to all holdings. |
+| Sector stress | Enables editable sector shock inputs in the right rail. |
+| Monte Carlo | Changes volatility and tail assumptions, then shows distribution statistics. |
+| Historical VaR | Changes lookback period and uses available daily history for the top holdings. |

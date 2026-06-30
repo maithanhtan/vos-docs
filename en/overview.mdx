@@ -1,42 +1,36 @@
 ---
 title: 'Overview'
-description: 'VOS documentation for Vero OMS interface operations and API v2 signup integration'
+description: 'VOS documentation for REST APIs and streaming integration'
 mode: 'wide'
 ---
-
-VOS Docs provides the maintained documentation set for Vero OMS interface operations and API v2 integration.
-The documentation covers operating screens, component-level visual references, and the signup ID-card parsing endpoint.
 
 ## Current scope
 
 | Area | Included docs | Purpose |
 |---|---|---|
-| API v2 | Signup ID-card parsing | Defines the documented request, response, and error contract. |
-| Interface guide | Main Vero OMS screens and operating flows | Describes how users navigate the terminal. |
-| Interface reference | MacBook Pro captures of pages and key components | Provides visual reference for page layout and component state. |
+| Authentication | `POST /api/auth/login` on `platform.verolabs.co` | Defines terminal login and JWT bootstrap. |
+| REST API | Public endpoints via `api-oms.verolabs.co` | Defines exposed REST endpoints, request parameters, request bodies, response schemas, and role gates. |
+| Streaming API | Streaming transports and channel messages via `streaming-oms.verolabs.co` | Defines connection endpoints, channel names, and live payload structures. |
 
 <CardGroup cols={3}>
-  <Card title="API v2" icon="code" href="/en/api-v2">
-    Endpoint coverage, request requirements, and generated OpenAPI reference.
+  <Card title="Authentication" icon="key" href="/en/apis/rest/auth/post-api-auth-login">
+    Terminal password login, session token, and JWT response contract.
   </Card>
-  <Card title="Interface guide" icon="desktop" href="/en/user-guides/vero-oms-interface">
-    Operating guidance for Dashboard, Orders, Portfolios, Put Through, Price Board, Operation, and System.
+  <Card title="REST API" icon="server" href="/en/rest-api">
+    Public REST endpoints grouped by feature.
   </Card>
-  <Card title="Interface reference" icon="images" href="/en/user-guides/vero-oms-interface-reference">
-    Captured pages and component crops from the Vero OMS interface.
+  <Card title="Streaming API" icon="tower-broadcast" href="/en/apis/streaming/overview">
+    Connection transports, subscription channels, and message payloads.
   </Card>
 </CardGroup>
 
 ## Reference sequence
 
 <Steps>
-  <Step title="Interface operations">
-    Review the interface guide to align on screen names, navigation structure, and operating context.
+  <Step title="Authentication">
+    Call the terminal login API and use the returned JWT as `Authorization: Bearer <jwt>` for REST API calls.
   </Step>
-  <Step title="API v2 contract">
-    Review the API v2 page and endpoint reference for request fields, response fields, and error formats.
-  </Step>
-  <Step title="Visual reference">
-    Use the interface reference catalog for page, drawer, table, menu, and settings-panel context.
+  <Step title="REST and streaming APIs">
+    Review REST and Streaming API docs for request parameters, response schemas, channel names, and live payloads.
   </Step>
 </Steps>

@@ -1,14 +1,14 @@
 ---
 title: 'Operation'
-description: 'Operation page visual reference and component documentation'
+description: 'Account administration, risk rules, approvals, and operational actions'
 mode: 'wide'
 ---
 
 Operation contains account administration, risk rules, approvals, reference actions, and operational search.
 
-## Full page
+## Workspace overview
 
-![Operation full page](/images/vero-oms-ui/operation-full.png)
+![Operation workspace overview](/images/vero-oms-ui/operation-full.png)
 
 ## Tabs and actions
 
@@ -16,17 +16,48 @@ The action bar contains Accounts, Risk Rules, Approvals, search, New Group, Add 
 
 ![Operation tabs and actions](/images/vero-oms-ui/operation-tabs-actions.png)
 
+| Area | Behavior |
+|---|---|
+| Accounts | Opens account mapping, group, access, and request workflows. |
+| Risk Rules | Opens governed rule configuration and approval submission. |
+| Approvals | Opens the maker-checker review queue. |
+| Search | Filters account rows by account, name, email, phone, comp id, or group. |
+| New Group | Creates a group directly when the user has permission. |
+| Add Account | Opens a governed account-create request form. |
+| Reference Data | Opens the account and counterparty reference values available to the user. |
+| Refresh | Reloads the current operational data set. |
+
 ## Account Table
 
 The account table displays account id, name, type, group, margin, short sell, users, and rules.
 
 ![Operation account table](/images/vero-oms-ui/operation-account-table.png)
 
+Account rows can be sorted by account, name, type, group, margin, short-sell rule state, user count, and rule count. Row checkboxes enable bulk `ASSIGN USER` and `ADD TO GROUP`; each bulk action runs one governed operation per selected account and reports progress.
+
 ## Account Detail
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/operation-account-detail.png" alt="Operation account detail" />
+  </div>
+  <div className="guide-split-copy">
 
 The right-side account panel displays and manages the selected account.
 
-![Operation account detail](/images/vero-oms-ui/operation-account-detail.png)
+| Detail action | Behavior |
+|---|---|
+| Edit Account | Opens an update-account request form prefilled from the selected account. |
+| Deposit / Withdraw | Opens a request form for cash movement approval. |
+| Add Rule | Opens a create-risk-rule request seeded to the selected account. |
+| Move / Remove from group | Changes account group membership when allowed. |
+| Grant / Revoke | Grants or revokes user access levels on the selected account. |
+| Applied Rules | Displays active system/account rules affecting the selected account. |
+
+Reference Data groups account and counterparty values by user-facing function. Users with manage permission can add values, confirm deletion, refresh the list, and close the dialog.
+
+  </div>
+</div>
 
 ## Risk Rules
 
@@ -34,8 +65,27 @@ Risk Rules contains the rule catalog, filters by engine/scope/kind, rules list, 
 
 ![Operation risk rules](/images/vero-oms-ui/operation-risk-rules.png)
 
+| Risk rule action | Behavior |
+|---|---|
+| Search target rail | Filters rules by target or match value. |
+| Category / scope / kind filters | Narrow the rule table to one rule family. |
+| New Rule | Opens a maker-checker dialog for a new rule. |
+| Select rule | Loads editable rule detail in the right panel. |
+| Update Rule | Submits a change request; the rule does not apply until approved. |
+| Delete Rule | Submits a delete request; removal does not apply until approved. |
+
 ## Approvals
 
 Approvals contains review queues, request state, and the selected approval detail panel.
 
 ![Operation approvals](/images/vero-oms-ui/operation-approvals.png)
+
+| Approval action | Behavior |
+|---|---|
+| All / Mine | Switches between all requests and requests submitted by the current user. |
+| Status filter | Filters by pending, approved, applied, rejected, failed, or cancelled state. |
+| Search | Searches id, request type, status, requester, or reviewer. |
+| Select row | Opens request details, changed values, and review controls in the detail panel. |
+| Approve / Reject | Available only to reviewers on other users' pending requests. |
+| Cancel Request | Available to the requester while the request is pending. |
+| Bulk approve / reject | Processes eligible pending requests and reports success/failure count. |

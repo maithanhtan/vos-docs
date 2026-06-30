@@ -1,6 +1,6 @@
 ---
 title: 'Global shell và menu chung'
-description: 'Navigation, settings, language, time zone, algo menu, status bar và layout controls dùng chung'
+description: 'Navigation, settings, language, time zone, status bar và layout controls dùng chung'
 mode: 'wide'
 ---
 
@@ -14,7 +14,7 @@ Thanh trên cùng chứa logo, phím tắt `F1` đến `F8`, Help, Settings, Ful
 
 | Control | Chức năng |
 |---|---|
-| `F1` đến `F8` | Chuyển nhanh giữa Dashboard, Orders, Portfolios, Algo, Put Through, Price Board, Operation và System. |
+| Shortcut workspace được document | Chuyển nhanh giữa Dashboard, Orders, Portfolios, Put Through, Price Board, Operation và System. |
 | `CMD>` | Ô command/search để tìm account hoặc group. |
 | `NEW ORDER` | Mở drawer đặt lệnh mà không rời workspace hiện tại. |
 | Help | Mở tài liệu hỗ trợ bên ngoài. |
@@ -23,29 +23,75 @@ Thanh trên cùng chứa logo, phím tắt `F1` đến `F8`, Help, Settings, Ful
 | Language | Chọn `EN` hoặc `VI`. |
 | Time zone | Chọn múi giờ hiển thị cho clock và timestamps. |
 
+## Command search
+
+Ô `CMD>` dùng để tìm account hoặc group context. Khi chọn account hoặc group, workspace scope ở cạnh `NEW ORDER` được cập nhật; drawer, blotter, portfolio và risk view sẽ đọc theo context đó.
+
+| Action | Kết quả |
+|---|---|
+| Nhập account, tên hoặc group | Mở suggestion theo account/group. |
+| Chọn account | Set active account context cho trading và review page. |
+| Chọn group | Set active group context và cập nhật chỉ báo `SHOWING GRP`. |
+| Bấm New Order | Mở order drawer từ page hiện tại mà không đổi workspace. |
+
+## Tìm module và action
+
+Shortcut command có thể cấu hình sẽ mở dialog tìm các module và user action khả dụng.
+
+| Action | Kết quả |
+|---|---|
+| Nhập tên module hoặc action | Lọc danh sách kết quả khả dụng. |
+| Up / Down | Di chuyển active result. |
+| Enter | Mở module hoặc chạy action đang chọn. |
+| Escape | Đóng dialog mà không đổi workspace hiện tại. |
+| Sign out | Kết thúc session hiện tại sau khi chọn. |
+
 ## Settings
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/settings-system-panel.png" alt="Settings system panel" />
+  </div>
+  <div className="guide-split-copy">
 
 Settings có các tab `Profile`, `System`, `Hotkeys`, `Notifications`. Tab System chứa theme, accent color, UI scale, density, broker ticker source và clear cache.
 
-![Settings system panel](/images/vero-oms-ui/settings-system-panel.png)
+| Khu vực setting | Hành vi |
+|---|---|
+| Profile | Hiển thị identity, current session, active sessions, account context và sign-out controls. |
+| System | Cập nhật theme, accent color, UI scale, density, ticker source và local display preferences. Tab này cũng có action reset local cache. |
+| Hotkeys | Liệt kê shortcut có thể cấu hình, nhận diện conflict và hỗ trợ reset defaults. |
+| Notifications | Điều khiển notification channels, event types, presentation và sound preferences. |
+| Close / backdrop / Escape | Đóng drawer mà không chuyển page. |
+
+  </div>
+</div>
 
 ## Language menu
 
+<div className="guide-split guide-split--compact">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/language-menu.png" alt="Language menu" />
+  </div>
+  <div className="guide-split-copy">
+
 Menu language điều khiển ngôn ngữ giao diện.
 
-![Language menu](/images/vero-oms-ui/language-menu.png)
+  </div>
+</div>
 
 ## Time zone menu
 
+<div className="guide-split guide-split--compact">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/timezone-menu.png" alt="Time zone menu" />
+  </div>
+  <div className="guide-split-copy">
+
 Menu time zone có search và danh sách múi giờ hỗ trợ cho clock và timestamps của terminal.
 
-![Time zone menu](/images/vero-oms-ui/timezone-menu.png)
-
-## Algo menu
-
-`F4 Algo` mở menu điều hướng algo. Menu gồm Execution Algo, MM Algo, Basket Trade, Neutral Algo, Strategy Algo và Options Strategy.
-
-![Algo menu](/images/vero-oms-ui/algo-menu.png)
+  </div>
+</div>
 
 ## Status bar
 
@@ -55,10 +101,34 @@ Status bar cuối màn hình hiển thị streaming connection, RTT/P99, market 
 
 ## Layout controls
 
+<div className="guide-split guide-split--compact">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/layout-toolbar.png" alt="Layout toolbar" />
+  </div>
+  <div className="guide-split-copy">
+
 Toolbar layout ở góc phải dưới gồm layout selector, share layout, import layout và arrange/grid controls.
 
-![Layout toolbar](/images/vero-oms-ui/layout-toolbar.png)
+  </div>
+</div>
+
+<div className="guide-split guide-split--compact">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/layout-menu.png" alt="Layout menu" />
+  </div>
+  <div className="guide-split-copy">
 
 Layout menu hiển thị layout hiện tại, danh sách layout có sẵn, tạo layout mới và duplicate layout.
 
-![Layout menu](/images/vero-oms-ui/layout-menu.png)
+| Layout action | Kết quả |
+|---|---|
+| Chọn layout | Load layout dashboard đã lưu. |
+| Create hoặc duplicate layout | Tạo layout entry mới cho user. |
+| Rename layout | Đổi tên layout hiện tại inline. |
+| Delete layout | Xoá layout đã lưu đang chọn. |
+| Share layout | Copy layout definition hiện tại để dùng lại. |
+| Import layout | Mở dialog import JSON và validate trước khi apply. |
+| Auto arrange / reset | Sắp xếp lại hoặc restore widget dashboard. |
+
+  </div>
+</div>

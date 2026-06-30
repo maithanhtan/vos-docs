@@ -1,16 +1,16 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "VOS Docs",
+  "name": "Vero OMS Docs",
   "seo": {
     "indexing": "all",
     "metatags": {
-      "description": "VOS documentation for Vero OMS interface operations and API v2 integration.",
-      "og:title": "VOS Docs",
-      "og:description": "Vero OMS interface documentation and API v2 reference",
-      "og:site_name": "VOS Docs",
-      "twitter:title": "VOS Docs",
-      "twitter:description": "Vero OMS interface documentation and API v2 reference"
+      "description": "VOS documentation for Vero OMS interface operations, REST APIs, and streaming integration.",
+      "og:title": "Vero OMS Docs",
+      "og:description": "Vero OMS interface documentation, REST API reference, and streaming API guide",
+      "og:site_name": "Vero OMS Docs",
+      "twitter:title": "Vero OMS Docs",
+      "twitter:description": "Vero OMS interface documentation, REST API reference, and streaming API guide"
     }
   },
   "colors": {
@@ -54,11 +54,12 @@
                 "group": "Guide",
                 "pages": [
                   "en/user-guides/vero-oms-interface",
-                  "en/user-guides/vero-oms-interface-reference"
+                  "en/user-guides/sign-in",
+                  "en/user-guides/account-recovery"
                 ]
               },
               {
-                "group": "Trader Guideline",
+                "group": "Trader User Guide",
                 "expanded": true,
                 "pages": [
                   "en/user-guides/screens/global-shell",
@@ -70,14 +71,14 @@
                 ]
               },
               {
-                "group": "Operation Guideline",
+                "group": "Operation User Guide",
                 "expanded": true,
                 "pages": [
                   "en/user-guides/screens/operation"
                 ]
               },
               {
-                "group": "Admin Guideline",
+                "group": "Admin User Guide",
                 "expanded": true,
                 "pages": [
                   "en/user-guides/screens/system"
@@ -92,11 +93,12 @@
                 "group": "Hướng dẫn",
                 "pages": [
                   "vi/user-guides/giao-dien-vero-oms",
-                  "vi/user-guides/vero-oms-interface-reference"
+                  "vi/user-guides/sign-in",
+                  "vi/user-guides/account-recovery"
                 ]
               },
               {
-                "group": "Trader Guideline",
+                "group": "Trader User Guide",
                 "expanded": true,
                 "pages": [
                   "vi/user-guides/screens/global-shell",
@@ -108,14 +110,14 @@
                 ]
               },
               {
-                "group": "Operation Guideline",
+                "group": "Operation User Guide",
                 "expanded": true,
                 "pages": [
                   "vi/user-guides/screens/operation"
                 ]
               },
               {
-                "group": "Admin Guideline",
+                "group": "Admin User Guide",
                 "expanded": true,
                 "pages": [
                   "vi/user-guides/screens/system"
@@ -139,17 +141,168 @@
                 ]
               },
               {
-                "group": "API v2",
+                "group": "Integrations",
+                "expanded": true,
                 "pages": [
-                  "en/api-v2",
+                  "en/integrations/mcp-server",
+                  "en/integrations/openapi-spec"
+                ]
+              },
+              {
+                "group": "Authentication",
+                "expanded": true,
+                "pages": [
+                  "en/apis/rest/auth/post-api-auth-login"
+                ]
+              },
+              {
+                "group": "REST API",
+                "expanded": true,
+                "pages": [
+                  "en/rest-api",
                   {
-                    "group": "Signup",
-                    "icon": "id-card",
-                    "expanded": true,
+                    "group": "Trading",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
                     "pages": [
-                      "en/apis/api-v2/parse-id-card"
+                      {
+                        "group": "Order Entry",
+                        "expanded": false,
+                        "pages": [
+                          {
+                            "group": "Normal order",
+                            "expanded": false,
+                            "pages": [
+                              "en/apis/rest/trading/post-api-v1-orders-new",
+                              "en/apis/rest/trading/post-api-v1-orders-cancel",
+                              "en/apis/rest/trading/post-api-v1-orders-replace",
+                              "en/apis/rest/trading/get-api-v1-util-orders"
+                            ]
+                          },
+                          {
+                            "group": "IOI",
+                            "expanded": false,
+                            "pages": [
+                              "en/apis/rest/trading/post-api-v1-orders-ioi",
+                              "en/apis/rest/trading/get-api-v1-util-ioi-advertisements"
+                            ]
+                          },
+                          {
+                            "group": "PT",
+                            "expanded": false,
+                            "pages": [
+                              "en/apis/rest/trading/post-api-v1-orders-quote",
+                              "en/apis/rest/trading/post-api-v1-orders-quote-response",
+                              "en/apis/rest/trading/post-api-v1-orders-kquote",
+                              "en/apis/rest/trading/post-api-v1-orders-kquote-cancel"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Portfolio & Risk",
+                    "icon": "wallet",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/portfolio-risk/get-api-v1-oms-admin-mappings",
+                      "en/apis/rest/portfolio-risk/get-api-v1-oms-admin-mappings-account-code",
+                      "en/apis/rest/portfolio-risk/get-api-v1-oms-risk-accounts",
+                      "en/apis/rest/portfolio-risk/get-api-v1-oms-risk-accounts-account-id",
+                      "en/apis/rest/portfolio-risk/get-api-v1-oms-risk-rules",
+                      "en/apis/rest/portfolio-risk/get-api-v1-orders-risk-rules"
+                    ]
+                  },
+                  {
+                    "group": "Administration",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      {
+                        "group": "Permissions & Groups",
+                        "expanded": false,
+                        "pages": [
+                          "en/apis/rest/administration/get-api-v1-util-admin-permissions",
+                          "en/apis/rest/administration/post-api-v1-util-admin-permissions",
+                          "en/apis/rest/administration/delete-api-v1-util-admin-permissions",
+                          "en/apis/rest/administration/get-api-v1-util-groups",
+                          "en/apis/rest/administration/post-api-v1-util-groups",
+                          "en/apis/rest/administration/get-api-v1-util-groups-members",
+                          "en/apis/rest/administration/delete-api-v1-util-groups-members",
+                          "en/apis/rest/administration/post-api-v1-util-groups-move",
+                          "en/apis/rest/administration/get-api-v1-util-permissions",
+                          "en/apis/rest/administration/get-api-v1-util-search"
+                        ]
+                      },
+                      {
+                        "group": "Workflow & Audit",
+                        "expanded": false,
+                        "pages": [
+                          "en/apis/rest/administration/get-api-v1-util-audit",
+                          "en/apis/rest/administration/get-api-v1-util-requests",
+                          "en/apis/rest/administration/post-api-v1-util-requests",
+                          "en/apis/rest/administration/get-api-v1-util-requests-requestid",
+                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
+                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
+                          "en/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
+                        ]
+                      },
+                      {
+                        "group": "Reference Data",
+                        "expanded": false,
+                        "pages": [
+                          "en/apis/rest/administration/get-api-v1-util-firms-traders",
+                          "en/apis/rest/administration/post-api-v1-util-firms-traders",
+                          "en/apis/rest/administration/delete-api-v1-util-firms-traders",
+                          "en/apis/rest/administration/get-api-v1-util-reference",
+                          "en/apis/rest/administration/post-api-v1-util-reference",
+                          "en/apis/rest/administration/delete-api-v1-util-reference"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Recovery",
+                    "expanded": false,
+                    "pages": [
+                      "en/apis/rest/auth/post-api-auth-recovery-start",
+                      "en/apis/rest/auth/post-api-auth-recovery-verify",
+                      "en/apis/rest/auth/post-api-auth-recovery-reset-password"
+                    ]
+                  },
+                  {
+                    "group": "System & Diagnostics",
+                    "icon": "stethoscope",
+                    "expanded": false,
+                    "pages": [
+                      {
+                        "group": "Health",
+                        "expanded": false,
+                        "pages": [
+                          "en/apis/rest/system-diagnostics/get-api-v1-oms-health",
+                          "en/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
+                          "en/apis/rest/system-diagnostics/get-api-v1-util-health"
+                        ]
+                      },
+                      {
+                        "group": "Latency",
+                        "expanded": false,
+                        "pages": [
+                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
+                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
+                          "en/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
+                        ]
+                      }
                     ]
                   }
+                ]
+              },
+              {
+                "group": "Streaming API",
+                "expanded": true,
+                "pages": [
+                  "en/apis/streaming/overview"
                 ]
               },
               {
@@ -170,17 +323,168 @@
                 ]
               },
               {
-                "group": "API v2",
+                "group": "Integrations",
+                "expanded": true,
                 "pages": [
-                  "vi/api-v2",
+                  "vi/integrations/mcp-server",
+                  "vi/integrations/openapi-spec"
+                ]
+              },
+              {
+                "group": "Authentication",
+                "expanded": true,
+                "pages": [
+                  "vi/apis/rest/auth/post-api-auth-login"
+                ]
+              },
+              {
+                "group": "REST API",
+                "expanded": true,
+                "pages": [
+                  "vi/rest-api",
                   {
-                    "group": "Đăng ký",
-                    "icon": "id-card",
-                    "expanded": true,
+                    "group": "Trading",
+                    "icon": "arrow-right-arrow-left",
+                    "expanded": false,
                     "pages": [
-                      "vi/apis/api-v2/parse-id-card"
+                      {
+                        "group": "Order Entry",
+                        "expanded": false,
+                        "pages": [
+                          {
+                            "group": "Normal order",
+                            "expanded": false,
+                            "pages": [
+                              "vi/apis/rest/trading/post-api-v1-orders-new",
+                              "vi/apis/rest/trading/post-api-v1-orders-cancel",
+                              "vi/apis/rest/trading/post-api-v1-orders-replace",
+                              "vi/apis/rest/trading/get-api-v1-util-orders"
+                            ]
+                          },
+                          {
+                            "group": "IOI",
+                            "expanded": false,
+                            "pages": [
+                              "vi/apis/rest/trading/post-api-v1-orders-ioi",
+                              "vi/apis/rest/trading/get-api-v1-util-ioi-advertisements"
+                            ]
+                          },
+                          {
+                            "group": "PT",
+                            "expanded": false,
+                            "pages": [
+                              "vi/apis/rest/trading/post-api-v1-orders-quote",
+                              "vi/apis/rest/trading/post-api-v1-orders-quote-response",
+                              "vi/apis/rest/trading/post-api-v1-orders-kquote",
+                              "vi/apis/rest/trading/post-api-v1-orders-kquote-cancel"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Portfolio & Risk",
+                    "icon": "wallet",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/portfolio-risk/get-api-v1-oms-admin-mappings",
+                      "vi/apis/rest/portfolio-risk/get-api-v1-oms-admin-mappings-account-code",
+                      "vi/apis/rest/portfolio-risk/get-api-v1-oms-risk-accounts",
+                      "vi/apis/rest/portfolio-risk/get-api-v1-oms-risk-accounts-account-id",
+                      "vi/apis/rest/portfolio-risk/get-api-v1-oms-risk-rules",
+                      "vi/apis/rest/portfolio-risk/get-api-v1-orders-risk-rules"
+                    ]
+                  },
+                  {
+                    "group": "Administration",
+                    "icon": "user-shield",
+                    "expanded": false,
+                    "pages": [
+                      {
+                        "group": "Permissions & Groups",
+                        "expanded": false,
+                        "pages": [
+                          "vi/apis/rest/administration/get-api-v1-util-admin-permissions",
+                          "vi/apis/rest/administration/post-api-v1-util-admin-permissions",
+                          "vi/apis/rest/administration/delete-api-v1-util-admin-permissions",
+                          "vi/apis/rest/administration/get-api-v1-util-groups",
+                          "vi/apis/rest/administration/post-api-v1-util-groups",
+                          "vi/apis/rest/administration/get-api-v1-util-groups-members",
+                          "vi/apis/rest/administration/delete-api-v1-util-groups-members",
+                          "vi/apis/rest/administration/post-api-v1-util-groups-move",
+                          "vi/apis/rest/administration/get-api-v1-util-permissions",
+                          "vi/apis/rest/administration/get-api-v1-util-search"
+                        ]
+                      },
+                      {
+                        "group": "Workflow & Audit",
+                        "expanded": false,
+                        "pages": [
+                          "vi/apis/rest/administration/get-api-v1-util-audit",
+                          "vi/apis/rest/administration/get-api-v1-util-requests",
+                          "vi/apis/rest/administration/post-api-v1-util-requests",
+                          "vi/apis/rest/administration/get-api-v1-util-requests-requestid",
+                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-approve",
+                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-cancel",
+                          "vi/apis/rest/administration/post-api-v1-util-requests-requestid-reject"
+                        ]
+                      },
+                      {
+                        "group": "Reference Data",
+                        "expanded": false,
+                        "pages": [
+                          "vi/apis/rest/administration/get-api-v1-util-firms-traders",
+                          "vi/apis/rest/administration/post-api-v1-util-firms-traders",
+                          "vi/apis/rest/administration/delete-api-v1-util-firms-traders",
+                          "vi/apis/rest/administration/get-api-v1-util-reference",
+                          "vi/apis/rest/administration/post-api-v1-util-reference",
+                          "vi/apis/rest/administration/delete-api-v1-util-reference"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "group": "Recovery",
+                    "expanded": false,
+                    "pages": [
+                      "vi/apis/rest/auth/post-api-auth-recovery-start",
+                      "vi/apis/rest/auth/post-api-auth-recovery-verify",
+                      "vi/apis/rest/auth/post-api-auth-recovery-reset-password"
+                    ]
+                  },
+                  {
+                    "group": "System & Diagnostics",
+                    "icon": "stethoscope",
+                    "expanded": false,
+                    "pages": [
+                      {
+                        "group": "Health",
+                        "expanded": false,
+                        "pages": [
+                          "vi/apis/rest/system-diagnostics/get-api-v1-oms-health",
+                          "vi/apis/rest/system-diagnostics/get-api-v1-orders-healthz",
+                          "vi/apis/rest/system-diagnostics/get-api-v1-util-health"
+                        ]
+                      },
+                      {
+                        "group": "Latency",
+                        "expanded": false,
+                        "pages": [
+                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-metrics",
+                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-raw",
+                          "vi/apis/rest/system-diagnostics/get-api-v1-util-latency-stages"
+                        ]
+                      }
                     ]
                   }
+                ]
+              },
+              {
+                "group": "Streaming API",
+                "expanded": true,
+                "pages": [
+                  "vi/apis/streaming/overview"
                 ]
               },
               {
@@ -228,8 +532,8 @@
     },
     "url": "full",
     "openapi": [
-      "openapi.v2.en.json",
-      "openapi.v2.vi.json"
+      "openapi.oms.en.json",
+      "openapi.oms.vi.json"
     ]
   }
 }

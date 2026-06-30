@@ -1,0 +1,36 @@
+---
+title: 'Account recovery'
+description: 'Recover Vero OMS access with a one-time code'
+mode: 'wide'
+---
+
+Use account recovery when you cannot sign in with the current password.
+
+![Vero OMS account recovery page](/images/vero-oms-ui/auth-reset-access.png)
+
+## Recovery procedure
+
+<Steps>
+  <Step title="Enter your account email">
+    Enter the email associated with the Vero OMS account, then select **Send Code**.
+  </Step>
+  <Step title="Check your inbox">
+    Retrieve the one-time recovery code sent to the account email.
+  </Step>
+  <Step title="Enter the recovery code">
+    Enter the code and select **Verify & Continue**.
+  </Step>
+  <Step title="Continue to Vero OMS">
+    A valid code restores access and opens the application workspace.
+  </Step>
+</Steps>
+
+## Controls and states
+
+| Control or state | Behavior |
+|---|---|
+| Send Code | Requests a one-time code for the entered email. |
+| Verify & Continue | Verifies the code entered by the user. |
+| Use a different email | Returns to the email step. |
+| Back to sign in | Returns to the [Sign in](/en/user-guides/sign-in) page. |
+| Invalid or expired code | Enter a current code or request a new one. |

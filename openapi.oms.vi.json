@@ -1,0 +1,5235 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "VOS OMS Public API",
+    "version": "1.0.0",
+    "description": "Public REST API surface for Vero OMS. Authentication requests use platform.verolabs.co. REST API requests use api-oms.verolabs.co."
+  },
+  "servers": [
+    {
+      "url": "https://platform.verolabs.co",
+      "description": "Authentication host"
+    },
+    {
+      "url": "https://api-oms.verolabs.co",
+      "description": "REST API host"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Xác thực tài khoản và khôi phục mật khẩu."
+    },
+    {
+      "name": "Trading",
+      "description": "Order entry, quote, IOI, and trading activity APIs."
+    },
+    {
+      "name": "Portfolio & Risk",
+      "description": "Accounts, holdings, mappings, and risk-rule read APIs."
+    },
+    {
+      "name": "Administration",
+      "description": "Permissions, groups, workflow, reference data, and audit APIs."
+    },
+    {
+      "name": "System & Diagnostics",
+      "description": "Health and latency endpoints."
+    }
+  ],
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Login with password",
+        "description": "Authenticates an email identifier and password, then returns a session token and Bearer JWT for API calls.",
+        "operationId": "post_api_auth_login",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active session and JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "502": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthLoginRequest"
+              }
+            }
+          },
+          "description": "Email identifier and password credentials."
+        }
+      }
+    },
+    "/api/auth/recovery/start": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Bắt đầu khôi phục mật khẩu",
+        "description": "Gửi mã khôi phục dùng một lần đến email của tài khoản và tạo phiên khôi phục ngắn hạn. Lưu cookie trong phản hồi để gửi cùng các yêu cầu xác minh và đặt lại mật khẩu.",
+        "operationId": "post_api_auth_recovery_start",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Yêu cầu gửi mã khôi phục đã được chấp nhận",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie phiên khôi phục ngắn hạn bắt buộc cho yêu cầu khôi phục tiếp theo.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthRecoveryStartResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "502": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Địa chỉ email của tài khoản.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRecoveryStartRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/recovery/verify": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Xác minh mã khôi phục",
+        "description": "Xác minh mã dùng một lần cho phiên khôi phục hiện tại. Gửi cookie phiên khôi phục do yêu cầu bắt đầu trả về.",
+        "operationId": "post_api_auth_recovery_verify",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mã khôi phục đã được xác minh",
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie phiên khôi phục đã cập nhật, bắt buộc cho yêu cầu đặt lại mật khẩu.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthRecoveryVerifyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "502": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Mã khôi phục dùng một lần.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRecoveryVerifyRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/recovery/reset-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Đặt lại mật khẩu đã khôi phục",
+        "description": "Đặt mật khẩu mới sau khi xác minh mã. Gửi cookie phiên khôi phục do yêu cầu xác minh trả về. Phản hồi thành công cũng trả về phiên đã xác thực.",
+        "operationId": "post_api_auth_recovery_reset_password",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mật khẩu đã được đặt lại và phiên đang hoạt động",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "401": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "502": {
+            "$ref": "#/components/responses/AuthError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Mật khẩu mới của tài khoản.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRecoveryResetRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/util/health": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "Liveness probe",
+        "description": "Returns liveness status for the REST API.",
+        "operationId": "get_api_v1_util_health",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API is up",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/util/latency/metrics": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "Aggregated latency metrics",
+        "description": "Returns count, min, max, avg, p50, p95, p99, and a time-bucketed series.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "operationId": "get_api_v1_util_latency_metrics",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metrics result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FromNs"
+          },
+          {
+            "$ref": "#/components/parameters/ToNs"
+          },
+          {
+            "$ref": "#/components/parameters/MessageType"
+          },
+          {
+            "$ref": "#/components/parameters/TimeField"
+          },
+          {
+            "name": "bucket_ns",
+            "in": "query",
+            "description": "Bucket size in nanoseconds (default 1000000000).",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/latency/raw": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "Raw latency records",
+        "description": "Most-recent latency records with paging.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "operationId": "get_api_v1_util_latency_raw",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Raw records result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RawResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FromNs"
+          },
+          {
+            "$ref": "#/components/parameters/ToNs"
+          },
+          {
+            "$ref": "#/components/parameters/MessageType"
+          },
+          {
+            "$ref": "#/components/parameters/TimeField"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/latency/stages": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "Latency detail records and segments",
+        "description": "Returns matching latency detail records and derived per-segment latencies. When `request_id` is supplied without time parameters, the query uses the request identifier. Otherwise, the query uses the time window.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "operationId": "get_api_v1_util_latency_stages",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latency detail result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatencyDetailResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Request identifier."
+          },
+          {
+            "$ref": "#/components/parameters/FromNs"
+          },
+          {
+            "$ref": "#/components/parameters/ToNs"
+          },
+          {
+            "$ref": "#/components/parameters/MessageType"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/orders": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Query orders (caller-scoped)",
+        "description": "Returns order records scoped to the accounts the caller can access. A caller with no account grants receives an empty page. `from_ns` and `to_ns` filter by order creation timestamp (`create_unix_utc_time_ms`).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_orders",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orders result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrdersResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional order identifier filter."
+          },
+          {
+            "name": "original_req_id",
+            "in": "query",
+            "description": "Filter by the order stable entry key. Trade records use the same value in `original_req_id`, which can be used to match orders and trades.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "orig_cl_ord_id",
+            "in": "query",
+            "description": "Filter by the originating client order id.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Optional refinement. Must be one of the caller's permitted accounts — a request for an\naccount the caller has no grant on is rejected with 403.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "symbol",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional trading symbol filter."
+          },
+          {
+            "name": "order_status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional order status filter."
+          },
+          {
+            "$ref": "#/components/parameters/FromNs"
+          },
+          {
+            "$ref": "#/components/parameters/ToNs"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/ioi/advertisements": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Query IOI advertisements (public board data)",
+        "description": "Returns IOI advertisement board data. Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "listIoiAdvertisements",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "IOI advertisements result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IOIResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/ServerError"
+          }
+        },
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional trading symbol filter."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional status filter."
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional side filter."
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/permissions": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List the calling user's own per-account permission grants",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_permissions",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyPermissionsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/admin/permissions": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List permission grants (admin)",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_admin_permissions",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionsByUserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Grant a per-account permission (admin, direct)",
+        "description": "Grants account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_admin_permissions",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Grant"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantPermissionPayload"
+              }
+            }
+          },
+          "description": "Permission grant payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Revoke a per-account permission (admin, direct)",
+        "description": "Revokes account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "delete_api_v1_util_admin_permissions",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokePermissionPayload"
+              }
+            }
+          },
+          "description": "Permission revoke payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/groups": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List account groups",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_groups",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Create an account group",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_groups",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupPayload"
+              }
+            }
+          },
+          "description": "Group creation payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/groups/members": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List the members (accounts) of a group",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_groups_members",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMembersResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Remove an account from its group",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "delete_api_v1_util_groups_members",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemovedMemberResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveMemberPayload"
+              }
+            }
+          },
+          "description": "Remove group member payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/groups/move": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Move an account into a group (single membership)",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_groups_move",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMember"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveAccountPayload"
+              }
+            }
+          },
+          "description": "Move account to group payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/search": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Caller-scoped account search (backs the terminal CMD search)",
+        "description": "Returns only the accounts the calling user is permitted on whose code matches `q` (case-insensitive substring).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_search",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchAccountsResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Optional case-insensitive substring to match account codes.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Default 50, capped at 200.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/requests": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Create a maker-checker workflow request",
+        "description": "Creates a `PENDING` request. The body's `type` selects the request kind, one of:\n`CREATE_RISK_RULE`, `DELETE_RISK_RULE`, `GRANT_PERMISSION`, `REVOKE_PERMISSION`,\n`CREATE_GROUP`, `MOVE_ACCOUNT`, `CREATE_ACCOUNT`, `UPDATE_ACCOUNT`, `DEPOSIT`, `WITHDRAW`,\n`ADD_STOCK`, `REMOVE_STOCK`. The remaining fields are the type-specific payload.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_requests",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequest"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowRequestPayload"
+              }
+            }
+          },
+          "description": "Maker-checker workflow request payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List workflow requests",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_requests",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequestsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/requests/{requestId}": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Get a single workflow request",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_requests_requestId",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/requests/{requestId}/approve": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Approve a request (reviewer must differ from requester)",
+        "description": "Approves a pending request and records the workflow result.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "operationId": "post_api_v1_util_requests_requestId_approve",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewNote"
+              }
+            }
+          },
+          "description": "Optional reviewer note payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/requests/{requestId}/reject": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Reject a request (reviewer must differ from requester)",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "operationId": "post_api_v1_util_requests_requestId_reject",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewNote"
+              }
+            }
+          },
+          "description": "Optional reviewer note payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/requests/{requestId}/cancel": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Cancel a request (only the original requester may cancel)",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_requests_requestId_cancel",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowRequest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/RequestID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/audit": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List the admin audit log",
+        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `checker` or `admin`.",
+        "operationId": "get_api_v1_util_audit",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/reference": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List controlled reference values",
+        "description": "Requires `kind=comp_id` or `kind=sender_sub_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_reference",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceValuesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "comp_id",
+                "sender_sub_id"
+              ]
+            },
+            "description": "Reference data kind. Supported values are `comp_id` and `sender_sub_id`."
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Add a controlled reference value",
+        "description": "Adds or upserts a reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_reference",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceValue"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceValuePayload"
+              }
+            }
+          },
+          "description": "Reference data value payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Remove a controlled reference value",
+        "description": "Deletes one reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "delete_api_v1_util_reference",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferenceRemovedResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Reference value not found"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferenceValuePayload"
+              }
+            }
+          },
+          "description": "Reference data value payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/util/firms/traders": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "List firm trader mappings",
+        "description": "Optionally filter by `firm_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_util_firms_traders",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirmTradersResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "firm_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional firm identifier filter."
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Add a firm trader mapping",
+        "description": "Adds or upserts one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "post_api_v1_util_firms_traders",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirmTrader"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FirmTraderPayload"
+              }
+            }
+          },
+          "description": "Firm to trader mapping payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Administration"
+        ],
+        "summary": "Remove a firm trader mapping",
+        "description": "Deletes one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "operationId": "delete_api_v1_util_firms_traders",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirmTraderRemovedResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Firm trader mapping not found"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FirmTraderPayload"
+              }
+            }
+          },
+          "description": "Firm to trader mapping payload."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/healthz": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "Order entry health check",
+        "description": "Returns order API health status.",
+        "operationId": "get_api_v1_orders_healthz",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/risk/rules": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "List order reject rules",
+        "description": "Returns live order-risk reject rules.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_orders_risk_rules",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderRiskRulesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/new": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Submit a new order",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_new",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewOrderRequest"
+              }
+            }
+          },
+          "description": "New order request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/cancel": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Cancel a working order",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_cancel",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderRequest"
+              }
+            }
+          },
+          "description": "Cancel order request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/replace": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Replace a working order",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_replace",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceOrderRequest"
+              }
+            }
+          },
+          "description": "Replace order request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/quote": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Submit a FIX quote",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_quote",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteRequest"
+              }
+            }
+          },
+          "description": "Put-through quote request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/quote-response": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Respond to a quote",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_quote_response",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteResponseRequest"
+              }
+            }
+          },
+          "description": "Put-through quote response request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/kquote": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Submit a KRX quote",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_kquote",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KQuoteRequest"
+              }
+            }
+          },
+          "description": "KQuote request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/kquote-cancel": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Cancel a KRX quote",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_kquote_cancel",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KQuoteCancelRequest"
+              }
+            }
+          },
+          "description": "KQuote cancel request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/orders/ioi": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Submit an IOI",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "post_api_v1_orders_ioi",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "413": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IOIRequest"
+              }
+            }
+          },
+          "description": "IOI advertisement request fields."
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/oms/health": {
+      "get": {
+        "tags": [
+          "System & Diagnostics"
+        ],
+        "summary": "OMS health check",
+        "description": "Returns health status for Vero OMS.",
+        "operationId": "get_api_v1_oms_health",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OmsHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/oms/admin/mappings": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "List account mappings",
+        "description": "Returns configured account mappings, filtered by permissions when permission filtering is active.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_oms_admin_mappings",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mappings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MappingView"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/OmsError"
+          },
+          "503": {
+            "$ref": "#/components/responses/OmsError"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/oms/admin/mappings/{account_code}": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "Get account mapping",
+        "description": "Returns one account mapping by account code.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_oms_admin_mappings_account_code",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingView"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/OmsError"
+          },
+          "503": {
+            "$ref": "#/components/responses/OmsError"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AccountCode"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/oms/risk/accounts": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "List account balances and holdings",
+        "description": "Returns current cash balances and stock holdings for every permitted account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_oms_risk_accounts",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountView"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/OmsError"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/oms/risk/accounts/{account_id}": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "Get account balance and holdings",
+        "description": "Returns one account balance and holdings by engine account id.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_oms_risk_accounts_account_id",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountView"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/OmsError"
+          },
+          "503": {
+            "$ref": "#/components/responses/OmsError"
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AccountID"
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/oms/risk/rules": {
+      "get": {
+        "tags": [
+          "Portfolio & Risk"
+        ],
+        "summary": "List risk rules",
+        "description": "Returns active risk rules from the live read model.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "operationId": "get_api_v1_oms_risk_rules",
+        "servers": [
+          {
+            "url": "https://api-oms.verolabs.co"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Risk rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RuleView"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/OmsError"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "RequestID": {
+        "name": "requestId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Workflow request identifier."
+      },
+      "AccountCode": {
+        "name": "account_code",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Account code path parameter."
+      },
+      "AccountID": {
+        "name": "account_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Optional account identifier filter. When used as a path parameter, identifies one account."
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Page size. Defaults to 200; capped by the per-API max limit.",
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "Offset": {
+        "name": "offset",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "description": "Zero-based number of records to skip."
+      },
+      "FromNs": {
+        "name": "from_ns",
+        "in": "query",
+        "description": "Start of the time window as epoch nanoseconds.",
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "ToNs": {
+        "name": "to_ns",
+        "in": "query",
+        "description": "End of the time window as epoch nanoseconds.",
+        "schema": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "MessageType": {
+        "name": "message_type",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        },
+        "description": "Optional message type filter."
+      },
+      "TimeField": {
+        "name": "time_field",
+        "in": "query",
+        "description": "Which timestamp to filter/aggregate on.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "complete_time",
+            "create_time"
+          ],
+          "default": "complete_time"
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code or error category."
+          },
+          "status": {
+            "type": "integer",
+            "description": "Status value returned by the API."
+          }
+        },
+        "description": "Standard error response envelope."
+      },
+      "LatencyStats": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "min_latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Minimum latency in nanoseconds."
+          },
+          "max_latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Maximum latency in nanoseconds."
+          },
+          "avg_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "Average latency in nanoseconds."
+          },
+          "p50_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "50th percentile latency in nanoseconds."
+          },
+          "p95_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "95th percentile latency in nanoseconds."
+          },
+          "p99_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "99th percentile latency in nanoseconds."
+          }
+        },
+        "description": "Aggregate latency statistics."
+      },
+      "MetricsBucket": {
+        "type": "object",
+        "properties": {
+          "bucket_start_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bucket start timestamp in epoch nanoseconds."
+          },
+          "bucket_end_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bucket end timestamp in epoch nanoseconds."
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "min_latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Minimum latency in nanoseconds."
+          },
+          "max_latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Maximum latency in nanoseconds."
+          },
+          "avg_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "Average latency in nanoseconds."
+          },
+          "p50_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "50th percentile latency in nanoseconds."
+          },
+          "p95_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "95th percentile latency in nanoseconds."
+          },
+          "p99_latency_ns": {
+            "type": "number",
+            "format": "double",
+            "description": "99th percentile latency in nanoseconds."
+          }
+        },
+        "description": "Latency metrics for one time bucket."
+      },
+      "MetricsResult": {
+        "type": "object",
+        "properties": {
+          "from_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start of the response time window in epoch nanoseconds."
+          },
+          "to_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End of the response time window in epoch nanoseconds."
+          },
+          "bucket_size_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bucket size for time-series aggregation in nanoseconds."
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Message type filter or message type reported by the record."
+          },
+          "time_field": {
+            "type": "string",
+            "description": "Timestamp field used for filtering or aggregation."
+          },
+          "summary": {
+            "$ref": "#/components/schemas/LatencyStats"
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricsBucket"
+            },
+            "description": "Time-bucketed metric rows."
+          }
+        },
+        "description": "Aggregated latency metrics response."
+      },
+      "RawRecord": {
+        "type": "object",
+        "properties": {
+          "message_type": {
+            "type": "string",
+            "description": "Message type filter or message type reported by the record."
+          },
+          "message_body_json": {
+            "type": "object",
+            "description": "Original message body as JSON."
+          },
+          "create_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Message creation timestamp in epoch nanoseconds."
+          },
+          "complete_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Message completion timestamp in epoch nanoseconds."
+          },
+          "latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Latency duration in nanoseconds."
+          }
+        },
+        "description": "Raw latency record."
+      },
+      "RawResult": {
+        "type": "object",
+        "properties": {
+          "from_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start of the response time window in epoch nanoseconds."
+          },
+          "to_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End of the response time window in epoch nanoseconds."
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Message type filter or message type reported by the record."
+          },
+          "time_field": {
+            "type": "string",
+            "description": "Timestamp field used for filtering or aggregation."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of records returned."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Zero-based number of records skipped before returning results."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RawRecord"
+            },
+            "description": "Records returned for the current page."
+          }
+        },
+        "description": "Raw latency records response."
+      },
+      "Order": {
+        "type": "object",
+        "description": "Order record snapshot.",
+        "properties": {
+          "originalReqID": {
+            "type": "string",
+            "description": "Stable original request identifier for the order lifecycle."
+          },
+          "rawMessageID": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Message identifier."
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was received."
+          },
+          "sourceSeq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source sequence number for ordering updates."
+          },
+          "orderID": {
+            "type": "string",
+            "description": "Order identifier assigned to the order."
+          },
+          "clOrdID": {
+            "type": "string",
+            "description": "Client order identifier."
+          },
+          "origClOrdID": {
+            "type": "string",
+            "description": "Original client order identifier for replace or cancel flows."
+          },
+          "accountID": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "orderSide": {
+            "type": "string",
+            "description": "Order side reported by the order record."
+          },
+          "fixOrderSide": {
+            "type": "string",
+            "description": "FIX order side code."
+          },
+          "orderStatus": {
+            "type": "string",
+            "description": "Current order status."
+          },
+          "orderType": {
+            "type": "string",
+            "description": "Order type reported by the order record."
+          },
+          "fixOrdType": {
+            "type": "string",
+            "description": "FIX order type code."
+          },
+          "timeInForce": {
+            "type": "string",
+            "description": "Time-in-force code."
+          },
+          "board": {
+            "type": "string",
+            "description": "Trading board code."
+          },
+          "marketID": {
+            "type": "string",
+            "description": "Market identifier."
+          },
+          "user": {
+            "type": "string",
+            "description": "User identifier associated with the record."
+          },
+          "exchange": {
+            "type": "string",
+            "description": "Exchange code."
+          },
+          "ISIN": {
+            "type": "string",
+            "description": "ISIN or routed instrument identifier."
+          },
+          "originalPrice": {
+            "type": "number",
+            "format": "double",
+            "description": "Original order price."
+          },
+          "originalQty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Original order quantity."
+          },
+          "orderCurrentPrice": {
+            "type": "number",
+            "format": "double",
+            "description": "Current working order price."
+          },
+          "orderCurrentQty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Current working order quantity."
+          },
+          "filledQty": {
+            "type": "number",
+            "format": "double",
+            "description": "Filled quantity."
+          },
+          "avgFillPrice": {
+            "type": "number",
+            "format": "double",
+            "description": "Average fill price."
+          },
+          "cancelledQty": {
+            "type": "number",
+            "format": "double",
+            "description": "Cancelled quantity."
+          },
+          "orderText": {
+            "type": "string",
+            "description": "Free-form order text or reject reason."
+          },
+          "unixUTCTimeMs": {
+            "type": "number",
+            "format": "double",
+            "description": "Order update timestamp in Unix UTC milliseconds."
+          },
+          "createunixUTCTimeMs": {
+            "type": "number",
+            "format": "double",
+            "description": "Order creation timestamp in Unix UTC milliseconds."
+          },
+          "partyID": {
+            "type": "string",
+            "description": "Party identifier."
+          },
+          "partyTraderID": {
+            "type": "string",
+            "description": "Party trader identifier."
+          },
+          "quoteRespID": {
+            "type": "string",
+            "description": "Quote response identifier."
+          },
+          "quoteID": {
+            "type": "string",
+            "description": "Quote identifier."
+          },
+          "persisState": {
+            "type": "string",
+            "description": "Order state reported by the order record."
+          },
+          "algoID": {
+            "type": "string",
+            "description": "Algorithm identifier associated with the order."
+          },
+          "positionID": {
+            "type": "string",
+            "description": "Position identifier associated with the order."
+          }
+        }
+      },
+      "OrdersResult": {
+        "type": "object",
+        "properties": {
+          "order_id": {
+            "type": "string",
+            "description": "Order identifier."
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "order_status": {
+            "type": "string",
+            "description": "Order status filter."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of records returned."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Zero-based number of records skipped before returning results."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            },
+            "description": "Order records returned for the current page."
+          }
+        },
+        "description": "Order query response."
+      },
+      "Trade": {
+        "type": "object",
+        "description": "Trade fill record.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the record."
+          },
+          "rawMessageID": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Message identifier."
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was received."
+          },
+          "sourceSeq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source sequence number for ordering updates."
+          },
+          "execID": {
+            "type": "string",
+            "description": "Execution identifier."
+          },
+          "orderID": {
+            "type": "string",
+            "description": "Order identifier assigned to the order."
+          },
+          "clOrdID": {
+            "type": "string",
+            "description": "Client order identifier."
+          },
+          "originalReqID": {
+            "type": "string",
+            "description": "Stable original request identifier for the order lifecycle."
+          },
+          "accountID": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "lastQty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Last executed quantity."
+          },
+          "lastPx": {
+            "type": "number",
+            "format": "double",
+            "description": "Last executed price."
+          },
+          "cumQty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Cumulative executed quantity."
+          },
+          "leavesQty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Remaining leaves quantity."
+          },
+          "avgPx": {
+            "type": "number",
+            "format": "double",
+            "description": "Average execution price."
+          },
+          "tradeDate": {
+            "type": "string",
+            "description": "Trade date."
+          },
+          "createUnixUTCTimeMs": {
+            "type": "number",
+            "format": "double",
+            "description": "Creation timestamp in Unix UTC milliseconds."
+          }
+        }
+      },
+      "TradesResult": {
+        "type": "object",
+        "properties": {
+          "exec_id": {
+            "type": "string",
+            "description": "Execution identifier filter."
+          },
+          "order_id": {
+            "type": "string",
+            "description": "Order identifier."
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of records returned."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Zero-based number of records skipped before returning results."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "trades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trade"
+            },
+            "description": "Trade records returned for the current page."
+          }
+        },
+        "description": "Trade query response."
+      },
+      "Advertisement": {
+        "type": "object",
+        "description": "IOI advertisement record.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the record."
+          },
+          "rawMessageID": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Message identifier."
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was received."
+          },
+          "ioiId": {
+            "type": "string",
+            "description": "IOI identifier."
+          },
+          "ioiRefId": {
+            "type": "string",
+            "description": "Referenced IOI identifier."
+          },
+          "broker": {
+            "type": "string",
+            "description": "Broker identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Quantity value for the request."
+          },
+          "price": {
+            "type": "number",
+            "format": "double",
+            "description": "Price value for the request or record."
+          },
+          "transType": {
+            "type": "string",
+            "description": "Transaction type."
+          },
+          "repoHaircutRatio": {
+            "type": "number",
+            "format": "double",
+            "description": "Repo haircut ratio."
+          },
+          "collateralValue": {
+            "type": "number",
+            "format": "double",
+            "description": "Collateral value."
+          },
+          "contactNo": {
+            "type": "string",
+            "description": "Contact number."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "rejReason": {
+            "type": "integer",
+            "description": "Rejection reason."
+          },
+          "sourceSeq": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source sequence number for ordering updates."
+          },
+          "createdAtNs": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Creation timestamp in epoch nanoseconds."
+          }
+        }
+      },
+      "IOIResult": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of records returned."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Zero-based number of records skipped before returning results."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "advertisements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Advertisement"
+            },
+            "description": "IOI advertisement records returned for the current page."
+          }
+        },
+        "description": "IOI advertisement query response."
+      },
+      "AuthLoginRequest": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Email address associated with the Vero OMS account."
+          },
+          "password": {
+            "type": "string",
+            "description": "Current password for the Vero OMS account."
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ],
+        "description": "Password login request. Set identifier to the account email address.",
+        "additionalProperties": false
+      },
+      "AuthRecoveryStartRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Địa chỉ email liên kết với tài khoản Vero OMS."
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Yêu cầu gửi mã khôi phục mật khẩu dùng một lần.",
+        "additionalProperties": false
+      },
+      "AuthRecoveryStartResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "code_sent"
+            ],
+            "description": "Cho biết yêu cầu gửi mã khôi phục đã được chấp nhận."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "Trạng thái bắt đầu khôi phục mật khẩu.",
+        "additionalProperties": false
+      },
+      "AuthRecoveryVerifyRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Mã khôi phục dùng một lần được gửi đến email của tài khoản."
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "description": "Yêu cầu xác minh mã khôi phục mật khẩu dùng một lần.",
+        "additionalProperties": false
+      },
+      "AuthRecoveryVerifyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified"
+            ],
+            "description": "Cho biết mã khôi phục đã được xác minh."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "Trạng thái xác minh khôi phục mật khẩu.",
+        "additionalProperties": false
+      },
+      "AuthRecoveryResetRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Mật khẩu mới của tài khoản Vero OMS."
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "description": "Yêu cầu đặt mật khẩu mới sau khi xác minh mã khôi phục.",
+        "additionalProperties": false
+      },
+      "AuthIdentity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the record."
+          },
+          "traits": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Account attributes returned with the authenticated session."
+          }
+        },
+        "description": "Account identity returned by the authenticated session.",
+        "additionalProperties": true
+      },
+      "AuthSessionDevice": {
+        "type": "object",
+        "properties": {
+          "ip_address": {
+            "type": "string",
+            "description": "IP address reported for the session device."
+          },
+          "location": {
+            "type": "string",
+            "description": "Location metadata reported for the session device."
+          },
+          "user_agent": {
+            "type": "string",
+            "description": "User agent reported for the session device."
+          }
+        },
+        "description": "AuthSessionDevice schema."
+      },
+      "AuthSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the record."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Indicates whether the session is active."
+          },
+          "authenticated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the session was authenticated."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the session expires."
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthSessionDevice"
+            },
+            "description": "Devices associated with the authenticated session."
+          },
+          "identity": {
+            "$ref": "#/components/schemas/AuthIdentity"
+          },
+          "tokenized": {
+            "type": "string",
+            "description": "Bearer JWT issued for REST API calls."
+          }
+        },
+        "description": "Session object. The `tokenized` field is the Bearer JWT used for API calls.",
+        "additionalProperties": true
+      },
+      "AuthLoginResponse": {
+        "type": "object",
+        "properties": {
+          "sessionToken": {
+            "type": "string",
+            "description": "Session token returned after authentication. Store it securely for session refresh and logout."
+          },
+          "jwt": {
+            "type": "string",
+            "description": "Bearer JWT returned for REST API calls."
+          },
+          "session": {
+            "$ref": "#/components/schemas/AuthSession"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/AuthIdentity"
+          },
+          "tokenizedSession": {
+            "$ref": "#/components/schemas/AuthSession"
+          }
+        },
+        "required": [
+          "sessionToken",
+          "jwt",
+          "session",
+          "tokenizedSession"
+        ],
+        "description": "AuthLoginResponse schema."
+      },
+      "AuthError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code or error category."
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message."
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Status value returned by the API."
+          }
+        },
+        "required": [
+          "error",
+          "message",
+          "status"
+        ],
+        "description": "AuthError schema."
+      },
+      "RestErrorResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": false,
+            "description": "Indicates whether the operation completed successfully."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Detailed information for the record."
+          }
+        },
+        "description": "RestErrorResponse schema."
+      },
+      "Ack": {
+        "type": "object",
+        "properties": {
+          "msg_type": {
+            "type": "string",
+            "description": "Msg type value for Ack."
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Request identifier."
+          },
+          "orig_request_id": {
+            "type": "string",
+            "description": "Original request identifier when the operation references a prior request."
+          },
+          "client_id": {
+            "type": "string",
+            "description": "Client identifier reported by the record."
+          },
+          "hft_gateway": {
+            "type": "string",
+            "description": "Routing identifier reported in the payload."
+          },
+          "source_service": {
+            "type": "string",
+            "description": "Source identifier reported by the payload."
+          },
+          "source_sequence": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source sequence number for ordering updates."
+          }
+        },
+        "description": "Ack schema."
+      },
+      "AckResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "example": true,
+            "description": "Indicates whether the operation completed successfully."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Detailed information for the record."
+          },
+          "data": {
+            "$ref": "#/components/schemas/Ack"
+          }
+        },
+        "description": "AckResponse schema."
+      },
+      "OrderHealthResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "description": "Indicates whether the operation completed successfully."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Detailed information for the record."
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string"
+              }
+            },
+            "description": "Operation-specific response payload."
+          }
+        },
+        "description": "OrderHealthResponse schema."
+      },
+      "NewOrderRequest": {
+        "type": "object",
+        "properties": {
+          "ref_order_id": {
+            "type": "string",
+            "description": "Client ClOrdID. Empty or - lets the API generate one."
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Trading account. Required."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Ticker. Required; rewritten to ISIN by risk routing."
+          },
+          "side": {
+            "type": "string",
+            "description": "B or S. Required."
+          },
+          "price": {
+            "type": "string",
+            "description": "Raw decimal price. No-price types ignore price and go out at 0."
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Order quantity. Must be > 0."
+          },
+          "order_type": {
+            "type": "string",
+            "description": "LO, PLO, ATO, ATC, MTL, MOK, MAK, or BUYIN."
+          },
+          "algo_id": {
+            "type": "string",
+            "description": "Algorithm identifier for the request."
+          },
+          "position_id": {
+            "type": "string",
+            "description": "Position identifier for the request."
+          },
+          "persis_state": {
+            "type": "string",
+            "description": "Requested order state."
+          }
+        },
+        "required": [
+          "account_id",
+          "symbol",
+          "side",
+          "qty",
+          "order_type"
+        ],
+        "description": "NewOrderRequest schema."
+      },
+      "CancelOrderRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "description": "Cancel ClOrdID. Empty or - lets the API generate one."
+          },
+          "order_id": {
+            "type": "string",
+            "description": "Original client request id/ref_order_id of the working order. Required."
+          }
+        },
+        "required": [
+          "order_id"
+        ],
+        "description": "CancelOrderRequest schema."
+      },
+      "ReplaceOrderRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "description": "Replace ClOrdID. Empty or - lets the API generate one."
+          },
+          "order_id": {
+            "type": "string",
+            "description": "Original client request id/ref_order_id of the working order. Required."
+          },
+          "price": {
+            "type": "string",
+            "description": "Replacement raw decimal price."
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Replacement quantity."
+          }
+        },
+        "required": [
+          "order_id",
+          "price",
+          "qty"
+        ],
+        "description": "ReplaceOrderRequest schema."
+      },
+      "PartyRequest": {
+        "type": "object",
+        "properties": {
+          "party_id": {
+            "type": "string",
+            "description": "Party identifier."
+          },
+          "party_id_source": {
+            "type": "string",
+            "description": "Party ID source code."
+          },
+          "party_role": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Party role code."
+          }
+        },
+        "description": "PartyRequest schema."
+      },
+      "QuoteRequest": {
+        "type": "object",
+        "properties": {
+          "quote_id": {
+            "type": "string",
+            "description": "Quote identifier."
+          },
+          "quote_msg_id": {
+            "type": "string",
+            "description": "Required."
+          },
+          "quote_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Quote type."
+          },
+          "private_quote": {
+            "type": "boolean",
+            "description": "Indicates whether the quote is private."
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyRequest"
+            },
+            "description": "Party list carried by the request."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "B or S; optional for quote."
+          },
+          "account": {
+            "type": "string",
+            "description": "Trading account used by the request."
+          },
+          "bid_price": {
+            "type": "string",
+            "description": "Bid price."
+          },
+          "offer_price": {
+            "type": "string",
+            "description": "Offer price."
+          },
+          "bid_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bid size."
+          },
+          "offer_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Offer size."
+          },
+          "order_type": {
+            "type": "string",
+            "description": "Order type submitted by the client."
+          },
+          "trade_date": {
+            "type": "string",
+            "description": "Trade date value for QuoteRequest."
+          },
+          "ioi_id": {
+            "type": "string",
+            "description": "IOI identifier."
+          }
+        },
+        "required": [
+          "quote_msg_id"
+        ],
+        "description": "QuoteRequest schema."
+      },
+      "QuoteResponseRequest": {
+        "type": "object",
+        "properties": {
+          "quote_resp_id": {
+            "type": "string",
+            "description": "Quote response identifier."
+          },
+          "quote_id": {
+            "type": "string",
+            "description": "Quote identifier."
+          },
+          "quote_msg_id": {
+            "type": "string",
+            "description": "Required."
+          },
+          "quote_resp_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Quote response type."
+          },
+          "quote_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Quote type."
+          },
+          "parties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyRequest"
+            },
+            "description": "Party list carried by the request."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "order_qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Order quantity."
+          },
+          "account": {
+            "type": "string",
+            "description": "Trading account used by the request."
+          },
+          "account_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Account type code."
+          },
+          "bid_price": {
+            "type": "string",
+            "description": "Bid price."
+          },
+          "offer_price": {
+            "type": "string",
+            "description": "Offer price."
+          },
+          "bid_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bid size."
+          },
+          "offer_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Offer size."
+          },
+          "order_type": {
+            "type": "string",
+            "description": "Order type submitted by the client."
+          },
+          "trade_date": {
+            "type": "string",
+            "description": "Trade date value for QuoteResponseRequest."
+          },
+          "cash_margin": {
+            "type": "string",
+            "description": "Cash margin indicator."
+          },
+          "ioi_id": {
+            "type": "string",
+            "description": "IOI identifier."
+          },
+          "invest_code": {
+            "type": "string",
+            "description": "Investor code."
+          },
+          "forn_invest_type_code": {
+            "type": "string",
+            "description": "Foreign investor type code."
+          },
+          "repo_haircut_ratio_mantissa": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Repo haircut ratio represented as a mantissa integer."
+          },
+          "collateral_value_mantissa": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Collateral value represented as a mantissa integer."
+          },
+          "custodian_id": {
+            "type": "string",
+            "description": "Custodian identifier."
+          },
+          "open_close_code": {
+            "type": "string",
+            "description": "Open/close code."
+          },
+          "forn_nego_classfy_code": {
+            "type": "string",
+            "description": "Foreign negotiation classification code."
+          }
+        },
+        "required": [
+          "quote_msg_id"
+        ],
+        "description": "QuoteResponseRequest schema."
+      },
+      "KQuoteRequest": {
+        "type": "object",
+        "properties": {
+          "quote_msg_id": {
+            "type": "string",
+            "description": "Required."
+          },
+          "orig_quote_msg_id": {
+            "type": "string",
+            "description": "Original quote message identifier."
+          },
+          "account": {
+            "type": "string",
+            "description": "Trading account used by the request."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "cash_margin": {
+            "type": "string",
+            "description": "Cash margin indicator."
+          },
+          "trade_date": {
+            "type": "string",
+            "description": "Trade date value for KQuoteRequest."
+          },
+          "bid_price": {
+            "type": "string",
+            "description": "Bid price."
+          },
+          "offer_price": {
+            "type": "string",
+            "description": "Offer price."
+          },
+          "bid_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Bid size."
+          },
+          "offer_size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Offer size."
+          },
+          "forn_invest_type_code": {
+            "type": "string",
+            "description": "Foreign investor type code."
+          },
+          "open_close_code": {
+            "type": "string",
+            "description": "Open/close code."
+          }
+        },
+        "required": [
+          "quote_msg_id"
+        ],
+        "description": "KQuoteRequest schema."
+      },
+      "KQuoteCancelRequest": {
+        "type": "object",
+        "properties": {
+          "quote_msg_id": {
+            "type": "string",
+            "description": "Required."
+          },
+          "orig_quote_msg_id": {
+            "type": "string",
+            "description": "Original quote message identifier."
+          },
+          "quote_cancel_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Quote cancel type."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          }
+        },
+        "required": [
+          "quote_msg_id"
+        ],
+        "description": "KQuoteCancelRequest schema."
+      },
+      "IOIRequest": {
+        "type": "object",
+        "properties": {
+          "ioi_id": {
+            "type": "string",
+            "description": "Required."
+          },
+          "ioi_ref_id": {
+            "type": "string",
+            "description": "Referenced IOI identifier."
+          },
+          "ioi_trans_type": {
+            "type": "string",
+            "description": "FIX 28: N/C/R."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "side": {
+            "type": "string",
+            "description": "Order or quote side."
+          },
+          "ioi_qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "IOI quantity."
+          },
+          "price": {
+            "type": "string",
+            "description": "Price value for the request or record."
+          },
+          "contact_no": {
+            "type": "string",
+            "description": "Contact number."
+          },
+          "repo_haircut_ratio_mantissa": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Repo haircut ratio represented as a mantissa integer."
+          },
+          "collateral_value_mantissa": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Collateral value represented as a mantissa integer."
+          }
+        },
+        "required": [
+          "ioi_id"
+        ],
+        "description": "IOIRequest schema."
+      },
+      "OrderRestrictionRule": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "ORDER_BLOCK_TRADE_{MARKET,PRODUCT_GROUP,SYMBOL}_{ALL,BUY,SELL}."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "CHANNEL",
+              "ACCOUNT",
+              "SYMBOL"
+            ],
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Account code or *."
+          },
+          "match": {
+            "type": "string",
+            "description": "Market/product group/ISIN or *."
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "1 blocks, 0 disables."
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "target",
+          "match",
+          "value"
+        ],
+        "description": "OrderRestrictionRule schema."
+      },
+      "OrderRiskRulesResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccess": {
+            "type": "boolean",
+            "description": "Indicates whether the operation completed successfully."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Detailed information for the record."
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderRestrictionRule"
+            },
+            "description": "Operation-specific response payload."
+          }
+        },
+        "description": "OrderRiskRulesResponse schema."
+      },
+      "OmsHealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          }
+        },
+        "description": "OmsHealthResponse schema."
+      },
+      "OmsErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable error code or error category."
+          }
+        },
+        "description": "OmsErrorResponse schema."
+      },
+      "HoldingView": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Trading symbol."
+          },
+          "sellable_qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Sellable quantity."
+          },
+          "hold_qty": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Quantity currently on hold."
+          },
+          "avg_price": {
+            "type": "number",
+            "format": "double",
+            "description": "Average cost price."
+          }
+        },
+        "description": "HoldingView schema."
+      },
+      "AccountView": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "cash_available": {
+            "type": "number",
+            "format": "double",
+            "description": "Available cash balance."
+          },
+          "cash_hold": {
+            "type": "number",
+            "format": "double",
+            "description": "Cash amount currently on hold."
+          },
+          "bypass_cash": {
+            "type": "boolean",
+            "description": "Indicates whether cash checks are bypassed."
+          },
+          "bypass_stock": {
+            "type": "boolean",
+            "description": "Indicates whether stock checks are bypassed."
+          },
+          "holdings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoldingView"
+            },
+            "description": "List of stock holdings for the account."
+          }
+        },
+        "description": "AccountView schema."
+      },
+      "RuleView": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Reference, rule, or request kind."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Rule target."
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Value associated with the record."
+          }
+        },
+        "description": "RuleView schema."
+      },
+      "MappingView": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "internal_client_code": {
+            "type": "string",
+            "description": "Account mapping code."
+          },
+          "client_code": {
+            "type": "string",
+            "description": "Client code for the account mapping."
+          },
+          "comp_id": {
+            "type": "string",
+            "description": "CompID used for routing or reference data."
+          },
+          "account_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Account type code."
+          },
+          "invest_code": {
+            "type": "string",
+            "description": "Investor code."
+          },
+          "forn_invest_type_code": {
+            "type": "string",
+            "description": "Foreign investor type code."
+          },
+          "is_mm_account": {
+            "type": "boolean",
+            "description": "Indicates whether the account is a market-making account."
+          },
+          "sender_sub_id": {
+            "type": "string",
+            "description": "SenderSubID used for routing or reference data."
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address associated with the user or account."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number associated with the account."
+          }
+        },
+        "description": "MappingView schema."
+      },
+      "Grant": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "VIEW",
+              "TRADE",
+              "ADMIN"
+            ],
+            "description": "Permission level."
+          },
+          "granted_by": {
+            "type": "string",
+            "description": "User that granted the permission."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated."
+          }
+        },
+        "description": "Grant schema."
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the record."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description text."
+          },
+          "created_by": {
+            "type": "string",
+            "description": "User that created the record."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated."
+          }
+        },
+        "description": "Group schema."
+      },
+      "GroupMember": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "group_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Group identifier."
+          },
+          "group_name": {
+            "type": "string",
+            "description": "Group name."
+          },
+          "moved_by": {
+            "type": "string",
+            "description": "User that moved the account between groups."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was last updated."
+          }
+        },
+        "description": "GroupMember schema."
+      },
+      "ReferenceValue": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "comp_id",
+              "sender_sub_id"
+            ],
+            "description": "Reference, rule, or request kind."
+          },
+          "value": {
+            "type": "string",
+            "description": "Value associated with the record."
+          },
+          "created_by": {
+            "type": "string",
+            "description": "User that created the record."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          }
+        },
+        "description": "ReferenceValue schema."
+      },
+      "ReferenceValuePayload": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "comp_id",
+              "sender_sub_id"
+            ],
+            "description": "Reference, rule, or request kind."
+          },
+          "value": {
+            "type": "string",
+            "description": "Value associated with the record."
+          }
+        },
+        "required": [
+          "kind",
+          "value"
+        ],
+        "description": "ReferenceValuePayload schema."
+      },
+      "FirmTrader": {
+        "type": "object",
+        "properties": {
+          "firm_id": {
+            "type": "string",
+            "description": "Firm identifier."
+          },
+          "trader_id": {
+            "type": "string",
+            "description": "Trader identifier."
+          },
+          "created_by": {
+            "type": "string",
+            "description": "User that created the record."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          }
+        },
+        "description": "FirmTrader schema."
+      },
+      "FirmTraderPayload": {
+        "type": "object",
+        "properties": {
+          "firm_id": {
+            "type": "string",
+            "description": "Firm identifier."
+          },
+          "trader_id": {
+            "type": "string",
+            "description": "Trader identifier."
+          }
+        },
+        "required": [
+          "firm_id",
+          "trader_id"
+        ],
+        "description": "FirmTraderPayload schema."
+      },
+      "GrantPermissionPayload": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "VIEW",
+              "TRADE",
+              "ADMIN"
+            ],
+            "description": "Permission level."
+          }
+        },
+        "required": [
+          "user_id",
+          "account_code",
+          "level"
+        ],
+        "description": "GrantPermissionPayload schema."
+      },
+      "RevokePermissionPayload": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          }
+        },
+        "required": [
+          "user_id",
+          "account_code"
+        ],
+        "description": "RevokePermissionPayload schema."
+      },
+      "CreateGroupPayload": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description text."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "description": "CreateGroupPayload schema."
+      },
+      "MoveAccountPayload": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "group_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Group identifier."
+          }
+        },
+        "required": [
+          "account_code",
+          "group_id"
+        ],
+        "description": "MoveAccountPayload schema."
+      },
+      "RemoveMemberPayload": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          }
+        },
+        "required": [
+          "account_code"
+        ],
+        "description": "RemoveMemberPayload schema."
+      },
+      "RiskRulePayload": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "OMS_MARGIN_ALLOWED",
+              "OMS_MARGIN_RATE_SYMBOL_ISIN",
+              "OMS_SHORT_ALLOWED",
+              "OMS_SHORT_ALLOWED_SYMBOL_ISIN"
+            ],
+            "description": "Reference, rule, or request kind."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "CHANNEL",
+              "ACCOUNT",
+              "SYMBOL"
+            ],
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Rule target."
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Value associated with the record."
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "target",
+          "value"
+        ],
+        "description": "RiskRulePayload schema."
+      },
+      "DeleteRiskRulePayload": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "OMS_MARGIN_ALLOWED",
+              "OMS_MARGIN_RATE_SYMBOL_ISIN",
+              "OMS_SHORT_ALLOWED",
+              "OMS_SHORT_ALLOWED_SYMBOL_ISIN"
+            ],
+            "description": "Reference, rule, or request kind."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "CHANNEL",
+              "ACCOUNT",
+              "SYMBOL"
+            ],
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Rule target."
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "target"
+        ],
+        "description": "DeleteRiskRulePayload schema."
+      },
+      "OrderRiskRulePayload": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "ORDER_BLOCK_TRADE_{MARKET,PRODUCT_GROUP,SYMBOL}_{ALL,BUY,SELL}."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "CHANNEL",
+              "ACCOUNT",
+              "SYMBOL"
+            ],
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Rule target."
+          },
+          "match": {
+            "type": "string",
+            "description": "Rule match operator or match value."
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Value associated with the record."
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "target",
+          "match",
+          "value"
+        ],
+        "description": "OrderRiskRulePayload schema."
+      },
+      "DeleteOrderRiskRulePayload": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Reference, rule, or request kind."
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SYSTEM",
+              "CHANNEL",
+              "ACCOUNT",
+              "SYMBOL"
+            ],
+            "description": "Rule scope."
+          },
+          "target": {
+            "type": "string",
+            "description": "Rule target."
+          },
+          "match": {
+            "type": "string",
+            "description": "Rule match operator or match value."
+          }
+        },
+        "required": [
+          "kind",
+          "scope",
+          "target",
+          "match"
+        ],
+        "description": "DeleteOrderRiskRulePayload schema."
+      },
+      "CreateAccountPayload": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name."
+          },
+          "internal_client_code": {
+            "type": "string",
+            "description": "Account mapping code."
+          },
+          "client_code": {
+            "type": "string",
+            "description": "Client code for the account mapping."
+          },
+          "comp_id": {
+            "type": "string",
+            "description": "CompID used for routing or reference data."
+          },
+          "account_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Account type code."
+          },
+          "invest_code": {
+            "type": "string",
+            "description": "Investor code."
+          },
+          "forn_invest_type_code": {
+            "type": "string",
+            "description": "Foreign investor type code."
+          },
+          "is_mm_account": {
+            "type": "boolean",
+            "description": "Indicates whether the account is a market-making account."
+          },
+          "sender_sub_id": {
+            "type": "string",
+            "description": "SenderSubID used for routing or reference data."
+          },
+          "email": {
+            "type": "string",
+            "description": "Email address associated with the user or account."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Phone number associated with the account."
+          }
+        },
+        "required": [
+          "account_code",
+          "name",
+          "internal_client_code",
+          "client_code",
+          "comp_id",
+          "account_type",
+          "invest_code",
+          "forn_invest_type_code",
+          "is_mm_account",
+          "sender_sub_id",
+          "email",
+          "phone"
+        ],
+        "description": "CreateAccountPayload schema."
+      },
+      "DepositPayload": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount value for DepositPayload."
+          }
+        },
+        "required": [
+          "account_id",
+          "amount"
+        ],
+        "description": "DepositPayload schema."
+      },
+      "WithdrawPayload": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount value for WithdrawPayload."
+          }
+        },
+        "required": [
+          "account_id",
+          "amount"
+        ],
+        "description": "WithdrawPayload schema."
+      },
+      "AddStockPayload": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "12-character ISIN."
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Quantity value."
+          },
+          "avg_price": {
+            "type": "number",
+            "format": "double",
+            "description": "Optional; 0 leaves average price unchanged."
+          }
+        },
+        "required": [
+          "account_id",
+          "symbol",
+          "quantity"
+        ],
+        "description": "AddStockPayload schema."
+      },
+      "RemoveStockPayload": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "description": "Trading account identifier."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "12-character ISIN."
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Quantity value."
+          }
+        },
+        "required": [
+          "account_id",
+          "symbol",
+          "quantity"
+        ],
+        "description": "RemoveStockPayload schema."
+      },
+      "WorkflowRequestPayload": {
+        "type": "object",
+        "properties": {
+          "request_type": {
+            "type": "string",
+            "enum": [
+              "CREATE_RISK_RULE",
+              "DELETE_RISK_RULE",
+              "GRANT_PERMISSION",
+              "REVOKE_PERMISSION",
+              "CREATE_GROUP",
+              "MOVE_ACCOUNT",
+              "CREATE_ACCOUNT",
+              "UPDATE_ACCOUNT",
+              "DEPOSIT",
+              "WITHDRAW",
+              "ADD_STOCK",
+              "REMOVE_STOCK",
+              "CREATE_ORDER_RISK_RULE",
+              "DELETE_ORDER_RISK_RULE"
+            ],
+            "description": "Workflow request type."
+          },
+          "payload": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RiskRulePayload"
+              },
+              {
+                "$ref": "#/components/schemas/DeleteRiskRulePayload"
+              },
+              {
+                "$ref": "#/components/schemas/GrantPermissionPayload"
+              },
+              {
+                "$ref": "#/components/schemas/RevokePermissionPayload"
+              },
+              {
+                "$ref": "#/components/schemas/CreateGroupPayload"
+              },
+              {
+                "$ref": "#/components/schemas/MoveAccountPayload"
+              },
+              {
+                "$ref": "#/components/schemas/CreateAccountPayload"
+              },
+              {
+                "$ref": "#/components/schemas/DepositPayload"
+              },
+              {
+                "$ref": "#/components/schemas/WithdrawPayload"
+              },
+              {
+                "$ref": "#/components/schemas/AddStockPayload"
+              },
+              {
+                "$ref": "#/components/schemas/RemoveStockPayload"
+              },
+              {
+                "$ref": "#/components/schemas/OrderRiskRulePayload"
+              },
+              {
+                "$ref": "#/components/schemas/DeleteOrderRiskRulePayload"
+              }
+            ],
+            "description": "Type-specific request payload."
+          }
+        },
+        "required": [
+          "request_type",
+          "payload"
+        ],
+        "description": "WorkflowRequestPayload schema."
+      },
+      "WorkflowRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the record."
+          },
+          "request_type": {
+            "type": "string",
+            "description": "Workflow request type."
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Type-specific request payload."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "CANCELLED",
+              "APPLIED",
+              "FAILED"
+            ],
+            "description": "Status value returned by the API."
+          },
+          "requested_by": {
+            "type": "string",
+            "description": "User that submitted the request."
+          },
+          "reviewed_by": {
+            "type": "string",
+            "description": "User that reviewed the request."
+          },
+          "review_note": {
+            "type": "string",
+            "description": "Reviewer note."
+          },
+          "apply_error": {
+            "type": "string",
+            "description": "Error captured while applying the approved request."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the request was reviewed."
+          },
+          "applied_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the approved request was applied."
+          }
+        },
+        "description": "WorkflowRequest schema."
+      },
+      "ReviewNote": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "description": "Optional review note for approve/reject."
+          }
+        },
+        "description": "ReviewNote schema."
+      },
+      "AuditEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the record."
+          },
+          "actor": {
+            "type": "string",
+            "description": "User that performed the audited action."
+          },
+          "action": {
+            "type": "string",
+            "description": "Audited action name."
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "Audited entity type."
+          },
+          "entity_id": {
+            "type": "string",
+            "description": "Audited entity identifier."
+          },
+          "request_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Request identifier."
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Detailed information for the record."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the record was created."
+          }
+        },
+        "description": "AuditEntry schema."
+      },
+      "MyPermissionsResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Grant"
+            },
+            "description": "Permission grants returned by the response."
+          }
+        },
+        "description": "MyPermissionsResponse schema."
+      },
+      "PermissionsByUserResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Grant"
+            },
+            "description": "Permission grants returned by the response."
+          }
+        },
+        "description": "PermissionsByUserResponse schema."
+      },
+      "PermissionsByAccountResponse": {
+        "type": "object",
+        "properties": {
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          },
+          "grants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Grant"
+            },
+            "description": "Permission grants returned by the response."
+          }
+        },
+        "description": "PermissionsByAccountResponse schema."
+      },
+      "GroupsResponse": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "description": "Groups returned by the response."
+          }
+        },
+        "description": "GroupsResponse schema."
+      },
+      "GroupMembersResponse": {
+        "type": "object",
+        "properties": {
+          "group_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Group identifier."
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupMember"
+            },
+            "description": "Group members returned by the response."
+          }
+        },
+        "description": "GroupMembersResponse schema."
+      },
+      "SearchAccountsResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Query value for SearchAccountsResponse."
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Grant"
+            },
+            "description": "Accounts returned by the search response."
+          }
+        },
+        "description": "SearchAccountsResponse schema."
+      },
+      "WorkflowRequestsResponse": {
+        "type": "object",
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRequest"
+            },
+            "description": "Workflow requests returned by the response."
+          }
+        },
+        "description": "WorkflowRequestsResponse schema."
+      },
+      "AuditResponse": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            },
+            "description": "Audit entries returned by the response."
+          }
+        },
+        "description": "AuditResponse schema."
+      },
+      "ReferenceValuesResponse": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Reference, rule, or request kind."
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReferenceValue"
+            },
+            "description": "Reference values returned by the response."
+          }
+        },
+        "description": "ReferenceValuesResponse schema."
+      },
+      "ReferenceRemovedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Reference, rule, or request kind."
+          },
+          "value": {
+            "type": "string",
+            "description": "Value associated with the record."
+          }
+        },
+        "description": "ReferenceRemovedResponse schema."
+      },
+      "FirmTradersResponse": {
+        "type": "object",
+        "properties": {
+          "firm_id": {
+            "type": "string",
+            "description": "Firm identifier."
+          },
+          "traders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FirmTrader"
+            },
+            "description": "Firm trader mappings returned by the response."
+          }
+        },
+        "description": "FirmTradersResponse schema."
+      },
+      "FirmTraderRemovedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "firm_id": {
+            "type": "string",
+            "description": "Firm identifier."
+          },
+          "trader_id": {
+            "type": "string",
+            "description": "Trader identifier."
+          }
+        },
+        "description": "FirmTraderRemovedResponse schema."
+      },
+      "RevokedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "user_id": {
+            "type": "string",
+            "description": "User identifier."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          }
+        },
+        "description": "RevokedResponse schema."
+      },
+      "RemovedMemberResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Account code used by administration and mapping records."
+          }
+        },
+        "description": "RemovedMemberResponse schema."
+      },
+      "LatencyDetailRecord": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "description": "Request identifier."
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Message type filter or message type reported by the record."
+          },
+          "stage": {
+            "type": "string",
+            "description": "Timing step value."
+          },
+          "stage_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Timestamp for the timing step."
+          },
+          "service": {
+            "type": "string",
+            "description": "Status label reported by the payload."
+          },
+          "source_service": {
+            "type": "string",
+            "description": "Source identifier reported by the payload."
+          },
+          "source_sequence": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source sequence number for ordering updates."
+          },
+          "client_id": {
+            "type": "string",
+            "description": "Client identifier reported by the record."
+          },
+          "hft_gateway": {
+            "type": "string",
+            "description": "Routing identifier reported in the payload."
+          },
+          "stream_id": {
+            "type": "integer",
+            "description": "Stream identifier reported by the record."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status value returned by the API."
+          }
+        },
+        "description": "Latency detail record."
+      },
+      "LatencySegment": {
+        "type": "object",
+        "properties": {
+          "from_stage": {
+            "type": "string",
+            "description": "Timing step where the latency segment starts."
+          },
+          "to_stage": {
+            "type": "string",
+            "description": "Timing step where the latency segment ends."
+          },
+          "from_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start of the response time window in epoch nanoseconds."
+          },
+          "to_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End of the response time window in epoch nanoseconds."
+          },
+          "latency_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Latency duration in nanoseconds."
+          }
+        },
+        "description": "Derived latency segment."
+      },
+      "LatencyDetailResult": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "description": "Request identifier."
+          },
+          "from_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Start of the response time window in epoch nanoseconds."
+          },
+          "to_time": {
+            "type": "integer",
+            "format": "int64",
+            "description": "End of the response time window in epoch nanoseconds."
+          },
+          "message_type": {
+            "type": "string",
+            "description": "Message type filter or message type reported by the record."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of records returned."
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Zero-based number of records skipped before returning results."
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of records in the response page or aggregation."
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LatencyDetailRecord"
+            },
+            "description": "Latency detail records returned for the current page."
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LatencySegment"
+            },
+            "description": "Latency segments returned for the current page."
+          }
+        },
+        "description": "Latency detail response."
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Invalid parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Caller is not permitted on the requested account",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "AdminJSON": {
+        "description": "JSON response. The exact shape depends on the route (a list, a single record, or a\nlifecycle acknowledgement). Errors use the standard error envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        }
+      },
+      "AuthError": {
+        "description": "Authentication error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AuthError"
+            }
+          }
+        }
+      },
+      "OmsError": {
+        "description": "OMS error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/OmsErrorResponse"
+            }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "Server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ApiError": {
+        "description": "API error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/RestErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,14 @@
 ---
 title: 'Orders'
-description: 'Ảnh và tài liệu component của Orders page'
+description: 'Hướng dẫn theo dõi lệnh, chi tiết, fill progress, latency và market quality'
 mode: 'wide'
 ---
 
 Orders là workspace theo dõi trạng thái lệnh, fills, latency và market quality.
 
-## Toàn màn hình
+## Tổng quan workspace
 
-![Orders full page](/images/vero-oms-ui/orders-full.png)
+![Tổng quan Orders workspace](/images/vero-oms-ui/orders-full.png)
 
 ## Order Blotter
 
@@ -16,14 +16,54 @@ Bảng Orders liệt kê account, symbol, side, quantity, price, status và thô
 
 ![Orders blotter](/images/vero-oms-ui/orders-blotter.png)
 
+| Control | Hành vi |
+|---|---|
+| Status / side filters | Lọc blotter theo trạng thái lệnh và side. |
+| Account và symbol filters | Lọc theo một account hoặc một symbol; `ALL` là trạng thái reset. |
+| From / To date-time | Cập nhật range hiển thị và shared order time range. |
+| Export | Tải các dòng đang hiển thị/sort ra file XLSX. |
+| Header sort | Sort theo id, date/time, account, symbol, side, quantity, fill %, price, market hoặc status. |
+| Row click | Chọn lệnh và cập nhật panel chi tiết bên phải. |
+| Checkbox / Select all | Chọn một hoặc nhiều dòng cho bulk action. |
+
+Khi có dòng được chọn, bulk action bar hiển thị số dòng chọn, số lệnh có thể cancel và estimated notional. `MODIFY ORDER` chỉ bật khi có đúng một lệnh cancellable. `CANCEL ALL` mở confirmation để cancel remaining working quantity.
+
 ## Order Detail
+
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/orders-detail-panel.png" alt="Orders detail panel" />
+  </div>
+  <div className="guide-split-copy">
 
 Panel chi tiết bên phải hiển thị order summary, latency breakdown, child fills và action liên quan tới lệnh đang chọn.
 
-![Orders detail panel](/images/vero-oms-ui/orders-detail-panel.png)
+| Detail action | Hành vi |
+|---|---|
+| Parent link | Mở order-chain modal khi lệnh có quan hệ parent hoặc child. |
+| Modify | Mở dialog cho phép sửa price hoặc quantity, không sửa cả hai trong cùng request. |
+| Cancel Order | Mở confirmation cho remaining working quantity. |
+| Latency breakdown | Load timing details của lệnh đang chọn và hiển thị latency breakdown. |
+
+Modify và cancel bị disable khi lệnh đang chọn không ở trạng thái working, pending hoặc armed có thể thao tác.
+
+  </div>
+</div>
+
+## Quan hệ lệnh và fills
+
+| Khu vực | Hành vi |
+|---|---|
+| Order chain | Hiển thị order đang chọn, parent, child orders và sibling orders khi có. |
+| Child fills | Liệt kê fills đã execute cùng quantity, price, value và execution time. |
+| Empty fill state | Cho biết order đang chọn chưa có execution được ghi nhận. |
+| Bulk cancel summary | Hiển thị selected, cancellable và skipped orders trước khi confirm. |
+| Action feedback | Hiển thị trạng thái request sent hoặc failure; order list vẫn phản ánh trạng thái hiện hành. |
 
 ## Market Quality
 
 Khu vực cuối màn hình hiển thị fill progress và market quality theo market.
 
 ![Orders market quality](/images/vero-oms-ui/orders-market-quality.png)
+
+Fill progress chart so sánh sent quantity và filled quantity trong intraday series. Hover chart hiển thị timestamp, sent quantity và filled quantity tại điểm gần nhất. Market quality table tổng hợp fill ratio, rejection rate, order count và trade count theo market.

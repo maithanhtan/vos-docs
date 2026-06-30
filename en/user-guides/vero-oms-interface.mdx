@@ -1,71 +1,52 @@
 ---
-title: 'Vero OMS interface guide'
-description: 'Reference guide for the main Vero OMS screens and operating procedures'
+title: 'Vero OMS User Guide'
+description: 'Overview of Vero OMS workspaces and operating areas'
 mode: 'wide'
 ---
 
-This guide maps the main Vero OMS screens to standard operating procedures.
-Screen names and permissions can vary by account configuration. The operating structure remains organized around trading, account management, controls, and support tasks.
+Vero OMS is the operator workspace for order entry, order monitoring, portfolio review, market monitoring, operational control, and administration.
+The interface uses a shared navigation shell, account context, status indicators, and role-based controls across all workspaces.
+
+## Workspace groups
+
+| Group | Workspaces | Purpose |
+|---|---|---|
+| Trader | Dashboard, Orders, Portfolios, Put Through, Price Board | Supports trading, market review, order monitoring, and portfolio oversight. |
+| Operation | Accounts, Risk Rules, Approvals | Supports account administration, governed changes, and review workflows. |
+| Admin | Latency, Users, Audit | Supports operational monitoring, user access, and activity review. |
+
+## User Guide sections
 
 <CardGroup cols={2}>
-  <Card title="Interface reference" icon="images" href="/en/user-guides/vero-oms-interface-reference">
-    Index of captured pages and component-level detail pages.
+  <Card title="Global shell and menus" icon="window" href="/en/user-guides/screens/global-shell">
+    Shared navigation, account context, settings, language, time zone, status, and layout controls.
   </Card>
-  <Card title="Dashboard details" icon="chart-line" href="/en/user-guides/screens/dashboard">
-    Full-page and component-level visual documentation for Dashboard.
+  <Card title="Dashboard" icon="chart-line" href="/en/user-guides/screens/dashboard">
+    Order entry, market depth, charts, widgets, and order monitoring.
+  </Card>
+  <Card title="Orders" icon="list-check" href="/en/user-guides/screens/orders">
+    Order filters, detail, actions, relationships, fills, and market quality.
+  </Card>
+  <Card title="Portfolios" icon="briefcase" href="/en/user-guides/screens/portfolios">
+    Cash, positions, valuation, allocation, concentration, and scenario review.
+  </Card>
+  <Card title="Put Through" icon="handshake" href="/en/user-guides/screens/put-through">
+    Workspace filters, advertisements, quote entry, and order tracking.
+  </Card>
+  <Card title="Price Board" icon="table-cells" href="/en/user-guides/screens/price-board">
+    Market groups, symbol filtering, configurable columns, and symbol detail.
+  </Card>
+  <Card title="Operation" icon="sliders" href="/en/user-guides/screens/operation">
+    Account administration, risk rules, approvals, and reference actions.
+  </Card>
+  <Card title="System" icon="server" href="/en/user-guides/screens/system">
+    Latency, user access, login activity, and audit history.
   </Card>
 </CardGroup>
 
-## Main interface areas
+## Operating context
 
-| Area | What users do | Typical checks |
-|---|---|---|
-| Sign in | Authenticate and enter the terminal workspace. | Confirm user, language, time zone, and session context. |
-| Account selector | Choose the account before reviewing balances or placing orders. | Verify account, group, permissions, and selected workspace. |
-| Market view | Search symbols, review watchlists, and inspect depth or chart context. | Confirm symbol, market state, spread, depth, and recent trading activity. |
-| Order ticket | Enter symbol, side, price, quantity, and order type before submitting. | Check buying power, price limits, quantity, and order mode. |
-| Order management | Track live orders, child fills, latency, and status changes. | Compare order detail, fill progress, and operational alerts. |
-| Portfolio view | Review positions, exposure, P&L, allocation, and concentration. | Validate selected account, valuation time, and risk concentration. |
-| Operation and System | Manage accounts, rules, approvals, users, audit, and latency views. | Check filters, selected records, service health, and audit trail context. |
-
-## Standard operating sequence
-
-<Steps>
-  <Step title="Sign in and verify context">
-    Start from the login screen, complete authentication, then confirm the selected language, time zone, user context, and workspace.
-  </Step>
-  <Step title="Choose the account">
-    Select the trading account before opening the order ticket or reviewing account-specific records.
-  </Step>
-  <Step title="Review the market context">
-    Review watchlists, symbol search, price depth, and charts to verify the instrument before preparing an order.
-  </Step>
-  <Step title="Submit and monitor orders">
-    Place the order from the ticket or drawer, then monitor order status, fills, latency, and notifications.
-  </Step>
-  <Step title="Reconcile after trading">
-    Review portfolio exposure, order history, operational approvals, and audit records for the selected time range.
-  </Step>
-</Steps>
-
-## Order ticket checklist
-
-| Field | Check before submitting |
-|---|---|
-| Account | The selected account matches the intended trading account. |
-| Symbol | The symbol exists in the market view and matches the instrument the user expects. |
-| Side | Buy or sell direction is correct. |
-| Price | Price follows the product tick size and the user's trading intent. |
-| Quantity | Quantity matches account limits, product rules, and order type constraints. |
-| Order type | Normal, stop, or bracket order mode matches the intended strategy. |
-
-## Troubleshooting from the interface
-
-| Symptom | First check |
-|---|---|
-| Login fails | Confirm credentials, selected environment, and current session state. |
-| Account data is missing | Refresh the account selector and verify the user has account permissions. |
-| Symbol cannot be found | Search again with the expected exchange symbol and confirm the market group. |
-| Order submission fails | Compare the UI input with the visible validation message and order summary. |
-| Order status is stale | Refresh the order blotter and confirm streaming or service health indicators. |
-| Audit context is unclear | Open the selected record detail panel and verify filters, time range, and request id. |
+- Confirm the active account or group before reviewing data or preparing an action.
+- Review required fields, validation messages, and confirmation dialogs before submitting a change.
+- Use the page status, selected record, and activity history to confirm the current state.
+- Available controls depend on the current user's assigned access.

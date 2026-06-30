@@ -1,20 +1,34 @@
 ---
 title: 'Put Through'
-description: 'Put Through page visual reference and component documentation'
+description: 'Put Through intent filtering, advertisements, and order tracking'
 mode: 'wide'
 ---
 
 Put Through is the workspace for PT intent filtering, advertisement review, and PT order tracking.
 
-## Full page
+## Workspace overview
 
-![Put Through full page](/images/vero-oms-ui/put-through-full.png)
+![Put Through workspace overview](/images/vero-oms-ui/put-through-full.png)
 
 ## PT Workspace Filters
 
+<div className="guide-split">
+  <div className="guide-split-media">
+    <img src="/images/vero-oms-ui/put-through-filters.png" alt="Put Through filters" />
+  </div>
+  <div className="guide-split-copy">
+
 The filter sidebar contains symbol, side, status, account, and IOI ID controls.
 
-![Put Through filters](/images/vero-oms-ui/put-through-filters.png)
+| Filter action | Behavior |
+|---|---|
+| Symbol / side / status / account / IOI ID | Updates the draft filter set in the sidebar. |
+| Matching IOIs | Shows how many advertisements match the draft filter before applying it. |
+| Apply Changes | Applies the draft filters to advertisements and PT orders. |
+| Clear All | Resets the workspace filters to the default state. |
+
+  </div>
+</div>
 
 ## Advertisements
 
@@ -22,8 +36,33 @@ The advertisements area displays status tabs, open IOI count, matched count, and
 
 ![Put Through advertisements](/images/vero-oms-ui/put-through-advertisements.png)
 
+| Advertisement action | Behavior |
+|---|---|
+| Status segmented control | Filters the advertisement board by all, active, matched, or rejected states. |
+| Header sort | Sorts visible IOIs by id, time, symbol, side, quantity, price, transaction type, status, or party. |
+| Row click | Selects the advertisement and pre-fills the PT order form. |
+| Pagination | Moves through the filtered advertisement list. |
+| New Advertise | Opens the IOI advertisement dialog with symbol, side, quantity, price, contact, market snapshot, notional, and validation state. |
+
+The IOI advertisement dialog sends only after symbol, quantity, and price are valid. Picking a market snapshot price fills the price field.
+
+## PT order form
+
+The right-side form can be filled manually or seeded from a selected advertisement.
+
+| Field / action | Behavior |
+|---|---|
+| Clear | Removes the linked advertisement and returns the form to fresh state. |
+| Account / symbol | Sets the route and instrument. Symbol selection updates market snapshot and account summary. |
+| Buy / Sell | Sets quote side and recalculates notional. |
+| Quantity / price | Accept formatted numeric input and drive validation. |
+| Firm ID / Trader ID | Requires a valid firm and trader pair from reference data. |
+| Place PT Quote | Sends the quote request only when account, symbol, quantity, price, and counterparty ids are valid. |
+
 ## PT Orders
 
 The PT orders area displays the put-through order queue after filters return matching data.
 
 ![Put Through PT orders](/images/vero-oms-ui/put-through-pt-orders.png)
+
+Pending orders float to the top of the queue. The workspace displays approval status and age. Review actions appear only when they are available to the current user.

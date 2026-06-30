@@ -1,0 +1,36 @@
+---
+title: 'OpenAPI Spec'
+description: 'Use the Vero OMS OpenAPI files as the source of truth for API clients'
+---
+
+Use the OpenAPI files when generating clients, validating payloads, or giving API context to AI tools.
+
+## Specification files
+
+| File | Purpose |
+|---|---|
+| [`/openapi.oms.en.json`](/openapi.oms.en.json) | English REST API reference used by the English docs |
+| [`/openapi.oms.vi.json`](/openapi.oms.vi.json) | Vietnamese REST API reference used by the Vietnamese docs |
+
+The OMS REST API reference currently contains 48 HTTP operations.
+
+## Use with AI tools
+
+Give the model the OpenAPI file plus this instruction:
+
+```text
+Build against the Vero OMS OpenAPI spec.
+Use the operation's method and path exactly.
+Use Bearer authentication for protected endpoints.
+Validate all path, query, and body fields against the schema.
+Treat response schemas as authoritative for payload shape and field meanings.
+Handle documented error responses.
+```
+
+## Client checklist
+
+1. Find the operation by method or path.
+2. Read every path, query, header, and body parameter.
+3. Build the request from typed fields, not string concatenation where a structured client is available.
+4. Parse the success response according to the documented schema.
+5. Parse error responses defensively because error payloads can vary by failure point.
