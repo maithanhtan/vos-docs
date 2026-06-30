@@ -1,72 +1,235 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mintlify Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+  "theme": "maple",
+  "name": "VOS Docs",
+  "seo": {
+    "indexing": "all",
+    "metatags": {
+      "description": "VOS documentation for Vero OMS interface operations and API v2 integration.",
+      "og:title": "VOS Docs",
+      "og:description": "Vero OMS interface documentation and API v2 reference",
+      "og:site_name": "VOS Docs",
+      "twitter:title": "VOS Docs",
+      "twitter:description": "Vero OMS interface documentation and API v2 reference"
+    }
   },
-  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#073B31",
+    "light": "#DCEBE4",
+    "dark": "#0A211D"
+  },
+  "appearance": {
+    "default": "dark",
+    "strict": false
+  },
+  "fonts": {
+    "heading": {
+      "family": "Be Vietnam Pro"
+    },
+    "body": {
+      "family": "Noto Sans"
+    }
+  },
+  "icons": {
+    "library": "fontawesome"
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#0D1210"
+    }
+  },
+  "favicon": "/logo/favicon.png",
   "navigation": {
-    "pages": [
+    "style": "minimal",
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "User Guide",
+        "icon": "book-open",
+        "languages": [
+          {
+            "language": "en",
+            "groups": [
+              {
+                "group": "Guide",
+                "pages": [
+                  "en/user-guides/vero-oms-interface",
+                  "en/user-guides/vero-oms-interface-reference"
+                ]
+              },
+              {
+                "group": "Trader Guideline",
+                "expanded": true,
+                "pages": [
+                  "en/user-guides/screens/global-shell",
+                  "en/user-guides/screens/dashboard",
+                  "en/user-guides/screens/orders",
+                  "en/user-guides/screens/portfolios",
+                  "en/user-guides/screens/put-through",
+                  "en/user-guides/screens/price-board"
+                ]
+              },
+              {
+                "group": "Operation Guideline",
+                "expanded": true,
+                "pages": [
+                  "en/user-guides/screens/operation"
+                ]
+              },
+              {
+                "group": "Admin Guideline",
+                "expanded": true,
+                "pages": [
+                  "en/user-guides/screens/system"
+                ]
+              }
+            ]
+          },
+          {
+            "language": "vi",
+            "groups": [
+              {
+                "group": "Hướng dẫn",
+                "pages": [
+                  "vi/user-guides/giao-dien-vero-oms",
+                  "vi/user-guides/vero-oms-interface-reference"
+                ]
+              },
+              {
+                "group": "Trader Guideline",
+                "expanded": true,
+                "pages": [
+                  "vi/user-guides/screens/global-shell",
+                  "vi/user-guides/screens/dashboard",
+                  "vi/user-guides/screens/orders",
+                  "vi/user-guides/screens/portfolios",
+                  "vi/user-guides/screens/put-through",
+                  "vi/user-guides/screens/price-board"
+                ]
+              },
+              {
+                "group": "Operation Guideline",
+                "expanded": true,
+                "pages": [
+                  "vi/user-guides/screens/operation"
+                ]
+              },
+              {
+                "group": "Admin Guideline",
+                "expanded": true,
+                "pages": [
+                  "vi/user-guides/screens/system"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API",
+        "icon": "code",
+        "languages": [
+          {
+            "language": "en",
+            "groups": [
+              {
+                "group": "Overview",
+                "pages": [
+                  "en/overview"
+                ]
+              },
+              {
+                "group": "API v2",
+                "pages": [
+                  "en/api-v2",
+                  {
+                    "group": "Signup",
+                    "icon": "id-card",
+                    "expanded": true,
+                    "pages": [
+                      "en/apis/api-v2/parse-id-card"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "FIX API",
+                "pages": [
+                  "en/fix-api"
+                ]
+              }
+            ]
+          },
+          {
+            "language": "vi",
+            "groups": [
+              {
+                "group": "Tổng quan",
+                "pages": [
+                  "vi/overview"
+                ]
+              },
+              {
+                "group": "API v2",
+                "pages": [
+                  "vi/api-v2",
+                  {
+                    "group": "Đăng ký",
+                    "icon": "id-card",
+                    "expanded": true,
+                    "pages": [
+                      "vi/apis/api-v2/parse-id-card"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "FIX API",
+                "pages": [
+                  "vi/fix-api"
+                ]
+              }
+            ]
+          }
         ]
       }
     ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    "global": {}
+  },
+  "sidebar": {
+    "items": "border"
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/vero-logo.png",
+    "dark": "/logo/vero-logo-white.png"
   },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
+  "navbar": {},
+  "footer": {},
+  "api": {
+    "playground": {
+      "display": "interactive",
+      "proxy": false
+    },
+    "examples": {
+      "languages": [
+        "curl",
+        "javascript",
+        "python",
+        "go",
+        "csharp",
+        "rust",
+        "cpp"
+      ],
+      "autogenerate": true,
+      "prefill": true
+    },
+    "params": {
+      "expanded": "all"
+    },
+    "url": "full",
+    "openapi": [
+      "openapi.v2.en.json",
+      "openapi.v2.vi.json"
     ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
   }
 }

@@ -1,0 +1,65 @@
+---
+title: 'Dashboard'
+description: 'Ảnh và tài liệu component của Dashboard workspace'
+mode: 'wide'
+---
+
+Dashboard là workspace giao dịch chính. Màn hình này hợp nhất order entry, market depth, chart và order blotter.
+
+## Toàn màn hình
+
+![Dashboard full page](/images/vero-oms-ui/dashboard-full.png)
+
+## New Order drawer
+
+`NEW ORDER` mở drawer bên phải chứa account, symbol, chart preview, order type, side, price, quantity, order summary và buying power preview.
+
+![New order drawer](/images/vero-oms-ui/new-order-drawer.png)
+
+## Order Ticket
+
+Ticket nhập lệnh chứa các field account, symbol, order type, side, price, quantity, order summary và buying power preview.
+
+![Dashboard order ticket](/images/vero-oms-ui/dashboard-order-ticket.png)
+
+## STOP order mode
+
+Khi chọn `STOP`, ticket hiển thị các field điều kiện như `WHEN PRICE` và `CONDITION PRICE`. Cảnh báo license được hiển thị khi feature chưa được cấp quyền.
+
+![Dashboard stop order ticket](/images/vero-oms-ui/dashboard-order-ticket-stop.png)
+
+## BRACKET order mode
+
+Khi chọn `BRACKET`, ticket hiển thị `TAKE PROFIT` và `STOP LOSS`, đồng thời giữ summary và buying power context.
+
+![Dashboard bracket order ticket](/images/vero-oms-ui/dashboard-order-ticket-bracket.png)
+
+## Price Depth
+
+Price Depth hiển thị best bid/ask, spread, các mức bid/ask và trade log của symbol đang chọn.
+
+![Dashboard market depth](/images/vero-oms-ui/dashboard-market-depth.png)
+
+## Price Ladder mode
+
+Header Price Depth có toggle `PRICE DEPTH` và `PRICE LADDER`, symbol selector và options menu.
+
+![Dashboard price ladder mode](/images/vero-oms-ui/dashboard-price-ladder.png)
+
+## Trading Chart
+
+Chart hiển thị nến, timeframe, vùng giá và volume của symbol đang chọn.
+
+![Dashboard trading chart](/images/vero-oms-ui/dashboard-trading-chart.png)
+
+## TradingView mode
+
+Chart hỗ trợ hai chế độ `CANDLE` và `TRADINGVIEW`. TradingView mode dành vùng chart cho embedded widget.
+
+![Dashboard TradingView mode](/images/vero-oms-ui/dashboard-tradingview.png)
+
+## Order Blotter
+
+Order blotter dưới Dashboard cho phép lọc theo status, side, account, ngày giờ và hiển thị trạng thái lệnh live.
+
+![Dashboard order blotter](/images/vero-oms-ui/dashboard-order-blotter.png)

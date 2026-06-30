@@ -1,0 +1,46 @@
+---
+title: 'API v2'
+description: 'Contract API v2 của VOS cho trích xuất CCCD trong đăng ký'
+mode: 'wide'
+---
+
+VOS API v2 ghi nhận contract trích xuất CCCD trong đăng ký được dùng bởi Vero OMS.
+Dùng OpenAPI reference làm nguồn chuẩn cho path, request schema, response schema và yêu cầu xác thực.
+
+## Phạm vi hiện tại
+
+| Nhóm | Operation | Mục đích |
+|---|---|---|
+| Đăng ký | `POST /api/v2/chat/api/id-card` | Trích xuất thông tin CCCD/CMND trong luồng đăng ký. |
+
+<CardGroup cols={2}>
+  <Card title="Trích xuất CCCD" icon="id-card" href="/vi/apis/api-v2/parse-id-card">
+    Request body, ví dụ, response schema và định dạng lỗi.
+  </Card>
+  <Card title="Nguồn OpenAPI" icon="file-code" href="/openapi.v2.vi.json">
+    File OpenAPI đã lọc chứa operation API v2 được document.
+  </Card>
+</CardGroup>
+
+## Hướng dẫn versioning
+
+| Chủ đề | Hướng dẫn |
+|---|---|
+| Version trong path | Giữ đúng path `/api/v2` như tài liệu. |
+| Base URL | Dùng server URL được định nghĩa trong OpenAPI operation hoặc API playground được generate. |
+| Xác thực | Theo đúng yêu cầu security của từng endpoint. Endpoint trích xuất CCCD trong đăng ký không yêu cầu xác thực. |
+| Định dạng payload | Gửi JSON field đúng schema. Với ảnh CCCD, gửi nội dung base64 không kèm tiền tố `data:` URL. |
+
+## Luồng trích xuất CCCD khi đăng ký
+
+<Steps>
+  <Step title="Chuẩn bị ảnh">
+    Chụp hoặc upload ảnh mặt trước CCCD/CMND. Chỉ gửi ảnh mặt sau hoặc ảnh chân dung khi quy trình đăng ký yêu cầu.
+  </Step>
+  <Step title="Gửi request API v2">
+    Gọi `POST /api/v2/chat/api/id-card` với payload ảnh dạng base64.
+  </Step>
+  <Step title="Xác thực dữ liệu trích xuất">
+    Dùng response để điền thông tin đăng ký, sau đó yêu cầu người dùng kiểm tra và chỉnh sửa trước khi submit.
+  </Step>
+</Steps>

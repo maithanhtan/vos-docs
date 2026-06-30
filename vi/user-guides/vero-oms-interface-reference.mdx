@@ -1,0 +1,53 @@
+---
+title: 'Bộ ảnh tham chiếu giao diện Vero OMS'
+description: 'Ảnh tham chiếu từng màn hình và component chính của Vero OMS ở kích thước MacBook Pro'
+mode: 'wide'
+---
+
+Bộ ảnh này được chụp từ `http://localhost:3000` với viewport `1512 x 982`, tương ứng kích thước hiển thị MacBook Pro phổ biến.
+Ảnh toàn màn hình ghi nhận bố cục page. Ảnh chi tiết ghi nhận component cụ thể và không lặp lại toàn bộ màn hình.
+
+Các control có side effect như `PLACE ORDER`, `MODIFY`, `CANCEL ORDER`, `CLEAR CACHE`, `IMPORT LAYOUT`, `NEW USER`, `NEW RULE` hoặc file picker chỉ được ghi nhận trong tài liệu và không được execute.
+
+## Trang detail
+
+<CardGroup cols={2}>
+  <Card title="Global shell và menu chung" icon="window" href="/vi/user-guides/screens/global-shell">
+    Top navigation, command bar, settings, language, time zone, algo menu, status bar và layout controls.
+  </Card>
+  <Card title="Dashboard" icon="chart-line" href="/vi/user-guides/screens/dashboard">
+    Dashboard workspace, order drawer, order ticket, price depth, chart và order blotter.
+  </Card>
+  <Card title="Orders" icon="list-check" href="/vi/user-guides/screens/orders">
+    Order blotter, detail panel, fill progress và market quality.
+  </Card>
+  <Card title="Portfolios" icon="briefcase" href="/vi/user-guides/screens/portfolios">
+    KPI danh mục, bảng vị thế, allocation panel và treemaps.
+  </Card>
+  <Card title="Put Through" icon="handshake" href="/vi/user-guides/screens/put-through">
+    Bộ lọc PT workspace, advertisements và PT orders.
+  </Card>
+  <Card title="Price Board" icon="table-cells" href="/vi/user-guides/screens/price-board">
+    Controls thị trường, columns menu và bảng giá.
+  </Card>
+  <Card title="Operation" icon="sliders" href="/vi/user-guides/screens/operation">
+    Accounts, account detail, risk rules, approvals và thao tác vận hành.
+  </Card>
+  <Card title="System" icon="server" href="/vi/user-guides/screens/system">
+    Latency overview, trace table, order latency detail, users và audit trail.
+  </Card>
+</CardGroup>
+
+## Phạm vi chụp
+
+| Nhóm | Route / Control | Ghi chú |
+|---|---|---|
+| Global shell | Top nav, command bar, settings, language, time zone, status bar | [Global shell và menu chung](/vi/user-guides/screens/global-shell) |
+| `F1` Dashboard | `/dashboard` | [Dashboard](/vi/user-guides/screens/dashboard) |
+| `F2` Orders | `/orders` | [Orders](/vi/user-guides/screens/orders) |
+| `F3` Portfolios | `/portfolios` | [Portfolios](/vi/user-guides/screens/portfolios) |
+| `F4` Algo | Menu trên navigation | [Global shell và menu chung](/vi/user-guides/screens/global-shell) |
+| `F5` Put Through | `/put-through` | [Put Through](/vi/user-guides/screens/put-through) |
+| `F6` Price Board | `/price-board` | [Price Board](/vi/user-guides/screens/price-board) |
+| `F7` Operation | `/operational`, `/operational/rules`, `/operational/approvals` | [Operation](/vi/user-guides/screens/operation) |
+| `F8` System | `/system`, `/system/users`, `/system/audit` | [System](/vi/user-guides/screens/system) |
