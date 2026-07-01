@@ -1,0 +1,72 @@
+---
+title: 'Quản lý lệnh'
+description: 'Hợp đồng bản tin huỷ và sửa lệnh, quy tắc kiểm tra, ưu tiên khớp và luồng phản hồi'
+mode: 'wide'
+---
+
+Dùng `OrderCancelRequest (35=F)` để huỷ lệnh đang hoạt động.
+Dùng `OrderCancelReplaceRequest (35=G)` để sửa khối lượng hoặc giá của lệnh đang hoạt động.
+
+## Trường yêu cầu huỷ
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `41` | `OrigClOrdID` | Y | String | Định danh client ban đầu của lệnh cần huỷ. |
+| `11` | `ClOrdID` | Y | String | Định danh client mới cho yêu cầu huỷ. |
+| `55` | `Symbol` | Y | String | Mã của lệnh gốc. |
+| `54` | `Side` | Y | Char | Chiều lệnh gốc. Dùng `1=Buy` hoặc `2=Sell`. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Thời điểm tạo yêu cầu huỷ. |
+
+## Luồng phản hồi huỷ
+
+| Bước | Phản hồi |
+| --- | --- |
+| Yêu cầu huỷ không hợp lệ | `OrderCancelReject (35=9)` kèm trạng thái hiện tại của lệnh và chi tiết từ chối. |
+| Yêu cầu huỷ được nhận xử lý | `ExecutionReport (35=8)` với `OrdStatus (39)=6` và `ExecType (150)=6` cho pending cancel. |
+| Huỷ thành công | `ExecutionReport (35=8)` với `OrdStatus (39)=4` và `ExecType (150)=4` cho canceled. |
+| Huỷ thất bại sau khi đã nhận | `OrderCancelReject (35=9)` kèm trạng thái hiện tại của lệnh và chi tiết từ chối. |
+
+## Trường yêu cầu sửa
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `41` | `OrigClOrdID` | Y | String | Định danh client ban đầu của lệnh cần sửa. |
+| `11` | `ClOrdID` | Y | String | Định danh client mới cho yêu cầu sửa. |
+| `55` | `Symbol` | Y | String | Mã giao dịch. Giá trị này phải khớp với lệnh gốc. |
+| `54` | `Side` | Y | Char | Chiều lệnh. Giá trị này phải khớp với lệnh gốc. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Thời điểm tạo yêu cầu sửa. |
+| `38` | `OrderQty` | Y | Qty | Tổng khối lượng mới của lệnh. |
+| `40` | `OrdType` | Y | Char | Loại lệnh. Trường này bắt buộc trong bản tin và không được dùng để đổi loại lệnh gốc. |
+| `44` | `Price` | Y | Price | Giá mới của lệnh. |
+| `59` | `TimeInForce` | N | Char | Hiệu lực lệnh. Giá trị này không được thay đổi hiệu lực gốc đối với tổ hợp không hỗ trợ. |
+| `200` | `MaturityMonthYear` | N | Char | Tháng hợp đồng theo định dạng `YYYYMM` khi hợp đồng yêu cầu. |
+| `167` | `SecurityType` | N | Char | Loại sản phẩm khi được yêu cầu. Dùng giá trị được cấp cho phiên; `FUT` biểu thị hợp đồng tương lai. |
+
+## Luồng phản hồi sửa
+
+| Bước | Phản hồi |
+| --- | --- |
+| Yêu cầu sửa không hợp lệ | `OrderCancelReject (35=9)` kèm trạng thái hiện tại của lệnh và chi tiết từ chối. |
+| Yêu cầu sửa không thay đổi giá hoặc khối lượng | `OrderCancelReject (35=9)`. |
+| Yêu cầu sửa cố thay đổi loại lệnh hoặc hiệu lực khi không được phép | `OrderCancelReject (35=9)`. |
+| Yêu cầu sửa được nhận xử lý | `ExecutionReport (35=8)` với `OrdStatus (39)=E` và `ExecType (150)=E` cho pending replace. |
+| Sửa thành công | `ExecutionReport (35=8)` với `ExecType (150)=5` cho replaced. `OrdStatus (39)` tuân theo thứ tự ưu tiên trạng thái lệnh của FIX 4.2. |
+| Sửa thất bại sau khi đã nhận | `OrderCancelReject (35=9)` kèm trạng thái hiện tại của lệnh và chi tiết từ chối. |
+
+## Xử lý ưu tiên
+
+| Nội dung sửa | Hành vi ưu tiên |
+| --- | --- |
+| Thay đổi giá | Ưu tiên khớp được reset. |
+| Chỉ giảm khối lượng | Ưu tiên khớp được giữ nguyên. |
+| Tăng khối lượng | Ưu tiên khớp được reset. |
+
+## Ghi chú kiểm tra hợp lệ
+
+| Quy tắc | Mô tả |
+| --- | --- |
+| Tham chiếu lệnh gốc | `OrigClOrdID (41)` phải tham chiếu lệnh có thể huỷ hoặc sửa. |
+| Một hành động pending | Yêu cầu huỷ hoặc sửa mới bị từ chối nếu lệnh mục tiêu đã có yêu cầu huỷ hoặc sửa đang pending. |
+| Trường bất biến | `Symbol (55)`, `Side (54)`, và định danh lệnh gốc phải giữ nguyên. |
+| Lệnh hoàn tất | Lệnh đã khớp hết, đã huỷ, bị từ chối hoặc hết hiệu lực không thể huỷ hoặc sửa. |
+| Ràng buộc phiên | Huỷ và sửa chỉ được phép trong trạng thái phiên giao dịch cho phép hành động đó. |

@@ -1,0 +1,133 @@
+---
+title: 'Reject codes'
+description: 'Public reject-code families and common actionable error codes for FIX order flow'
+mode: 'wide'
+---
+
+FIX application rejects use `ExecutionReport (35=8)` or `OrderCancelReject (35=9)`.
+Session-level rejects use `Reject (35=3)` or `Logout (35=5)`.
+
+`Text (58)` may include a pipe-delimited diagnostic value:
+
+```text
+{source}|{errorCode}|{errorMessage}
+```
+
+Treat `errorCode` as the actionable code and `errorMessage` as diagnostic text.
+The exact text can change without a schema change.
+
+## Reject-code families
+
+| Range | Area | Handling guidance |
+| --- | --- | --- |
+| `-100000` to `-100099` | FIX request validation | Correct the FIX message fields, identifiers, or order attributes before resubmitting. |
+| `-131000` to `-135999` | Order, cancel, and modify business validation | Review market state, order eligibility, duplicate identifiers, and trading rules. |
+| `-132000` to `-132499` | Account, quantity, price, and instrument validation | Review account status, price bands, quantity limits, instrument status, and order type. |
+| `-200000` to `-209999` | Order-entry rejects | Use `Text (58)` for the exact order-entry reason. |
+| `-210000` to `-210500` | Business-message rejects | Review message type, required fields, and application availability. |
+| `-220000` to `-229999` | Cancel and replace rejects | Review target order status, replace values, pending actions, and session restrictions. |
+| `-230000` | General order reject | Treat as a general order rejection and review `Text (58)`. |
+| `-420000` to `-420999` | Market and order-type constraints | Review order type, session state, price limits, quantity rules, and instrument eligibility. |
+| `-900000` to `-913999` | Connectivity, risk, and venue response | Review connection status, risk limits, market availability, and venue rejection text. |
+| Positive codes | Operational order state | Review the target order state, product status, and operational restrictions. |
+
+## Common validation codes
+
+| Code | Meaning | Client action |
+| --- | --- | --- |
+| `-100000` | Missing one of the mandatory fields: `Account (1)`, `ClOrdID (11)`, `Symbol (55)`, `OrdType (40)`, `Side (54)`, or `OrderQty (38)`. | Add the missing field and resend with a valid `ClOrdID (11)`. |
+| `-100001` | Duplicate `ClOrdID (11)`. | Generate a new client order identifier. |
+| `-100002` | Incorrect `ClOrdID (11)`. | Verify identifier format and uniqueness rules. |
+| `-100003` | Unknown or invalid `OrdType (40)`, `TimeInForce (59)`, or `Price (44)`. | Use a supported order type mapping. |
+| `-100005` | Invalid order request. | Review all required order fields and trading-session constraints. |
+| `-100007` | Incorrect `Account (1)`. | Use an account assigned to the FIX session. |
+| `-100008` | Incorrect `Symbol (55)`. | Use a valid tradable symbol. |
+| `-100009` | Missing mandatory `ClOrdID (11)` or `OrigClOrdID (41)`. | Add the missing identifier. |
+| `-100010` | Missing mandatory `ClOrdID (11)`, `OrigClOrdID (41)`, `Price (44)`, or `OrderQty (38)`. | Add the missing cancel or replace field. |
+| `-100011` | Incorrect `OrigClOrdID (41)`. | Reference an active original order. |
+| `-100013` | Cancel failed because a cancel or modify request is already pending. | Wait for the pending request result before submitting another action. |
+| `-100014` | Modify failed because a cancel or modify request is already pending. | Wait for the pending request result before submitting another action. |
+| `-100015` | Modify failed because the order has no change. | Change price or quantity before resubmitting. |
+| `-100016` | Modify failed because order type or validity cannot be changed. | Keep immutable fields unchanged. |
+| `-100018` | Modify or cancel is not allowed in the current market session. | Retry only in a session state that permits the action. |
+| `-100019` | Modify or cancel failed because the order is completed. | Do not modify or cancel completed orders. |
+| `-100023` | Invalid stop price. | Correct `StopPx (99)` according to side and trigger rules. |
+| `-100024` | Invalid `DiscretionOffset (389)`. | Use a non-negative trailing offset. |
+| `-100025` | Missing price. | Provide `Price (44)` when the order type requires a price. |
+| `-100026` | Conditional order fields can be changed only while the order is pending. | Amend condition fields before activation. |
+
+## Common order and market codes
+
+| Code | Meaning | Client action |
+| --- | --- | --- |
+| `-131001` | Symbol does not exist. | Verify `Symbol (55)`. |
+| `-131002` | Market is closed. | Submit only during an allowed session state. |
+| `-131003` | Quantity exceeds limit. | Reduce `OrderQty (38)`. |
+| `-131006` | Duplicate order identifier. | Use a new `ClOrdID (11)`. |
+| `-131011` | Unsupported order type. | Use a supported order type mapping. |
+| `-131013` | Invalid quantity. | Correct quantity lot size and minimum rules. |
+| `-131018` | Price increment is invalid. | Correct `Price (44)` to the valid tick size. |
+| `-132000` | No credit limit is defined for the participant and account. | Confirm account setup before submitting orders. |
+| `-132002` | Order quantity is below the lower threshold. | Increase quantity to the permitted minimum. |
+| `-132003` | Order quantity is above the upper threshold. | Reduce quantity to the permitted maximum. |
+| `-132004` | Price is outside the permitted band. | Correct `Price (44)` to the allowed range. |
+| `-132005` | `MTL` orders are only valid in open continuous periods. | Submit `MTL` only in an allowed continuous session. |
+| `-132006` | Fill-or-kill orders are only valid in open continuous periods. | Submit `MOK` only in an allowed continuous session. |
+| `-132007` | Immediate-or-cancel orders are only valid in open continuous periods. | Submit `MAK` only in an allowed continuous session. |
+| `-132008` | Trading account is disabled. | Use an enabled account. |
+| `-132200` | Invalid instrument. | Verify symbol eligibility and contract status. |
+| `-132300` | Unsupported message type. | Send only documented FIX messages. |
+| `-132400` | Order submission is not allowed in the current market period. | Submit in an allowed session state. |
+| `-420025` | The specified time validity is not allowed. | Correct `TimeInForce (59)`. |
+| `-420045` | Illegal order quantity. | Correct `OrderQty (38)`. |
+| `-420131` | Price is outside allowed limits for the instrument. | Correct `Price (44)`. |
+| `-420193` | Fill-or-kill orders are not allowed in this session state. | Submit `MOK` only when permitted. |
+| `-420199` | Fill-and-kill orders are not allowed in this session state. | Submit `MAK` only when permitted. |
+| `-420211` | Limit orders are not allowed in this session state. | Submit `LO` only when permitted. |
+| `-420217` | Market orders are not allowed for this instrument. | Use an order type supported by the instrument. |
+| `-420219` | Market orders are not allowed in this session state. | Submit market orders only when permitted. |
+| `-420251` | `MTL` is not allowed for this instrument. | Use another supported order type. |
+| `-420253` | `MTL` is not allowed in the current trading state. | Submit `MTL` only when permitted. |
+
+## Common cancel and replace codes
+
+| Code | Meaning | Client action |
+| --- | --- | --- |
+| `-133000` | Cancel rejected because the order was sent too late. | Review order state before retrying. |
+| `-133001` | Cancel rejected because the order is not determined. | Confirm the target order exists and is active. |
+| `-133003` | Cancel rejected because the order is pending. | Wait for the pending state to resolve. |
+| `-133006` | Cancel rejected because the order identifier is duplicated. | Use a new `ClOrdID (11)` for the cancel request. |
+| `-133007` | Cancel is not allowed in the current market period. | Retry only in an allowed session state. |
+| `-134000` | Modify rejected because the order was sent too late. | Review order state before retrying. |
+| `-134001` | Modify rejected because the order is not determined. | Confirm the target order exists and is active. |
+| `-134003` | Modify rejected because the order is pending. | Wait for the pending state to resolve. |
+| `-134006` | Modify rejected because the order identifier is duplicated. | Use a new `ClOrdID (11)` for the replace request. |
+| `-134007` | Modify is not allowed in the current market period. | Retry only in an allowed session state. |
+
+## Connectivity, risk, and operational codes
+
+| Code | Meaning | Client action |
+| --- | --- | --- |
+| `-900000` | Trading connection is disconnected. | Wait for connectivity recovery before resubmitting. |
+| `-900001` | Risk-rule check failed. | Review account limit, position limit, and available balance. |
+| `-913001` | Market is currently unavailable. | Retry after market connectivity is restored. |
+| `-913002` | Request waited longer than the configured processing window. | Check the final order state before resubmitting. |
+| `-913004` | No limits are configured for the account or contract type. | Confirm account and contract setup. |
+| `-913007` | Buy stop price must be above the last traded price. | Correct `StopPx (99)`. |
+| `-913008` | Sell stop price must be below the last traded price. | Correct `StopPx (99)`. |
+| `-913018` | Order rejected because of insufficient margin. | Review available margin before resubmitting. |
+| `-913019` | Invalid `SecurityDesc (107)`. | Correct security description when the field is required. |
+| `-913999` | Venue action rejected. | Review `Text (58)` for the specific rejection reason. |
+| `1001` | Target order is completed. | Do not cancel or modify completed orders. |
+| `1002` | Target order is not active in the market. | Confirm the current order state before submitting an action. |
+| `1003` | Trading service is not available. | Retry after service availability is restored. |
+| `1006` | Product is unavailable. | Verify symbol and product status. |
+| `3001` | Lot size limit exceeded. | Correct `OrderQty (38)`. |
+| `3002` | Single-order limit exceeded. | Reduce `OrderQty (38)`. |
+| `3003` | Accumulated order limit exceeded. | Reduce order size or review limits. |
+| `3004` | Position order limit exceeded. | Review position limits. |
+| `3011` | Margin check rejected the order. | Review available margin. |
+| `3024` | Order is not accepted in this period. | Submit in an allowed session state. |
+| `3025` | Amendment is not allowed in this session. | Retry only when amendment is permitted. |
+| `3027` | Market order is not supported for the product. | Use another supported order type. |
+| `3028` | Order is outside the trading session. | Submit during an allowed session. |

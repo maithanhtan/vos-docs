@@ -1,0 +1,85 @@
+---
+title: 'Báo cáo thực thi'
+description: 'Hợp đồng phản hồi ExecutionReport và OrderCancelReject, ánh xạ trạng thái và chuỗi báo cáo MTL'
+mode: 'wide'
+---
+
+Dịch vụ báo nhận lệnh, từ chối, khớp, huỷ, sửa và trạng thái pending bằng `ExecutionReport (35=8)`.
+Lỗi huỷ và sửa được báo bằng `OrderCancelReject (35=9)`.
+
+## Ánh xạ phản hồi
+
+| Yêu cầu hoặc sự kiện | Phản hồi |
+| --- | --- |
+| `NewOrderSingle (35=D)` được chấp nhận | `ExecutionReport (35=8)`, `OrdStatus (39)=0`, `ExecType (150)=0`. |
+| `NewOrderSingle (35=D)` bị từ chối | `ExecutionReport (35=8)`, `OrdStatus (39)=8`, `ExecType (150)=8`. |
+| Yêu cầu huỷ được chấp nhận | `ExecutionReport (35=8)`, `OrdStatus (39)=6`, `ExecType (150)=6`. |
+| Huỷ thành công | `ExecutionReport (35=8)`, `OrdStatus (39)=4`, `ExecType (150)=4`. |
+| Huỷ bị từ chối | `OrderCancelReject (35=9)`. |
+| Yêu cầu sửa được chấp nhận | `ExecutionReport (35=8)`, `OrdStatus (39)=E`, `ExecType (150)=E`. |
+| Sửa thành công | `ExecutionReport (35=8)`, `ExecType (150)=5`. |
+| Sửa bị từ chối | `OrderCancelReject (35=9)`. |
+| Khớp một phần | `ExecutionReport (35=8)`, `OrdStatus (39)=1`, `ExecType (150)=1`. |
+| Khớp hết | `ExecutionReport (35=8)`, `OrdStatus (39)=2`, `ExecType (150)=2`. |
+| Lệnh bị huỷ bởi kênh được uỷ quyền khác | `ExecutionReport (35=8)`, `OrdStatus (39)=4`, `ExecType (150)=4`. |
+| Lệnh được sửa bởi kênh được uỷ quyền khác | `ExecutionReport (35=8)`, `ExecType (150)=5`. |
+
+Khi reporting đa kênh được bật cho phiên, lệnh được đặt qua kênh được uỷ quyền khác có thể phát sinh `ExecutionReport (35=8)` trên phiên FIX.
+Các sự kiện vòng đời sau đó dùng cùng ánh xạ phản hồi.
+
+## Trường ExecutionReport
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `37` | `OrderID` | Y | String | Định danh lệnh do dịch vụ cấp. |
+| `11` | `ClOrdID` | Y | String | Định danh client của lệnh hoặc yêu cầu. |
+| `17` | `ExecID` | Y | String | Định danh duy nhất của execution report. |
+| `150` | `ExecType` | Y | Char | Loại sự kiện thực thi. |
+| `39` | `OrdStatus` | Y | Char | Trạng thái hiện tại của lệnh. |
+| `20` | `ExecTransType` | N | Char | Loại transaction execution theo FIX 4.2 khi được cung cấp. |
+| `1` | `Account` | N | String | Số tài khoản giao dịch. |
+| `55` | `Symbol` | Y | String | Mã giao dịch. |
+| `54` | `Side` | Y | Char | Chiều lệnh. Dùng `1=Buy` hoặc `2=Sell`. |
+| `38` | `OrderQty` | Y | Qty | Khối lượng lệnh. |
+| `44` | `Price` | N | Price | Giá lệnh. Bắt buộc khi báo cáo giá limit nếu áp dụng. |
+| `59` | `TimeInForce` | N | Char | Hiệu lực lệnh. |
+| `151` | `LeavesQty` | Y | Qty | Khối lượng còn mở. Thông thường bằng `OrderQty (38) - CumQty (14)`. Dùng `0` cho lệnh đã huỷ, bị từ chối hoặc không còn hoạt động. |
+| `14` | `CumQty` | Y | Qty | Khối lượng khớp luỹ kế. Dùng `0` cho lệnh mới được nhận và chưa khớp. |
+| `6` | `AvgPx` | Y | Price | Giá khớp trung bình. Dùng `0` khi chưa có khớp. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Thời điểm của sự kiện được báo cáo. |
+| `58` | `Text` | N | String | Chi tiết từ chối, chi tiết huỷ hoặc nội dung báo cáo khác. |
+
+## Giá trị trạng thái và execution thường dùng
+
+| Giá trị | `OrdStatus (39)` | `ExecType (150)` |
+| --- | --- | --- |
+| `0` | New | New |
+| `1` | Partially filled | Partial fill |
+| `2` | Filled | Fill |
+| `4` | Canceled | Canceled |
+| `5` | Trạng thái replaced khi áp dụng | Replaced |
+| `6` | Pending cancel | Pending cancel |
+| `8` | Rejected | Rejected |
+| `A` | Pending new | Pending new |
+| `E` | Pending replace | Pending replace |
+
+## Trường OrderCancelReject
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `37` | `OrderID` | Y | String | Định danh lệnh do dịch vụ cấp khi xác định được. |
+| `11` | `ClOrdID` | Y | String | Định danh client của yêu cầu huỷ hoặc sửa. |
+| `41` | `OrigClOrdID` | Y | String | Định danh client của lệnh gốc. |
+| `39` | `OrdStatus` | Y | Char | Trạng thái hiện tại của lệnh mục tiêu. |
+| `1` | `Account` | N | String | Số tài khoản giao dịch. |
+| `58` | `Text` | N | String | Chi tiết từ chối. |
+| `434` | `CxlRejResponseTo` | Y | Char | Loại yêu cầu bị từ chối. Dùng `1=OrderCancelRequest` hoặc `2=OrderCancelReplaceRequest`. |
+| `102` | `CxlRejReason` | N | Int | Mã lý do từ chối huỷ hoặc sửa khi được cung cấp. |
+
+## Chuỗi báo cáo MTL
+
+| Kết quả MTL | Chuỗi báo cáo |
+| --- | --- |
+| Khớp một phần và còn khối lượng | `New (39=0, 150=0)` rồi `Partial fill (39=1, 150=1)` rồi `Replaced (39=1, 150=5)` để báo phần còn lại là lệnh limit. |
+| Khớp hết | `New (39=0, 150=0)` rồi `Fill (39=2, 150=2)`. |
+| Không có lệnh đối ứng | `New (39=0, 150=0)` rồi `Canceled (39=4, 150=4)`. |

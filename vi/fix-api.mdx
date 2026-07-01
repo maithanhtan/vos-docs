@@ -1,8 +1,42 @@
 ---
 title: 'FIX API'
-description: 'Mục giữ chỗ cho các cập nhật tài liệu API đang chờ bổ sung'
+description: 'Đặc tả FIX 4.2 cho quản lý phiên, đặt lệnh, quản lý lệnh, báo cáo khớp lệnh và xử lý từ chối'
 mode: 'wide'
 ---
 
-Mục này được giữ chỗ cho các cập nhật tài liệu API đang chờ bổ sung.
-Nội dung sẽ được thêm sau khi phạm vi API được xác nhận.
+FIX API định nghĩa hợp đồng tích hợp cho luồng lệnh phái sinh qua FIX 4.2.
+Tài liệu chỉ mô tả giao thức bên ngoài, trường dữ liệu, hành vi lệnh và lỗi hiển thị cho khách hàng.
+
+## Phạm vi công bố
+
+| Trang | Mô tả |
+| --- | --- |
+| [Lớp phiên](/vi/apis/fix/session) | Cách đóng gói bản tin, số thứ tự, logon, heartbeat, resend, gap fill, failover và logout. |
+| [Bản tin phiên](/vi/apis/fix/session-messages) | Loại bản tin và trường body cho logon, heartbeat, test request, resend request, reject, sequence reset và logout. |
+| [Đặt lệnh](/vi/apis/fix/order-entry) | Trường của `NewOrderSingle (35=D)`, loại lệnh hỗ trợ, lệnh điều kiện và ma trận quyền theo phiên giao dịch. |
+| [Quản lý lệnh](/vi/apis/fix/order-management) | Trường, kiểm tra hợp lệ và vòng đời của `OrderCancelRequest (35=F)` và `OrderCancelReplaceRequest (35=G)`. |
+| [Báo cáo thực thi](/vi/apis/fix/execution-reports) | Phản hồi `ExecutionReport (35=8)` và `OrderCancelReject (35=9)`, ánh xạ trạng thái và trường dữ liệu. |
+| [Mã từ chối](/vi/apis/fix/reject-codes) | Nhóm mã lỗi public và các mã lỗi thường gặp trong `Text (58)`. |
+
+## Quy ước hợp đồng
+
+| Quy ước | Mô tả |
+| --- | --- |
+| Phiên bản FIX | Giao diện dùng FIX 4.2 qua TCP/IP. Dùng `BeginString (8)=FIX.4.2`. |
+| Ký tự phân tách | Trường FIX dùng định dạng chuẩn `tag=value<SOH>`. `<SOH>` là ASCII `0x01`. |
+| Cờ bắt buộc | `Y` nghĩa là trường bắt buộc trong bản tin được mô tả. `N` nghĩa là trường có điều kiện hoặc không bắt buộc. |
+| Định dạng thời gian | Trường `UTCTimestamp` dùng giờ UTC. |
+| Định danh phiên | `SenderCompID (49)` và `TargetCompID (56)` được cấp khi onboarding. Không suy diễn môi trường hoặc tuyến xử lý từ các giá trị này. |
+| Nội dung lỗi | `Text (58)` có thể chứa giá trị chẩn đoán phân tách bằng ký tự pipe. Xử lý nội dung này như thông tin chẩn đoán, không phải schema ổn định. |
+
+## Nhóm bản tin
+
+| Nhóm | Loại bản tin |
+| --- | --- |
+| Phiên | `Logon (35=A)`, `Heartbeat (35=0)`, `TestRequest (35=1)`, `ResendRequest (35=2)`, `Reject (35=3)`, `SequenceReset (35=4)`, `Logout (35=5)` |
+| Đặt lệnh | `NewOrderSingle (35=D)` |
+| Quản lý lệnh | `OrderCancelRequest (35=F)`, `OrderCancelReplaceRequest (35=G)` |
+| Thực thi và từ chối | `ExecutionReport (35=8)`, `OrderCancelReject (35=9)` |
+
+Sử dụng các bảng trường trong phần này như hợp đồng công bố.
+Khi cấu hình vận hành khác nhau theo khách hàng, sử dụng giá trị được cấp cho phiên FIX của bạn.

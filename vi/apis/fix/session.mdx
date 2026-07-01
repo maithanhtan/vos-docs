@@ -1,0 +1,81 @@
+---
+title: 'Lớp phiên'
+description: 'Transport FIX 4.2, header, trailer, số thứ tự, heartbeat, resend, failover và logout'
+mode: 'wide'
+---
+
+FIX API dùng FIX 4.2 qua TCP/IP.
+Mỗi bản tin FIX gồm standard header, message body và standard trailer.
+Các trường dùng định dạng `tag=value<SOH>`, trong đó `<SOH>` là ASCII `0x01`.
+
+## Standard header
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `8` | `BeginString` | Y | String | Phiên bản FIX. Dùng `FIX.4.2`. Trường này phải là trường đầu tiên của bản tin. |
+| `9` | `BodyLength` | Y | Length | Độ dài body tính bằng byte, từ trường sau `BodyLength (9)` đến delimiter trước `CheckSum (10)`. |
+| `34` | `MsgSeqNum` | Y | SeqNum | Số thứ tự của bản tin theo từng chiều gửi. |
+| `35` | `MsgType` | Y | String | Loại bản tin FIX. |
+| `43` | `PossDupFlag` | N | Boolean | Gửi `Y` khi resend bản tin có khả năng trùng với bản tin đã gửi trước đó. |
+| `49` | `SenderCompID` | Y | String | Định danh bên gửi được cấp cho phiên FIX. |
+| `52` | `SendingTime` | Y | UTCTimestamp | Thời điểm gửi bản tin. |
+| `56` | `TargetCompID` | Y | String | Định danh bên nhận được cấp cho phiên FIX. |
+| `122` | `OrigSendingTime` | N | UTCTimestamp | Thời điểm gửi ban đầu của bản tin resend. Bắt buộc khi `PossDupFlag (43)=Y`. |
+
+## Standard trailer
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `10` | `CheckSum` | Y | String | Checksum modulo 256 gồm ba chữ số cho toàn bộ bản tin. Trường này phải là trường cuối cùng. |
+
+## Số thứ tự
+
+Mỗi bên duy trì số thứ tự outbound riêng.
+`MsgSeqNum (34)` bắt đầu từ `1` cho phiên reset và tăng `1` cho mỗi bản tin session hoặc application được gửi theo chiều đó.
+
+Khi phát hiện thiếu số thứ tự, bên nhận yêu cầu gửi lại bằng `ResendRequest (35=2)`.
+Nếu số thứ tự thấp hơn giá trị kỳ vọng và không thuộc trường hợp duplicate hợp lệ, dịch vụ từ chối trạng thái phiên và yêu cầu logon lại với số đúng.
+
+## Logon và reconnect
+
+| Tình huống | Hành vi client | Hành vi dịch vụ |
+| --- | --- | --- |
+| Logon đầu tiên trong ngày giao dịch | Gửi `Logon (35=A)` với `MsgSeqNum (34)=1`. | Chấp nhận phiên khi thông tin định danh và trạng thái sequence hợp lệ. |
+| Relogon thông thường | Gửi `ResetSeqNumFlag (141)=N` và `MsgSeqNum (34)` bằng số sequence client đã gửi cuối cùng cộng `1`. | Chấp nhận logon khi sequence khớp. |
+| Sequence client cao hơn kỳ vọng | Gửi sequence hiện tại của client. | Chấp nhận logon, sau đó gửi `ResendRequest (35=2)` cho khoảng bị thiếu. |
+| Sequence client thấp hơn kỳ vọng | Logon lại với giá trị kỳ vọng được trả trong text của `Logout (35=5)`. | Gửi `Logout (35=5)` với text dạng `MsgSeqNum too low, expecting X but received Y`. |
+| Sequence dịch vụ cao hơn kỳ vọng của client | Gửi `ResendRequest (35=2)` cho các bản tin dịch vụ bị thiếu. | Resend bản tin application được yêu cầu hoặc gửi gap fill cho bản tin không resend. |
+
+## Quy tắc heartbeat
+
+| Quy tắc | Yêu cầu |
+| --- | --- |
+| Khoảng heartbeat | `HeartBtInt (108)` phải lớn hơn `15` giây và nhỏ hơn `100` giây. Giá trị khuyến nghị là `30` giây. |
+| Kiểm tra kết nối idle | Nếu không nhận application message trong một khoảng heartbeat, gửi `TestRequest (35=1)`. |
+| Phản hồi test | Bên nhận phải phản hồi bằng `Heartbeat (35=0)` chứa `TestReqID (112)` đã nhận khi áp dụng. |
+| Ngưỡng ngắt kết nối | Nếu không nhận bất kỳ bản tin nào trong hai khoảng heartbeat, đóng kết nối TCP. |
+
+## Resend và gap fill
+
+| Trường hợp | Hành vi bắt buộc |
+| --- | --- |
+| Dịch vụ yêu cầu bản tin từ client | Dịch vụ gửi `ResendRequest (35=2)` với `BeginSeqNo (7)` bằng sequence kỳ vọng và `EndSeqNo (16)=0` khi yêu cầu toàn bộ bản tin từ điểm đó trở đi. |
+| Client yêu cầu bản tin từ dịch vụ | Client gửi `ResendRequest (35=2)` với `BeginSeqNo (7)` bằng sequence kỳ vọng và `EndSeqNo (16)` bằng sequence cuối bị thiếu, hoặc `0` để yêu cầu toàn bộ bản tin từ điểm đó trở đi. |
+| Resend application message | Gửi `PossDupFlag (43)=Y` và `OrigSendingTime (122)`. Giữ nguyên payload application ban đầu. |
+| Một bản tin không resend | Gửi `SequenceReset (35=4)` với `MsgSeqNum (34)=x`, `NewSeqNo (36)=x+1`, và `GapFillFlag (123)=Y`. |
+| Một khoảng bản tin không resend | Gửi `SequenceReset (35=4)` với `MsgSeqNum (34)=x`, `NewSeqNo (36)=y+1`, và `GapFillFlag (123)=Y` cho khoảng `x` đến `y`. |
+
+## Failover endpoint
+
+Endpoint primary và secondary không dùng chung trạng thái phiên FIX.
+Chỉ dùng endpoint secondary khi không thể reconnect endpoint primary sau `30` giây và việc chuyển hướng đã được cho phép cho phiên.
+
+| Chuyển hướng | Hành vi sequence | Hành vi lệnh |
+| --- | --- | --- |
+| Reconnect endpoint primary | Gửi `ResetSeqNumFlag (141)=N` và tiếp tục bằng sequence kỳ vọng tiếp theo. | Các lệnh hiện hữu tiếp tục theo cùng tuyến xử lý. |
+| Chuyển sang endpoint secondary | Gửi `ResetSeqNumFlag (141)=Y` và `MsgSeqNum (34)=1`. | Các lệnh đã gửi trước khi chuyển hướng không tự động bị huỷ và không cập nhật qua phiên secondary. Xác nhận hoặc huỷ lệnh đang hoạt động trước khi chuyển hướng nếu quy trình vận hành yêu cầu. |
+
+## Logout
+
+Để đóng phiên FIX, bên khởi tạo gửi `Logout (35=5)`.
+Bên nhận phản hồi bằng `Logout (35=5)`, sau đó kết nối TCP được đóng.

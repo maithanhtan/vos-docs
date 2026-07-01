@@ -1,0 +1,71 @@
+---
+title: 'Bản tin phiên'
+description: 'Loại bản tin session và trường body cho logon, heartbeat, resend, reject, sequence reset và logout'
+mode: 'wide'
+---
+
+Bản tin phiên kiểm soát xác thực, trạng thái sống của kết nối, phục hồi sequence và ngắt kết nối có kiểm soát.
+Tất cả bản tin phiên dùng standard FIX header và trailer.
+
+## Danh sách bản tin phiên
+
+| Bản tin | `MsgType (35)` | Chiều | Mục đích |
+| --- | --- | --- | --- |
+| Logon | `A` | Client đến dịch vụ; dịch vụ đến client | Mở phiên FIX và thiết lập heartbeat, sequence. |
+| Heartbeat | `0` | Hai chiều | Xác nhận kết nối FIX còn hoạt động. |
+| TestRequest | `1` | Hai chiều | Yêu cầu heartbeat ngay khi peer có dấu hiệu idle. |
+| ResendRequest | `2` | Hai chiều | Yêu cầu gửi lại một khoảng sequence bị thiếu. |
+| Reject | `3` | Dịch vụ đến client | Từ chối bản tin session-level hoặc điều kiện phiên không hợp lệ. |
+| SequenceReset | `4` | Hai chiều | Cập nhật trạng thái sequence hoặc gap fill cho bản tin không resend. |
+| Logout | `5` | Hai chiều | Đóng phiên FIX hoặc thông báo điều kiện phiên cần disconnect. |
+
+## Trường Logon
+
+`Logon (35=A)` mở phiên.
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `98` | `EncryptMethod` | Y | Int | Phương thức mã hoá. Dùng `0` cho none trừ khi phiên được cấp giá trị khác. |
+| `108` | `HeartBtInt` | Y | Int | Khoảng heartbeat tính bằng giây. Phải lớn hơn `15` và nhỏ hơn `100`. |
+| `141` | `ResetSeqNumFlag` | N | Boolean | `Y` reset sequence cho phiên. `N` tiếp tục trạng thái sequence trước đó. |
+
+## Trường Heartbeat
+
+`Heartbeat (35=0)` không có trường body bắt buộc trong hợp đồng này.
+Khi phản hồi `TestRequest (35=1)`, gửi kèm `TestReqID (112)` đã nhận.
+
+## Trường TestRequest
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `112` | `TestReqID` | Y | String | Định danh để peer echo trong heartbeat response. |
+
+## Trường ResendRequest
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `7` | `BeginSeqNo` | Y | Int | Sequence đầu tiên được yêu cầu. |
+| `16` | `EndSeqNo` | Y | Int | Sequence cuối được yêu cầu. Dùng `0` để yêu cầu toàn bộ bản tin từ `BeginSeqNo (7)` trở đi. |
+
+## Trường Reject
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `45` | `RefSeqNum` | Y | Int | Sequence của bản tin bị từ chối. |
+| `58` | `Text` | N | String | Mô tả lỗi có thể đọc được. |
+| `371` | `RefTagID` | N | Int | Tag FIX gây lỗi, nếu có. |
+| `372` | `RefMsgType` | Y | String | `MsgType (35)` của bản tin bị từ chối. |
+| `373` | `SessionRejectReason` | N | Int | Mã lý do từ chối session theo FIX. |
+
+## Trường SequenceReset
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `36` | `NewSeqNo` | Y | Int | Sequence tiếp theo được kỳ vọng sau reset hoặc gap fill. |
+| `123` | `GapFillFlag` | N | Boolean | `Y` nghĩa là gap fill. Bỏ trống hoặc `N` nghĩa là sequence reset. |
+
+## Trường Logout
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `58` | `Text` | N | String | Chi tiết logout. Nếu giá trị có dạng `MsgSeqNum too low, expecting X but received Y`, logon lại với `MsgSeqNum (34)=X`. |

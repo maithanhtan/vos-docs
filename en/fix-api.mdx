@@ -1,8 +1,39 @@
 ---
 title: 'FIX API'
-description: 'Reserved section for pending API documentation updates'
+description: 'The FIX API defines the client contract for derivatives order flow over FIX 4.2. It documents only the external protocol, message fields, order behavior, and user-visible error handling.'
 mode: 'wide'
 ---
 
-This section is reserved for pending API documentation updates.
-Content will be added after the API scope is confirmed.
+## Published scope
+
+| Page | Description |
+| --- | --- |
+| [Session layer](/en/apis/fix/session) | Transport framing, sequence numbers, logon, heartbeat, resend, gap fill, failover, and logout behavior. |
+| [Session messages](/en/apis/fix/session-messages) | FIX session message types and body fields for logon, heartbeat, test request, resend request, reject, sequence reset, and logout. |
+| [Order entry](/en/apis/fix/order-entry) | `NewOrderSingle (35=D)` fields, supported order types, conditional orders, and session permission matrix. |
+| [Order management](/en/apis/fix/order-management) | `OrderCancelRequest (35=F)` and `OrderCancelReplaceRequest (35=G)` fields, validation, and lifecycle behavior. |
+| [Execution reports](/en/apis/fix/execution-reports) | `ExecutionReport (35=8)` and `OrderCancelReject (35=9)` responses, status mapping, and report fields. |
+| [Reject codes](/en/apis/fix/reject-codes) | Public reject-code families and common actionable error codes returned in `Text (58)`. |
+
+## Contract conventions
+
+| Convention | Description |
+| --- | --- |
+| FIX version | The interface uses FIX 4.2 over TCP/IP. Use `BeginString (8)=FIX.4.2`. |
+| Message delimiter | FIX fields use the standard `tag=value<SOH>` format. `<SOH>` is ASCII `0x01`. |
+| Required flag | `Y` means the field is mandatory for the documented message. `N` means the field is conditional or optional. |
+| Timestamp format | `UTCTimestamp` fields use UTC time. |
+| Session identifiers | `SenderCompID (49)` and `TargetCompID (56)` are assigned during onboarding. Do not infer environment or routing behavior from these values. |
+| Error text | `Text (58)` may contain a pipe-delimited diagnostic value. Parse it as diagnostic text, not as a stable schema. |
+
+## Message groups
+
+| Group | Message types |
+| --- | --- |
+| Session | `Logon (35=A)`, `Heartbeat (35=0)`, `TestRequest (35=1)`, `ResendRequest (35=2)`, `Reject (35=3)`, `SequenceReset (35=4)`, `Logout (35=5)` |
+| Order entry | `NewOrderSingle (35=D)` |
+| Order management | `OrderCancelRequest (35=F)`, `OrderCancelReplaceRequest (35=G)` |
+| Execution and rejects | `ExecutionReport (35=8)`, `OrderCancelReject (35=9)` |
+
+Use the field tables in this section as the publication contract.
+Where operational configuration differs by client, use the values assigned for your FIX session.

@@ -1,0 +1,133 @@
+---
+title: 'Mã từ chối'
+description: 'Nhóm mã từ chối public và các mã lỗi thường gặp cho luồng lệnh FIX'
+mode: 'wide'
+---
+
+Application reject của FIX dùng `ExecutionReport (35=8)` hoặc `OrderCancelReject (35=9)`.
+Session-level reject dùng `Reject (35=3)` hoặc `Logout (35=5)`.
+
+`Text (58)` có thể chứa giá trị chẩn đoán phân tách bằng ký tự pipe:
+
+```text
+{source}|{errorCode}|{errorMessage}
+```
+
+Xử lý `errorCode` như mã hành động chính và `errorMessage` như thông tin chẩn đoán.
+Nội dung text cụ thể có thể thay đổi mà không làm thay đổi schema.
+
+## Nhóm mã từ chối
+
+| Khoảng mã | Phạm vi | Hướng xử lý |
+| --- | --- | --- |
+| `-100000` đến `-100099` | Kiểm tra hợp lệ yêu cầu FIX | Sửa trường FIX, định danh hoặc thuộc tính lệnh trước khi gửi lại. |
+| `-131000` đến `-135999` | Kiểm tra nghiệp vụ đặt, huỷ và sửa lệnh | Kiểm tra trạng thái thị trường, điều kiện lệnh, định danh trùng và quy tắc giao dịch. |
+| `-132000` đến `-132499` | Kiểm tra tài khoản, khối lượng, giá và sản phẩm | Kiểm tra trạng thái tài khoản, biên giá, giới hạn khối lượng, trạng thái sản phẩm và loại lệnh. |
+| `-200000` đến `-209999` | Từ chối đặt lệnh | Dùng `Text (58)` để xác định lý do cụ thể. |
+| `-210000` đến `-210500` | Từ chối business message | Kiểm tra loại bản tin, trường bắt buộc và tình trạng xử lý. |
+| `-220000` đến `-229999` | Từ chối huỷ và sửa | Kiểm tra trạng thái lệnh mục tiêu, giá trị sửa, hành động pending và ràng buộc phiên. |
+| `-230000` | Từ chối lệnh tổng quát | Xử lý như lỗi từ chối tổng quát và kiểm tra `Text (58)`. |
+| `-420000` đến `-420999` | Ràng buộc thị trường và loại lệnh | Kiểm tra loại lệnh, trạng thái phiên, giới hạn giá, quy tắc khối lượng và điều kiện sản phẩm. |
+| `-900000` đến `-913999` | Kết nối, rủi ro và phản hồi thị trường | Kiểm tra trạng thái kết nối, hạn mức rủi ro, tình trạng thị trường và nội dung từ chối. |
+| Mã dương | Trạng thái vận hành của lệnh | Kiểm tra trạng thái lệnh mục tiêu, trạng thái sản phẩm và ràng buộc vận hành. |
+
+## Mã kiểm tra hợp lệ thường gặp
+
+| Mã | Ý nghĩa | Hành động của client |
+| --- | --- | --- |
+| `-100000` | Thiếu một trong các trường bắt buộc: `Account (1)`, `ClOrdID (11)`, `Symbol (55)`, `OrdType (40)`, `Side (54)`, hoặc `OrderQty (38)`. | Bổ sung trường thiếu và gửi lại với `ClOrdID (11)` hợp lệ. |
+| `-100001` | Trùng `ClOrdID (11)`. | Tạo định danh lệnh client mới. |
+| `-100002` | `ClOrdID (11)` không đúng. | Kiểm tra định dạng và quy tắc duy nhất của định danh. |
+| `-100003` | `OrdType (40)`, `TimeInForce (59)`, hoặc `Price (44)` không xác định hoặc không hợp lệ. | Dùng tổ hợp loại lệnh được hỗ trợ. |
+| `-100005` | Yêu cầu đặt lệnh không hợp lệ. | Kiểm tra toàn bộ trường bắt buộc và ràng buộc phiên giao dịch. |
+| `-100007` | `Account (1)` không đúng. | Dùng tài khoản được cấp cho phiên FIX. |
+| `-100008` | `Symbol (55)` không đúng. | Dùng mã có thể giao dịch hợp lệ. |
+| `-100009` | Thiếu `ClOrdID (11)` hoặc `OrigClOrdID (41)`. | Bổ sung định danh còn thiếu. |
+| `-100010` | Thiếu `ClOrdID (11)`, `OrigClOrdID (41)`, `Price (44)`, hoặc `OrderQty (38)`. | Bổ sung trường huỷ hoặc sửa còn thiếu. |
+| `-100011` | `OrigClOrdID (41)` không đúng. | Tham chiếu một lệnh gốc đang hoạt động. |
+| `-100013` | Huỷ thất bại vì đã có yêu cầu huỷ hoặc sửa đang pending. | Chờ kết quả yêu cầu pending trước khi gửi hành động mới. |
+| `-100014` | Sửa thất bại vì đã có yêu cầu huỷ hoặc sửa đang pending. | Chờ kết quả yêu cầu pending trước khi gửi hành động mới. |
+| `-100015` | Sửa thất bại vì lệnh không có thay đổi. | Thay đổi giá hoặc khối lượng trước khi gửi lại. |
+| `-100016` | Sửa thất bại vì không thể thay đổi loại lệnh hoặc hiệu lực. | Giữ nguyên các trường bất biến. |
+| `-100018` | Không được phép sửa hoặc huỷ trong phiên hiện tại. | Chỉ thử lại trong trạng thái phiên cho phép hành động. |
+| `-100019` | Sửa hoặc huỷ thất bại vì lệnh đã hoàn tất. | Không sửa hoặc huỷ lệnh đã hoàn tất. |
+| `-100023` | Giá stop không hợp lệ. | Sửa `StopPx (99)` theo chiều lệnh và quy tắc kích hoạt. |
+| `-100024` | `DiscretionOffset (389)` không hợp lệ. | Dùng trailing offset không âm. |
+| `-100025` | Thiếu giá. | Cung cấp `Price (44)` khi loại lệnh yêu cầu giá. |
+| `-100026` | Trường điều kiện chỉ có thể sửa khi lệnh đang pending. | Sửa trường điều kiện trước khi lệnh được kích hoạt. |
+
+## Mã lệnh và thị trường thường gặp
+
+| Mã | Ý nghĩa | Hành động của client |
+| --- | --- | --- |
+| `-131001` | Mã giao dịch không tồn tại. | Kiểm tra `Symbol (55)`. |
+| `-131002` | Thị trường đã đóng cửa. | Chỉ gửi lệnh trong trạng thái phiên được phép. |
+| `-131003` | Khối lượng vượt giới hạn. | Giảm `OrderQty (38)`. |
+| `-131006` | Trùng định danh lệnh. | Dùng `ClOrdID (11)` mới. |
+| `-131011` | Loại lệnh không hỗ trợ. | Dùng tổ hợp loại lệnh được hỗ trợ. |
+| `-131013` | Khối lượng không hợp lệ. | Sửa khối lượng theo lô và mức tối thiểu. |
+| `-131018` | Bước giá không hợp lệ. | Sửa `Price (44)` theo bước giá hợp lệ. |
+| `-132000` | Chưa cấu hình hạn mức tín dụng cho thành viên và tài khoản. | Xác nhận cấu hình tài khoản trước khi gửi lệnh. |
+| `-132002` | Khối lượng thấp hơn ngưỡng tối thiểu. | Tăng khối lượng đến mức tối thiểu được phép. |
+| `-132003` | Khối lượng cao hơn ngưỡng tối đa. | Giảm khối lượng về mức tối đa được phép. |
+| `-132004` | Giá nằm ngoài biên được phép. | Sửa `Price (44)` về khoảng hợp lệ. |
+| `-132005` | Lệnh `MTL` chỉ hợp lệ trong phiên liên tục mở. | Chỉ gửi `MTL` trong phiên liên tục được phép. |
+| `-132006` | Lệnh fill-or-kill chỉ hợp lệ trong phiên liên tục mở. | Chỉ gửi `MOK` trong phiên liên tục được phép. |
+| `-132007` | Lệnh immediate-or-cancel chỉ hợp lệ trong phiên liên tục mở. | Chỉ gửi `MAK` trong phiên liên tục được phép. |
+| `-132008` | Tài khoản giao dịch bị vô hiệu hoá. | Dùng tài khoản đang được kích hoạt. |
+| `-132200` | Sản phẩm không hợp lệ. | Kiểm tra điều kiện của symbol và trạng thái hợp đồng. |
+| `-132300` | Loại bản tin không hỗ trợ. | Chỉ gửi các bản tin FIX được tài liệu hoá. |
+| `-132400` | Không được phép đặt lệnh trong giai đoạn thị trường hiện tại. | Gửi lệnh trong trạng thái phiên được phép. |
+| `-420025` | Hiệu lực thời gian không được phép. | Sửa `TimeInForce (59)`. |
+| `-420045` | Khối lượng lệnh không hợp lệ. | Sửa `OrderQty (38)`. |
+| `-420131` | Giá nằm ngoài giới hạn được phép của sản phẩm. | Sửa `Price (44)`. |
+| `-420193` | Lệnh fill-or-kill không được phép trong trạng thái phiên này. | Chỉ gửi `MOK` khi được phép. |
+| `-420199` | Lệnh fill-and-kill không được phép trong trạng thái phiên này. | Chỉ gửi `MAK` khi được phép. |
+| `-420211` | Lệnh limit không được phép trong trạng thái phiên này. | Chỉ gửi `LO` khi được phép. |
+| `-420217` | Lệnh market không được phép cho sản phẩm này. | Dùng loại lệnh khác được sản phẩm hỗ trợ. |
+| `-420219` | Lệnh market không được phép trong trạng thái phiên này. | Chỉ gửi lệnh market khi được phép. |
+| `-420251` | `MTL` không được phép cho sản phẩm này. | Dùng loại lệnh khác được hỗ trợ. |
+| `-420253` | `MTL` không được phép trong trạng thái giao dịch hiện tại. | Chỉ gửi `MTL` khi được phép. |
+
+## Mã huỷ và sửa thường gặp
+
+| Mã | Ý nghĩa | Hành động của client |
+| --- | --- | --- |
+| `-133000` | Huỷ bị từ chối vì lệnh được gửi quá muộn. | Kiểm tra trạng thái lệnh trước khi thử lại. |
+| `-133001` | Huỷ bị từ chối vì chưa xác định được lệnh. | Xác nhận lệnh mục tiêu tồn tại và đang hoạt động. |
+| `-133003` | Huỷ bị từ chối vì lệnh đang pending. | Chờ trạng thái pending kết thúc. |
+| `-133006` | Huỷ bị từ chối vì định danh lệnh bị trùng. | Dùng `ClOrdID (11)` mới cho yêu cầu huỷ. |
+| `-133007` | Không được phép huỷ trong giai đoạn thị trường hiện tại. | Chỉ thử lại trong trạng thái phiên được phép. |
+| `-134000` | Sửa bị từ chối vì lệnh được gửi quá muộn. | Kiểm tra trạng thái lệnh trước khi thử lại. |
+| `-134001` | Sửa bị từ chối vì chưa xác định được lệnh. | Xác nhận lệnh mục tiêu tồn tại và đang hoạt động. |
+| `-134003` | Sửa bị từ chối vì lệnh đang pending. | Chờ trạng thái pending kết thúc. |
+| `-134006` | Sửa bị từ chối vì định danh lệnh bị trùng. | Dùng `ClOrdID (11)` mới cho yêu cầu sửa. |
+| `-134007` | Không được phép sửa trong giai đoạn thị trường hiện tại. | Chỉ thử lại trong trạng thái phiên được phép. |
+
+## Mã kết nối, rủi ro và vận hành
+
+| Mã | Ý nghĩa | Hành động của client |
+| --- | --- | --- |
+| `-900000` | Kết nối giao dịch bị ngắt. | Chờ kết nối phục hồi trước khi gửi lại. |
+| `-900001` | Kiểm tra quy tắc rủi ro thất bại. | Kiểm tra hạn mức tài khoản, giới hạn vị thế và số dư khả dụng. |
+| `-913001` | Thị trường hiện không khả dụng. | Thử lại sau khi kết nối thị trường được phục hồi. |
+| `-913002` | Yêu cầu chờ lâu hơn cửa sổ xử lý cấu hình. | Kiểm tra trạng thái cuối cùng của lệnh trước khi gửi lại. |
+| `-913004` | Chưa cấu hình hạn mức cho tài khoản hoặc loại hợp đồng. | Xác nhận cấu hình tài khoản và hợp đồng. |
+| `-913007` | Giá stop mua phải cao hơn giá khớp cuối. | Sửa `StopPx (99)`. |
+| `-913008` | Giá stop bán phải thấp hơn giá khớp cuối. | Sửa `StopPx (99)`. |
+| `-913018` | Lệnh bị từ chối do không đủ ký quỹ. | Kiểm tra ký quỹ khả dụng trước khi gửi lại. |
+| `-913019` | `SecurityDesc (107)` không hợp lệ. | Sửa mô tả sản phẩm khi trường này được yêu cầu. |
+| `-913999` | Hành động thị trường bị từ chối. | Kiểm tra `Text (58)` để biết lý do cụ thể. |
+| `1001` | Lệnh mục tiêu đã hoàn tất. | Không huỷ hoặc sửa lệnh đã hoàn tất. |
+| `1002` | Lệnh mục tiêu không hoạt động trên thị trường. | Xác nhận trạng thái hiện tại của lệnh trước khi gửi hành động. |
+| `1003` | Dịch vụ giao dịch không khả dụng. | Thử lại sau khi dịch vụ phục hồi. |
+| `1006` | Sản phẩm không khả dụng. | Kiểm tra symbol và trạng thái sản phẩm. |
+| `3001` | Vượt giới hạn lot size. | Sửa `OrderQty (38)`. |
+| `3002` | Vượt giới hạn một lệnh. | Giảm `OrderQty (38)`. |
+| `3003` | Vượt giới hạn lệnh tích luỹ. | Giảm khối lượng lệnh hoặc kiểm tra hạn mức. |
+| `3004` | Vượt giới hạn vị thế. | Kiểm tra giới hạn vị thế. |
+| `3011` | Kiểm tra ký quỹ từ chối lệnh. | Kiểm tra ký quỹ khả dụng. |
+| `3024` | Lệnh không được nhận trong giai đoạn này. | Gửi lệnh trong trạng thái phiên được phép. |
+| `3025` | Không được phép sửa trong phiên này. | Chỉ thử lại khi sửa được phép. |
+| `3027` | Lệnh market không được hỗ trợ cho sản phẩm. | Dùng loại lệnh khác được hỗ trợ. |
+| `3028` | Lệnh nằm ngoài phiên giao dịch. | Gửi trong phiên được phép. |

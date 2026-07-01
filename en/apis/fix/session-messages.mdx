@@ -1,0 +1,71 @@
+---
+title: 'Session messages'
+description: 'FIX session message types and body fields for logon, heartbeat, resend, reject, sequence reset, and logout'
+mode: 'wide'
+---
+
+Session messages control authentication, liveness, sequence recovery, and orderly disconnect.
+All session messages use the standard FIX header and trailer.
+
+## Session message list
+
+| Message | `MsgType (35)` | Direction | Purpose |
+| --- | --- | --- | --- |
+| Logon | `A` | Client to service; service to client | Opens a FIX session and negotiates heartbeat and sequence behavior. |
+| Heartbeat | `0` | Both directions | Confirms that the FIX connection is alive. |
+| TestRequest | `1` | Both directions | Requests an immediate heartbeat response when a peer appears idle. |
+| ResendRequest | `2` | Both directions | Requests retransmission for a missing sequence range. |
+| Reject | `3` | Service to client | Rejects a session-level message or invalid session condition. |
+| SequenceReset | `4` | Both directions | Advances sequence state or fills gaps for messages that are not resent. |
+| Logout | `5` | Both directions | Closes the FIX session or reports a session condition that requires disconnect. |
+
+## Logon fields
+
+`Logon (35=A)` opens a session.
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `98` | `EncryptMethod` | Y | Int | Encryption method. Use `0` for none unless a different value is assigned for the session. |
+| `108` | `HeartBtInt` | Y | Int | Heartbeat interval in seconds. Must be greater than `15` and less than `100`. |
+| `141` | `ResetSeqNumFlag` | N | Boolean | `Y` resets sequence numbers for the session. `N` continues the previous sequence state. |
+
+## Heartbeat fields
+
+`Heartbeat (35=0)` contains no required body fields in this contract.
+When replying to `TestRequest (35=1)`, include the received `TestReqID (112)`.
+
+## Test request fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `112` | `TestReqID` | Y | String | Identifier that the peer echoes in the heartbeat response. |
+
+## Resend request fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `7` | `BeginSeqNo` | Y | Int | First sequence number requested. |
+| `16` | `EndSeqNo` | Y | Int | Last sequence number requested. Use `0` to request all messages from `BeginSeqNo (7)` onward. |
+
+## Reject fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `45` | `RefSeqNum` | Y | Int | Sequence number of the rejected message. |
+| `58` | `Text` | N | String | Human-readable reject detail. |
+| `371` | `RefTagID` | N | Int | FIX tag that caused the reject, when applicable. |
+| `372` | `RefMsgType` | Y | String | `MsgType (35)` of the rejected message. |
+| `373` | `SessionRejectReason` | N | Int | FIX session reject reason code. |
+
+## Sequence reset fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `36` | `NewSeqNo` | Y | Int | Next sequence number expected after the reset or gap fill. |
+| `123` | `GapFillFlag` | N | Boolean | `Y` indicates a gap fill. Omitted or `N` indicates a sequence reset. |
+
+## Logout fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `58` | `Text` | N | String | Logout detail. If the value states `MsgSeqNum too low, expecting X but received Y`, relogon with `MsgSeqNum (34)=X`. |

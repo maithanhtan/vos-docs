@@ -1,0 +1,105 @@
+---
+title: 'Đặt lệnh'
+description: 'Trường NewOrderSingle, loại lệnh hỗ trợ, hành vi lệnh điều kiện và quyền theo phiên giao dịch'
+mode: 'wide'
+---
+
+Dùng `NewOrderSingle (35=D)` để gửi lệnh mới.
+Định danh lệnh phía client phải là duy nhất trong ngày giao dịch.
+
+## Trường NewOrderSingle
+
+| Tag | Tên trường | Bắt buộc | Kiểu | Mô tả |
+| --- | --- | --- | --- | --- |
+| `1` | `Account` | Y | String | Số tài khoản giao dịch. |
+| `11` | `ClOrdID` | Y | String | Định danh lệnh phía client. Giá trị phải duy nhất trong ngày giao dịch. |
+| `55` | `Symbol` | Y | String | Mã chứng khoán hoặc hợp đồng có thể giao dịch. |
+| `40` | `OrdType` | Y | Char | Loại lệnh theo FIX. Xem bảng ánh xạ loại lệnh. |
+| `44` | `Price` | N | Price | Giá đặt lệnh. Bắt buộc với lệnh limit và lệnh điều kiện theo giá. |
+| `59` | `TimeInForce` | Y | Char | Hiệu lực lệnh. Xem bảng ánh xạ loại lệnh. |
+| `54` | `Side` | Y | Char | Chiều lệnh. Dùng `1=Buy` hoặc `2=Sell`. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Thời điểm tạo yêu cầu đặt lệnh. |
+| `38` | `OrderQty` | Y | Qty | Khối lượng đặt lệnh. |
+| `99` | `StopPx` | N | Price | Giá kích hoạt stop cho lệnh stop-limit và trailing-stop. Với lệnh bán, `StopPx >= Price`. Với lệnh mua, `StopPx <= Price`. |
+| `389` | `DiscretionOffset` | N | PriceOffset | Bước trailing cho lệnh trailing-stop. Giá trị phải lớn hơn hoặc bằng `0`. |
+
+## Ánh xạ loại lệnh
+
+Các tổ hợp không được hỗ trợ sẽ bị từ chối.
+
+| `TimeInForce (59)` | `OrdType (40)=1` market | `OrdType (40)=2` limit | `OrdType (40)=5` market on close |
+| --- | --- | --- | --- |
+| `3` Immediate or cancel | `MAK` | Không hỗ trợ | Không hỗ trợ |
+| `4` Fill or kill | `MOK` | Không hỗ trợ | Không hỗ trợ |
+| `0` Day | `MTL` | `LO` | `ATC` |
+| `2` At the opening | `ATO` | Không hỗ trợ | Không hỗ trợ |
+
+## Hành vi loại lệnh
+
+| Loại lệnh | Hành vi |
+| --- | --- |
+| `ATO` | Được nhận cho phiên khớp lệnh mở cửa khi trạng thái giao dịch cho phép. Phần không khớp hoặc còn lại bị huỷ cuối phiên mở cửa. |
+| `ATC` | Được nhận cho phiên khớp lệnh đóng cửa khi trạng thái giao dịch cho phép. Phần không khớp hoặc còn lại bị huỷ cuối phiên đóng cửa. |
+| `LO` | Lệnh giới hạn. Bắt buộc có `Price (44)`. |
+| `MTL` | Lệnh thị trường chuyển giới hạn. Nếu có lệnh đối ứng, lệnh khớp tại giá tốt nhất hiện có và phần còn lại trở thành lệnh giới hạn tại giá đã khớp. Nếu không có lệnh đối ứng, lệnh bị huỷ. |
+| `MAK` | Lệnh thị trường có hành vi immediate-or-cancel. |
+| `MOK` | Lệnh thị trường có hành vi fill-or-kill. |
+| Stop limit điều kiện | Chờ đến khi điều kiện stop được thoả mãn, sau đó gửi lệnh ra thị trường. |
+| Trailing stop điều kiện | Điều chỉnh mức stop theo trailing offset khi đang pending, sau đó gửi lệnh khi điều kiện được kích hoạt. |
+
+`MTL` chỉ hợp lệ trong phiên giao dịch liên tục.
+`MinQty (110)` mặc định là `1`; các giá trị khác không được hỗ trợ trong hợp đồng này.
+Lệnh chỉ có hiệu lực trong ngày giao dịch.
+Lệnh chưa khớp bị huỷ sau khi thị trường đóng cửa.
+
+## Lệnh điều kiện
+
+| Loại | Trường bắt buộc | Trạng thái pending | Hành vi kích hoạt | Sửa khi pending | Sửa sau khi kích hoạt |
+| --- | --- | --- | --- | --- | --- |
+| Stop limit | `OrdType (40)=4`, `Price (44)`, `StopPx (99)` | `OrdStatus (39)=A`, `ExecType (150)=A` | Khi điều kiện stop được thoả mãn, dịch vụ gửi lệnh ra thị trường và báo `OrdStatus (39)=0`, `ExecType (150)=0`. | Có thể sửa `Price (44)`, `OrderQty (38)`, và `StopPx (99)`. | Chỉ có thể sửa `Price (44)` và `OrderQty (38)`. |
+| Trailing stop | `OrdType (40)=4`, `Price (44)`, `StopPx (99)`, `DiscretionOffset (389)` | `OrdStatus (39)=A`, `ExecType (150)=A` | Khi mức stop thay đổi, dịch vụ gửi `ExecType (150)=5` cùng `Price (44)` mới. Khi điều kiện kích hoạt, lệnh được gửi ra thị trường. | Có thể sửa `Price (44)`, `OrderQty (38)`, `StopPx (99)`, và `DiscretionOffset (389)`. | Chỉ có thể sửa `Price (44)` và `OrderQty (38)`. |
+
+Đối với thiết kế stop-loss, lệnh bán có thể dùng `StopPx = Price + spread`.
+Lệnh mua có thể dùng `StopPx = Price - spread`.
+`spread` phải lớn hơn hoặc bằng `0`.
+
+## Hành vi từ chối
+
+Lệnh không hợp lệ bị từ chối bằng `ExecutionReport (35=8)`, `OrdStatus (39)=8`, và `ExecType (150)=8`.
+Các lý do thường gặp gồm giá không hợp lệ, loại lệnh không được phép trong phiên, không đủ hạn mức khả dụng, vượt giới hạn vị thế và khối lượng một lệnh lớn hơn `500`.
+Lệnh được chấp nhận nhận `ExecutionReport (35=8)`, `OrdStatus (39)=0`, và `ExecType (150)=0`, trừ khi lệnh ở trạng thái pending như lệnh điều kiện.
+
+## Ma trận quyền theo phiên giao dịch
+
+Chú giải:
+
+| Ký hiệu | Ý nghĩa |
+| --- | --- |
+| `P` | Được phép và giữ trạng thái pending. |
+| `A` | Được phép và được kích hoạt hoặc gửi ra thị trường. |
+| `A*` | Chỉ được phép khi lệnh đang pending. |
+| `x` | Không được phép. |
+
+| Trạng thái phiên | Hành động | `ATO` | `LO` | `MTL` | `MAK` | `MOK` | `ATC` | Điều kiện |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Trước mở cửa | Đặt lệnh | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Trước mở cửa | Huỷ | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Trước mở cửa | Sửa | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Khớp lệnh mở cửa | Đặt lệnh | `A` | `A` | `P` | `P` | `P` | `P` | `A` |
+| Khớp lệnh mở cửa | Huỷ | `x` | `x` | `P` | `P` | `P` | `P` | `A*` |
+| Khớp lệnh mở cửa | Sửa | `x` | `x` | `P` | `P` | `P` | `P` | `A*` |
+| Liên tục 1 | Đặt lệnh | `x` | `A` | `A` | `A` | `A` | `P` | `A` |
+| Liên tục 1 | Huỷ | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Liên tục 1 | Sửa | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Nghỉ giữa phiên | Đặt lệnh | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Nghỉ giữa phiên | Huỷ | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Nghỉ giữa phiên | Sửa | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Liên tục 2 | Đặt lệnh | `x` | `A` | `A` | `A` | `A` | `P` | `A` |
+| Liên tục 2 | Huỷ | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Liên tục 2 | Sửa | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Khớp lệnh đóng cửa | Đặt lệnh | `x` | `A` | `x` | `x` | `x` | `A` | `A` |
+| Khớp lệnh đóng cửa | Huỷ | `x` | `x` | `x` | `x` | `x` | `x` | `A*` |
+| Khớp lệnh đóng cửa | Sửa | `x` | `x` | `x` | `x` | `x` | `x` | `A*` |
+| Đóng cửa | Đặt lệnh | `x` | `x` | `x` | `x` | `x` | `x` | `x` |
+| Đóng cửa | Huỷ | `x` | `x` | `x` | `x` | `x` | `x` | `x` |
+| Đóng cửa | Sửa | `x` | `x` | `x` | `x` | `x` | `x` | `x` |

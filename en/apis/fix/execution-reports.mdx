@@ -1,0 +1,85 @@
+---
+title: 'Execution reports'
+description: 'ExecutionReport and OrderCancelReject response contracts, status mapping, and MTL report sequences'
+mode: 'wide'
+---
+
+The service reports order acceptance, rejection, fills, cancellation, amendment, and pending states with `ExecutionReport (35=8)`.
+Cancel and replace failures are reported with `OrderCancelReject (35=9)`.
+
+## Response mapping
+
+| Client request or event | Response |
+| --- | --- |
+| `NewOrderSingle (35=D)` accepted | `ExecutionReport (35=8)`, `OrdStatus (39)=0`, `ExecType (150)=0`. |
+| `NewOrderSingle (35=D)` rejected | `ExecutionReport (35=8)`, `OrdStatus (39)=8`, `ExecType (150)=8`. |
+| Cancel request accepted | `ExecutionReport (35=8)`, `OrdStatus (39)=6`, `ExecType (150)=6`. |
+| Cancel succeeds | `ExecutionReport (35=8)`, `OrdStatus (39)=4`, `ExecType (150)=4`. |
+| Cancel rejected | `OrderCancelReject (35=9)`. |
+| Replace request accepted | `ExecutionReport (35=8)`, `OrdStatus (39)=E`, `ExecType (150)=E`. |
+| Replace succeeds | `ExecutionReport (35=8)`, `ExecType (150)=5`. |
+| Replace rejected | `OrderCancelReject (35=9)`. |
+| Partial fill | `ExecutionReport (35=8)`, `OrdStatus (39)=1`, `ExecType (150)=1`. |
+| Full fill | `ExecutionReport (35=8)`, `OrdStatus (39)=2`, `ExecType (150)=2`. |
+| Order cancelled by another authorized channel | `ExecutionReport (35=8)`, `OrdStatus (39)=4`, `ExecType (150)=4`. |
+| Order amended by another authorized channel | `ExecutionReport (35=8)`, `ExecType (150)=5`. |
+
+When cross-channel reporting is enabled for your session, orders placed through another authorized channel may generate `ExecutionReport (35=8)` messages on the FIX session.
+Subsequent order lifecycle events use the same response mapping.
+
+## ExecutionReport fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `37` | `OrderID` | Y | String | Service-assigned order identifier. |
+| `11` | `ClOrdID` | Y | String | Client order identifier for the order or request. |
+| `17` | `ExecID` | Y | String | Unique execution report identifier. |
+| `150` | `ExecType` | Y | Char | Execution event type. |
+| `39` | `OrdStatus` | Y | Char | Current order status. |
+| `20` | `ExecTransType` | N | Char | FIX 4.2 execution transaction type when provided. |
+| `1` | `Account` | N | String | Trading account number. |
+| `55` | `Symbol` | Y | String | Symbol code. |
+| `54` | `Side` | Y | Char | Order side. Use `1=Buy` or `2=Sell`. |
+| `38` | `OrderQty` | Y | Qty | Order quantity. |
+| `44` | `Price` | N | Price | Order price. Required for limit-price reporting when applicable. |
+| `59` | `TimeInForce` | N | Char | Order validity. |
+| `151` | `LeavesQty` | Y | Qty | Open quantity. Normally `OrderQty (38) - CumQty (14)`. Use `0` for cancelled, rejected, or otherwise inactive orders. |
+| `14` | `CumQty` | Y | Qty | Cumulative matched quantity. Use `0` for a newly accepted order with no fills. |
+| `6` | `AvgPx` | Y | Price | Average matched price. Use `0` when there are no fills. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Time of the reported event. |
+| `58` | `Text` | N | String | Rejection detail, cancellation detail, or other report text. |
+
+## Common status and execution values
+
+| Value | `OrdStatus (39)` | `ExecType (150)` |
+| --- | --- | --- |
+| `0` | New | New |
+| `1` | Partially filled | Partial fill |
+| `2` | Filled | Fill |
+| `4` | Canceled | Canceled |
+| `5` | Replaced status when applicable | Replaced |
+| `6` | Pending cancel | Pending cancel |
+| `8` | Rejected | Rejected |
+| `A` | Pending new | Pending new |
+| `E` | Pending replace | Pending replace |
+
+## OrderCancelReject fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `37` | `OrderID` | Y | String | Service-assigned order identifier when known. |
+| `11` | `ClOrdID` | Y | String | Client identifier of the cancel or replace request. |
+| `41` | `OrigClOrdID` | Y | String | Client identifier of the original order. |
+| `39` | `OrdStatus` | Y | Char | Current status of the target order. |
+| `1` | `Account` | N | String | Trading account number. |
+| `58` | `Text` | N | String | Rejection detail. |
+| `434` | `CxlRejResponseTo` | Y | Char | Request type being rejected. Use `1=OrderCancelRequest` or `2=OrderCancelReplaceRequest`. |
+| `102` | `CxlRejReason` | N | Int | Cancel or replace rejection code when provided. |
+
+## MTL report sequences
+
+| MTL outcome | Report sequence |
+| --- | --- |
+| Partial fill with remaining quantity | `New (39=0, 150=0)` then `Partial fill (39=1, 150=1)` then `Replaced (39=1, 150=5)` to report the remaining order as limit. |
+| Full fill | `New (39=0, 150=0)` then `Fill (39=2, 150=2)`. |
+| No available contra order | `New (39=0, 150=0)` then `Canceled (39=4, 150=4)`. |

@@ -289,8 +289,15 @@
               },
               {
                 "group": "FIX API",
+                "expanded": true,
                 "pages": [
-                  "en/fix-api"
+                  "en/fix-api",
+                  "en/apis/fix/session",
+                  "en/apis/fix/session-messages",
+                  "en/apis/fix/order-entry",
+                  "en/apis/fix/order-management",
+                  "en/apis/fix/execution-reports",
+                  "en/apis/fix/reject-codes"
                 ]
               }
             ]
@@ -453,8 +460,15 @@
               },
               {
                 "group": "FIX API",
+                "expanded": true,
                 "pages": [
-                  "vi/fix-api"
+                  "vi/fix-api",
+                  "vi/apis/fix/session",
+                  "vi/apis/fix/session-messages",
+                  "vi/apis/fix/order-entry",
+                  "vi/apis/fix/order-management",
+                  "vi/apis/fix/execution-reports",
+                  "vi/apis/fix/reject-codes"
                 ]
               }
             ]

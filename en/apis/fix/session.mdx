@@ -1,0 +1,81 @@
+---
+title: 'Session layer'
+description: 'FIX 4.2 transport, header, trailer, sequence, heartbeat, resend, failover, and logout behavior'
+mode: 'wide'
+---
+
+The FIX API uses FIX 4.2 over TCP/IP.
+Each FIX message contains a standard header, a message body, and a standard trailer.
+Fields use the `tag=value<SOH>` format, where `<SOH>` is ASCII `0x01`.
+
+## Standard header
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `8` | `BeginString` | Y | String | FIX version. Use `FIX.4.2`. This field must be the first field in the message. |
+| `9` | `BodyLength` | Y | Length | Message body length in bytes, calculated from the field after `BodyLength (9)` through the delimiter before `CheckSum (10)`. |
+| `34` | `MsgSeqNum` | Y | SeqNum | Sequence number for the current message direction. |
+| `35` | `MsgType` | Y | String | FIX message type. |
+| `43` | `PossDupFlag` | N | Boolean | Set to `Y` when resending a message that may duplicate a previous transmission. |
+| `49` | `SenderCompID` | Y | String | Sender identifier assigned for the FIX session. |
+| `52` | `SendingTime` | Y | UTCTimestamp | Time when the message is sent. |
+| `56` | `TargetCompID` | Y | String | Target identifier assigned for the FIX session. |
+| `122` | `OrigSendingTime` | N | UTCTimestamp | Original send time for a resent message. Required when `PossDupFlag (43)=Y`. |
+
+## Standard trailer
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `10` | `CheckSum` | Y | String | Three-digit modulo 256 checksum for the message. This field must be the final field. |
+
+## Sequence numbers
+
+Each side maintains its own outbound sequence number.
+`MsgSeqNum (34)` starts at `1` for a reset session and increments by `1` for every session and application message sent in that direction.
+
+If a sequence gap is detected, the receiving side requests retransmission with `ResendRequest (35=2)`.
+If a sequence number is lower than expected and is not a permitted duplicate, the service rejects the session state and requires a corrected logon.
+
+## Logon and reconnect behavior
+
+| Scenario | Client behavior | Service behavior |
+| --- | --- | --- |
+| First logon for the trading day | Send `Logon (35=A)` with `MsgSeqNum (34)=1`. | Accepts the session when credentials, identifiers, and sequence state are valid. |
+| Normal relogon | Send `ResetSeqNumFlag (141)=N` and `MsgSeqNum (34)` equal to the last client-sent sequence plus `1`. | Accepts the logon when the sequence matches. |
+| Client sequence is higher than expected | Send the current client sequence. | Accepts the logon, then sends `ResendRequest (35=2)` for the missing range. |
+| Client sequence is lower than expected | Relogon with the expected value returned in `Logout (35=5)` text. | Sends `Logout (35=5)` with text in the form `MsgSeqNum too low, expecting X but received Y`. |
+| Service sequence is higher than client expected | Send `ResendRequest (35=2)` for the missing service messages. | Resends the requested application messages or sends gap fills for non-resendable messages. |
+
+## Heartbeat rules
+
+| Rule | Requirement |
+| --- | --- |
+| Heartbeat interval | `HeartBtInt (108)` must be greater than `15` seconds and less than `100` seconds. The recommended value is `30` seconds. |
+| Idle connection check | If no application message is received within the heartbeat interval, send `TestRequest (35=1)`. |
+| Test response | The peer must respond with `Heartbeat (35=0)` containing the received `TestReqID (112)` when applicable. |
+| Disconnect threshold | If no message is received for two heartbeat intervals, close the TCP connection. |
+
+## Resend and gap fill
+
+| Case | Required behavior |
+| --- | --- |
+| Service requests client messages | The service sends `ResendRequest (35=2)` with `BeginSeqNo (7)` equal to the expected sequence and `EndSeqNo (16)=0` when requesting all messages from that point onward. |
+| Client requests service messages | The client sends `ResendRequest (35=2)` with `BeginSeqNo (7)` equal to the expected sequence and `EndSeqNo (16)` equal to the last missing sequence, or `0` for all messages from that point onward. |
+| Resent application message | Set `PossDupFlag (43)=Y` and include `OrigSendingTime (122)`. Preserve the original application payload. |
+| One non-resendable message | Send `SequenceReset (35=4)` with `MsgSeqNum (34)=x`, `NewSeqNo (36)=x+1`, and `GapFillFlag (123)=Y`. |
+| Non-resendable range | Send `SequenceReset (35=4)` with `MsgSeqNum (34)=x`, `NewSeqNo (36)=y+1`, and `GapFillFlag (123)=Y` for range `x` through `y`. |
+
+## Endpoint failover
+
+Primary and secondary endpoints do not share FIX session state.
+Use the secondary endpoint only when the primary endpoint cannot be reconnected after `30` seconds and the switch is authorized for the session.
+
+| Switch | Sequence behavior | Order behavior |
+| --- | --- | --- |
+| Reconnect to primary endpoint | Send `ResetSeqNumFlag (141)=N` and continue with the next expected sequence number. | Existing orders continue on the same route. |
+| Switch to secondary endpoint | Send `ResetSeqNumFlag (141)=Y` and `MsgSeqNum (34)=1`. | Orders routed before the switch are not automatically cancelled and do not update through the secondary session. Confirm or cancel active orders before switching when operationally required. |
+
+## Logout
+
+To close a FIX session, the initiating side sends `Logout (35=5)`.
+The receiving side replies with `Logout (35=5)`, then the TCP connection closes.

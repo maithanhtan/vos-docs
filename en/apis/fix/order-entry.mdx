@@ -1,0 +1,105 @@
+---
+title: 'Order entry'
+description: 'NewOrderSingle fields, supported order types, conditional order behavior, and trading-session permissions'
+mode: 'wide'
+---
+
+Use `NewOrderSingle (35=D)` to submit a new order.
+The client order identifier must be unique within the trading date.
+
+## NewOrderSingle fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `1` | `Account` | Y | String | Trading account number. |
+| `11` | `ClOrdID` | Y | String | Client order identifier. The value must be unique for the trading date. |
+| `55` | `Symbol` | Y | String | Tradable symbol code. |
+| `40` | `OrdType` | Y | Char | FIX order type. See the order type mapping table. |
+| `44` | `Price` | N | Price | Order price. Required for limit orders and price-based conditional orders. |
+| `59` | `TimeInForce` | Y | Char | Order validity. See the order type mapping table. |
+| `54` | `Side` | Y | Char | Order side. Use `1=Buy` or `2=Sell`. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Time when the order request is created. |
+| `38` | `OrderQty` | Y | Qty | Order quantity. |
+| `99` | `StopPx` | N | Price | Stop trigger price for stop-limit and trailing-stop orders. For sell orders, `StopPx >= Price`. For buy orders, `StopPx <= Price`. |
+| `389` | `DiscretionOffset` | N | PriceOffset | Trailing step offset for trailing-stop orders. The value must be greater than or equal to `0`. |
+
+## Order type mapping
+
+Unsupported combinations are rejected.
+
+| `TimeInForce (59)` | `OrdType (40)=1` market | `OrdType (40)=2` limit | `OrdType (40)=5` market on close |
+| --- | --- | --- | --- |
+| `3` Immediate or cancel | `MAK` | Not supported | Not supported |
+| `4` Fill or kill | `MOK` | Not supported | Not supported |
+| `0` Day | `MTL` | `LO` | `ATC` |
+| `2` At the opening | `ATO` | Not supported | Not supported |
+
+## Order behavior
+
+| Order type | Behavior |
+| --- | --- |
+| `ATO` | Accepted for the opening auction when permitted by the trading session. Unmatched or remaining quantity is cancelled at the end of the opening auction. |
+| `ATC` | Accepted for the closing auction when permitted by the trading session. Unmatched or remaining quantity is cancelled at the end of the closing auction. |
+| `LO` | Limit order. Requires `Price (44)`. |
+| `MTL` | Market-to-limit order. If a contra order exists, the order matches at the best available price and any remaining quantity becomes a limit order at the matched price. If no contra order exists, the order is cancelled. |
+| `MAK` | Market order with immediate-or-cancel behavior. |
+| `MOK` | Market order with fill-or-kill behavior. |
+| Conditional stop limit | Waits until the stop condition is met, then submits the order to the market. |
+| Conditional trailing stop | Adjusts the stop level by the trailing offset while pending, then submits the order when the condition is met. |
+
+`MTL` orders are valid only in continuous trading sessions.
+`MinQty (110)` defaults to `1`; other values are not supported in this contract.
+Orders remain valid only within the trading date.
+Non-matched orders are cancelled after market close.
+
+## Conditional orders
+
+| Type | Required fields | Pending status | Activation behavior | Amendment while pending | Amendment after activation |
+| --- | --- | --- | --- | --- | --- |
+| Stop limit | `OrdType (40)=4`, `Price (44)`, `StopPx (99)` | `OrdStatus (39)=A`, `ExecType (150)=A` | When the stop condition is met, the service sends the order to market and reports `OrdStatus (39)=0`, `ExecType (150)=0`. | You may change `Price (44)`, `OrderQty (38)`, and `StopPx (99)`. | You may change only `Price (44)` and `OrderQty (38)`. |
+| Trailing stop | `OrdType (40)=4`, `Price (44)`, `StopPx (99)`, `DiscretionOffset (389)` | `OrdStatus (39)=A`, `ExecType (150)=A` | When the stop level changes, the service sends `ExecType (150)=5` with the new `Price (44)`. When triggered, the order is sent to market. | You may change `Price (44)`, `OrderQty (38)`, `StopPx (99)`, and `DiscretionOffset (389)`. | You may change only `Price (44)` and `OrderQty (38)`. |
+
+For stop-loss execution design, a sell stop may use `StopPx = Price + spread`.
+A buy stop may use `StopPx = Price - spread`.
+The spread must be greater than or equal to `0`.
+
+## Reject behavior
+
+Invalid orders are rejected with `ExecutionReport (35=8)`, `OrdStatus (39)=8`, and `ExecType (150)=8`.
+Common reject reasons include invalid price, disallowed order type for the session, insufficient available limit, position limit, and single-order quantity greater than `500`.
+Accepted orders receive `ExecutionReport (35=8)`, `OrdStatus (39)=0`, and `ExecType (150)=0`, unless the order remains pending as a conditional order.
+
+## Trading-session permission matrix
+
+Legend:
+
+| Marker | Meaning |
+| --- | --- |
+| `P` | Permitted and remains pending. |
+| `A` | Permitted and activated or sent to market. |
+| `A*` | Permitted only while the order is pending. |
+| `x` | Not permitted. |
+
+| Session state | Action | `ATO` | `LO` | `MTL` | `MAK` | `MOK` | `ATC` | Conditional |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Pre-opening | New order | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Pre-opening | Cancel | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Pre-opening | Modify | `P` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Opening auction | New order | `A` | `A` | `P` | `P` | `P` | `P` | `A` |
+| Opening auction | Cancel | `x` | `x` | `P` | `P` | `P` | `P` | `A*` |
+| Opening auction | Modify | `x` | `x` | `P` | `P` | `P` | `P` | `A*` |
+| Continuous 1 | New order | `x` | `A` | `A` | `A` | `A` | `P` | `A` |
+| Continuous 1 | Cancel | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Continuous 1 | Modify | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Intermission | New order | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Intermission | Cancel | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Intermission | Modify | `x` | `P` | `P` | `P` | `P` | `P` | `P` |
+| Continuous 2 | New order | `x` | `A` | `A` | `A` | `A` | `P` | `A` |
+| Continuous 2 | Cancel | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Continuous 2 | Modify | `x` | `A` | `A` | `x` | `x` | `P` | `A*` |
+| Closing auction | New order | `x` | `A` | `x` | `x` | `x` | `A` | `A` |
+| Closing auction | Cancel | `x` | `x` | `x` | `x` | `x` | `x` | `A*` |
+| Closing auction | Modify | `x` | `x` | `x` | `x` | `x` | `x` | `A*` |
+| Market closed | New order | `x` | `x` | `x` | `x` | `x` | `x` | `x` |
+| Market closed | Cancel | `x` | `x` | `x` | `x` | `x` | `x` | `x` |
+| Market closed | Modify | `x` | `x` | `x` | `x` | `x` | `x` | `x` |

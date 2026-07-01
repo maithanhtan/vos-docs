@@ -1,0 +1,72 @@
+---
+title: 'Order management'
+description: 'Cancel and replace message contracts, validation rules, priority handling, and response flow'
+mode: 'wide'
+---
+
+Use `OrderCancelRequest (35=F)` to cancel an active order.
+Use `OrderCancelReplaceRequest (35=G)` to amend quantity or price for an active order.
+
+## Cancel request fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `41` | `OrigClOrdID` | Y | String | Original client order identifier of the order being cancelled. |
+| `11` | `ClOrdID` | Y | String | New client identifier for the cancel request. |
+| `55` | `Symbol` | Y | String | Symbol code of the original order. |
+| `54` | `Side` | Y | Char | Original order side. Use `1=Buy` or `2=Sell`. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Time when the cancel request is created. |
+
+## Cancel response flow
+
+| Step | Response |
+| --- | --- |
+| Cancel request is invalid | `OrderCancelReject (35=9)` with the current order status and rejection detail. |
+| Cancel request is accepted for processing | `ExecutionReport (35=8)` with `OrdStatus (39)=6` and `ExecType (150)=6` for pending cancel. |
+| Cancel succeeds | `ExecutionReport (35=8)` with `OrdStatus (39)=4` and `ExecType (150)=4` for canceled. |
+| Cancel fails after acceptance | `OrderCancelReject (35=9)` with the current order status and rejection detail. |
+
+## Replace request fields
+
+| Tag | Name | Req | Type | Description |
+| --- | --- | --- | --- | --- |
+| `41` | `OrigClOrdID` | Y | String | Original client order identifier of the order being amended. |
+| `11` | `ClOrdID` | Y | String | New client identifier for the replace request. |
+| `55` | `Symbol` | Y | String | Symbol code. This value must match the original order. |
+| `54` | `Side` | Y | Char | Order side. This value must match the original order. |
+| `60` | `TransactTime` | Y | UTCTimestamp | Time when the replace request is created. |
+| `38` | `OrderQty` | Y | Qty | New total order quantity. |
+| `40` | `OrdType` | Y | Char | Order type. This value is required in the message and cannot change the original order type. |
+| `44` | `Price` | Y | Price | New order price. |
+| `59` | `TimeInForce` | N | Char | Order validity. This value cannot change the original validity for unsupported combinations. |
+| `200` | `MaturityMonthYear` | N | Char | Contract month in `YYYYMM` format when required by the symbol contract. |
+| `167` | `SecurityType` | N | Char | Security type when required. Use the value assigned for the session; `FUT` denotes futures. |
+
+## Replace response flow
+
+| Step | Response |
+| --- | --- |
+| Replace request is invalid | `OrderCancelReject (35=9)` with the current order status and rejection detail. |
+| Replace request contains no change in price or quantity | `OrderCancelReject (35=9)`. |
+| Replace request attempts to change order type or validity when not allowed | `OrderCancelReject (35=9)`. |
+| Replace request is accepted for processing | `ExecutionReport (35=8)` with `OrdStatus (39)=E` and `ExecType (150)=E` for pending replace. |
+| Replace succeeds | `ExecutionReport (35=8)` with `ExecType (150)=5` for replaced. `OrdStatus (39)` follows FIX 4.2 order-status precedence. |
+| Replace fails after acceptance | `OrderCancelReject (35=9)` with the current order status and rejection detail. |
+
+## Priority handling
+
+| Amendment | Priority behavior |
+| --- | --- |
+| Price changes | Matching priority is reset. |
+| Quantity decreases only | Matching priority is retained. |
+| Quantity increases | Matching priority is reset. |
+
+## Validation notes
+
+| Rule | Description |
+| --- | --- |
+| Original order reference | `OrigClOrdID (41)` must reference an order that can be cancelled or amended. |
+| One pending action | A new cancel or replace request is rejected when the target order already has a pending cancel or replace request. |
+| Immutable fields | `Symbol (55)`, `Side (54)`, and the original order identity must remain unchanged. |
+| Completed orders | Filled, cancelled, rejected, or expired orders cannot be cancelled or amended. |
+| Session restrictions | Cancel and replace requests are permitted only in trading-session states that allow the action. |
