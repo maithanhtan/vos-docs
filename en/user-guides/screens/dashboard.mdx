@@ -1,70 +1,28 @@
 ---
 title: 'Dashboard'
-description: 'Dashboard operations for order entry, market depth, charts, and order monitoring'
+description: 'Dashboard is the primary trading workspace. It consolidates order entry, market depth, chart context, and the order blotter.'
 mode: 'wide'
 ---
 
-Dashboard is the primary trading workspace. It consolidates order entry, market depth, chart context, and the order blotter.
-
 ## Workspace overview
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-full.png" alt="Dashboard workspace overview" />
-  </div>
-  <div className="guide-split-copy">
+![Dashboard workspace overview](/images/vero-oms-ui/dashboard-full.png)
 
-The workspace overview shows the Dashboard with order entry, market depth, chart widgets, and order monitoring in one layout.
+## Layout controls
 
-  </div>
-</div>
+![Layout toolbar](/images/vero-oms-ui/layout-toolbar.png)
 
-## Dashboard layout actions
+The bottom-right layout toolbar includes layout selection, share layout, import layout, and arrange/grid controls.
 
-| Action | Result |
+| Layout action | Result |
 |---|---|
-| Edit layout | Enables widget drag, resize, and remove controls. |
-| Add Widget | Opens the widget picker for charts, depth, tickets, blotters, and supporting panels. |
-| Add All / Remove All | Adds or removes the available dashboard widgets in one action. |
-| Share layout | Copies the current layout definition. |
-| Import layout | Opens a JSON import dialog and applies the layout only after validation. |
-| Arrange / Reset | Reflows widgets or restores the default workspace layout. |
-
-## Widgets and shared context
-
-The widget picker contains the trading and monitoring panels available to the current user.
-
-| Widget | Operating context |
-|---|---|
-| P&L Portfolio | Reviews portfolio performance for the selected account context. |
-| Orders Workspace | Monitors active and historical orders. |
-| Positions | Reviews holdings and live mark-to-market values. |
-| Risk Monitor | Reviews cash, holdings, exposure, and risk-check status. |
-| Order Ticket | Stages an order without leaving the Dashboard. |
-| Reports | Reviews reporting and audit summaries available to the user. |
-| Price Depth | Reviews the order book and recent trades for a symbol. |
-| Trading Chart | Reviews candle and volume history for a symbol. |
-| Market Indices | Reviews available market index values. |
-| Price Board | Embeds the market price table in the Dashboard layout. |
-| Latency Analytics | Reviews order timing and throughput for the selected period. |
-| Operational Workspace | Embeds the account and operational view when permitted. |
-
-Linked widgets can share symbol or account context. Unlink a widget before changing its context independently.
-
-## New Order drawer
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/new-order-drawer.png" alt="New order drawer" />
-  </div>
-  <div className="guide-split-copy">
-
-`NEW ORDER` opens a right-side drawer containing account, symbol, chart preview, order type, side, price, quantity, order summary, and buying power preview.
-
-The drawer can be pinned so it remains open while the user changes page focus. If it is not pinned, clicking outside the drawer closes it.
-
-  </div>
-</div>
+| Select layout | Loads the saved dashboard arrangement. |
+| Create or duplicate layout | Adds a new layout entry for the user. |
+| Rename layout | Updates the active layout label inline. |
+| Delete layout | Removes the selected saved layout. |
+| Share layout | Copies the current layout definition for reuse. |
+| Import layout | Opens a JSON import dialog and validates the pasted layout before applying it. |
+| Auto arrange / reset | Reflows or restores dashboard widgets. |
 
 ## Order Ticket
 
@@ -88,32 +46,6 @@ The ticket contains account, symbol, order type, side, price, quantity, order su
   </div>
 </div>
 
-## STOP order mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-order-ticket-stop.png" alt="Dashboard stop order ticket" />
-  </div>
-  <div className="guide-split-copy">
-
-When `STOP` is selected, the ticket displays trigger fields such as `WHEN PRICE` and `CONDITION PRICE`. A license warning is displayed when the feature is unavailable.
-
-  </div>
-</div>
-
-## BRACKET order mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-order-ticket-bracket.png" alt="Dashboard bracket order ticket" />
-  </div>
-  <div className="guide-split-copy">
-
-When `BRACKET` is selected, the ticket displays `TAKE PROFIT` and `STOP LOSS` fields while retaining summary and buying power context.
-
-  </div>
-</div>
-
 ## Price Depth
 
 <div className="guide-split">
@@ -129,19 +61,6 @@ The header includes a link toggle for syncing the widget symbol, a symbol select
   </div>
 </div>
 
-## Price Ladder mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-price-ladder.png" alt="Dashboard price ladder mode" />
-  </div>
-  <div className="guide-split-copy">
-
-The Price Depth header includes `PRICE DEPTH` and `PRICE LADDER` display modes, symbol selector, and options menu.
-
-  </div>
-</div>
-
 ## Trading Chart
 
 <div className="guide-split guide-split--wide">
@@ -153,19 +72,6 @@ The Price Depth header includes `PRICE DEPTH` and `PRICE LADDER` display modes, 
 The chart component displays candles, timeframe controls, price region, and volume for the selected symbol.
 
 Changing the symbol resets the chart context. Timeframe controls change the candle interval, and the load-more control extends the visible history when available.
-
-  </div>
-</div>
-
-## TradingView mode
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-tradingview.png" alt="Dashboard TradingView mode" />
-  </div>
-  <div className="guide-split-copy">
-
-The chart supports `CANDLE` and `TRADINGVIEW` display modes. TradingView mode reserves the chart area for the embedded chart widget.
 
   </div>
 </div>

@@ -1,70 +1,28 @@
 ---
 title: 'Dashboard'
-description: 'Hướng dẫn vận hành Dashboard cho order entry, market depth, chart và order monitoring'
+description: 'Dashboard là workspace giao dịch chính. Màn hình này hợp nhất order entry, market depth, chart và order blotter.'
 mode: 'wide'
 ---
 
-Dashboard là workspace giao dịch chính. Màn hình này hợp nhất order entry, market depth, chart và order blotter.
+## Workspace overview
 
-## Tổng quan workspace
+![Tổng quan Dashboard workspace](/images/vero-oms-ui/dashboard-full.png)
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-full.png" alt="Tổng quan Dashboard workspace" />
-  </div>
-  <div className="guide-split-copy">
+## Layout controls
 
-Tổng quan workspace hiển thị Dashboard với order entry, market depth, chart widget và order monitoring trong cùng một layout.
+![Layout toolbar](/images/vero-oms-ui/layout-toolbar.png)
 
-  </div>
-</div>
+Toolbar layout ở góc phải dưới gồm layout selector, share layout, import layout và arrange/grid controls.
 
-## Dashboard layout actions
-
-| Action | Kết quả |
+| Layout action | Kết quả |
 |---|---|
-| Edit layout | Cho phép drag, resize và remove widget. |
-| Add Widget | Mở widget picker cho chart, depth, ticket, blotter và các panel hỗ trợ. |
-| Add All / Remove All | Thêm hoặc xoá toàn bộ widget khả dụng. |
-| Share layout | Copy layout definition hiện tại. |
-| Import layout | Mở dialog import JSON và chỉ apply sau khi validate. |
-| Arrange / Reset | Sắp xếp lại hoặc khôi phục layout mặc định. |
-
-## Widgets và context dùng chung
-
-Widget picker chứa các panel giao dịch và giám sát khả dụng cho user hiện tại.
-
-| Widget | Context vận hành |
-|---|---|
-| P&L Portfolio | Xem hiệu suất danh mục theo context tài khoản đang chọn. |
-| Orders Workspace | Theo dõi lệnh active và historical orders. |
-| Positions | Xem holdings và live mark-to-market values. |
-| Risk Monitor | Xem cash, holdings, exposure và risk-check status. |
-| Order Ticket | Chuẩn bị lệnh mà không rời Dashboard. |
-| Reports | Xem reporting và audit summary khả dụng cho user. |
-| Price Depth | Xem order book và recent trades của symbol. |
-| Trading Chart | Xem candle và volume history của symbol. |
-| Market Indices | Xem market index values khả dụng. |
-| Price Board | Hiển thị market price table trong Dashboard layout. |
-| Latency Analytics | Xem order timing và throughput theo khoảng thời gian. |
-| Operational Workspace | Hiển thị account và operational view khi user có quyền. |
-
-Các widget được link có thể dùng chung symbol hoặc account context. Unlink widget trước khi đổi context độc lập.
-
-## New Order drawer
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/new-order-drawer.png" alt="New order drawer" />
-  </div>
-  <div className="guide-split-copy">
-
-`NEW ORDER` mở drawer bên phải chứa account, symbol, chart preview, order type, side, price, quantity, order summary và buying power preview.
-
-Drawer có thể pin để giữ mở khi user đổi focus. Nếu không pin, click ra ngoài drawer sẽ đóng drawer.
-
-  </div>
-</div>
+| Chọn layout | Load layout dashboard đã lưu. |
+| Create hoặc duplicate layout | Tạo layout entry mới cho user. |
+| Rename layout | Đổi tên layout hiện tại inline. |
+| Delete layout | Xoá layout đã lưu đang chọn. |
+| Share layout | Copy layout definition hiện tại để dùng lại. |
+| Import layout | Mở dialog import JSON và validate trước khi apply. |
+| Auto arrange / reset | Sắp xếp lại hoặc restore widget dashboard. |
 
 ## Order Ticket
 
@@ -88,32 +46,6 @@ Ticket nhập lệnh chứa các field account, symbol, order type, side, price,
   </div>
 </div>
 
-## STOP order mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-order-ticket-stop.png" alt="Dashboard stop order ticket" />
-  </div>
-  <div className="guide-split-copy">
-
-Khi chọn `STOP`, ticket hiển thị các field điều kiện như `WHEN PRICE` và `CONDITION PRICE`. Cảnh báo license được hiển thị khi feature chưa được cấp quyền.
-
-  </div>
-</div>
-
-## BRACKET order mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-order-ticket-bracket.png" alt="Dashboard bracket order ticket" />
-  </div>
-  <div className="guide-split-copy">
-
-Khi chọn `BRACKET`, ticket hiển thị `TAKE PROFIT` và `STOP LOSS`, đồng thời giữ summary và buying power context.
-
-  </div>
-</div>
-
 ## Price Depth
 
 <div className="guide-split">
@@ -129,19 +61,6 @@ Header có link toggle để đồng bộ symbol của widget, symbol selector v
   </div>
 </div>
 
-## Price Ladder mode
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-price-ladder.png" alt="Dashboard price ladder mode" />
-  </div>
-  <div className="guide-split-copy">
-
-Header Price Depth có toggle `PRICE DEPTH` và `PRICE LADDER`, symbol selector và options menu.
-
-  </div>
-</div>
-
 ## Trading Chart
 
 <div className="guide-split guide-split--wide">
@@ -153,19 +72,6 @@ Header Price Depth có toggle `PRICE DEPTH` và `PRICE LADDER`, symbol selector 
 Chart hiển thị nến, timeframe, vùng giá và volume của symbol đang chọn.
 
 Đổi symbol sẽ reset chart context. Timeframe control đổi candle interval, còn load-more mở rộng lịch sử hiển thị khi có dữ liệu.
-
-  </div>
-</div>
-
-## TradingView mode
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/dashboard-tradingview.png" alt="Dashboard TradingView mode" />
-  </div>
-  <div className="guide-split-copy">
-
-Chart hỗ trợ hai chế độ `CANDLE` và `TRADINGVIEW`. TradingView mode dành vùng chart cho embedded widget.
 
   </div>
 </div>

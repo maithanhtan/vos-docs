@@ -1,99 +1,25 @@
 ---
 title: 'Portfolios'
-description: 'Portfolio valuation, exposure, positions, allocation, and concentration'
+description: 'Portfolios provides valuation, exposure, positions, allocation, and concentration data for the selected account context.'
 mode: 'wide'
 ---
 
-Portfolios provides valuation, exposure, positions, allocation, and concentration data for the selected account context.
-
 ## Workspace overview
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-full.png" alt="Portfolios workspace overview" />
-  </div>
-  <div className="guide-split-copy">
+![Portfolios workspace overview](/images/vero-oms-ui/portfolios-full.png)
 
-The workspace overview shows portfolio KPIs, positions, allocation, concentration, and movers for the selected account context.
+## Cash balance
 
-  </div>
-</div>
+![Portfolio cash balance](/images/vero-oms-ui/portfolios-cash-balance.png)
 
-## Portfolio tabs
-
-| Tab | Purpose |
-|---|---|
-| Cash Balance | Reviews account cash, holds, exposure, and cash/stock check status. |
-| Positions | Reviews holdings, live marks, P&L, allocation, concentration, and movers. |
-| What-if · stress | Runs scenario, Monte Carlo, and historical VaR views against the current book. |
-
-## KPI Summary
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-kpis.png" alt="Portfolio KPI summary" />
-  </div>
-  <div className="guide-split-copy">
-
-The KPI strip displays market value, P&L, day P&L, open position count, and available cash.
-
-  </div>
-</div>
+The cash balance view displays account cash, holds, exposure, and cash/stock check status.
 
 ## Positions Table
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-positions-table.png" alt="Portfolio positions table" />
-  </div>
-  <div className="guide-split-copy">
+![Portfolio positions table](/images/vero-oms-ui/portfolios-positions-table.png)
 
 The positions table lists symbol, account, quantity, sellable quantity, average cost, mark, market value, day P&L, and weight.
 
-| Control | Behavior |
-|---|---|
-| Asset-class tabs | Filters positions by all holdings, equities, derivatives, cash-like assets, or other configured classes. |
-| Account search | Narrows positions to one account. |
-| Sector selector | Narrows positions to one sector. |
-| Header sort | Sorts visible rows by symbol, name, class, sector, account, quantity, sellable, cost, mark, value, P&L, or weight. |
-| Table footer | Shows the displayed range and total matching positions. |
-
-  </div>
-</div>
-
-## Allocation
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-allocation.png" alt="Portfolio allocation" />
-  </div>
-  <div className="guide-split-copy">
-
-The allocation panel displays exposure by asset class, account, sector, and top concentration.
-
-  </div>
-</div>
-
-## Treemaps
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-treemaps.png" alt="Portfolio treemaps" />
-  </div>
-  <div className="guide-split-copy">
-
-Treemaps classify top decliners and top gainers for the selected portfolio context.
-
-  </div>
-</div>
-
 ## What-if and cash states
 
-| Area | Behavior |
-|---|---|
-| Cash Balance | Sorts account rows by account, cash balance, cash hold, stock exposure, and risk-check flags. |
-| Scenario mode | Switches among limit-down, limit-up, uniform shock, sector shock, Monte Carlo, and historical VaR. |
-| Uniform shock | Applies preset percentage moves to all holdings. |
-| Sector stress | Enables editable sector shock inputs in the right rail. |
-| Monte Carlo | Changes volatility and tail assumptions, then shows distribution statistics. |
-| Historical VaR | Changes lookback period and uses available daily history for the top holdings. |
+![Portfolio what-if and cash states](/images/vero-oms-ui/portfolios-what-if.png)

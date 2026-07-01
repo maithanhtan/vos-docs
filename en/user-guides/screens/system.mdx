@@ -1,106 +1,24 @@
 ---
 title: 'System'
-description: 'System operations for latency, user access, and audit activity'
+description: 'System provides latency, availability, user access, and audit activity views.'
 mode: 'wide'
 ---
 
-System provides latency, availability, user access, and audit activity views.
-
 ## Workspace overview
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-full.png" alt="System workspace overview" />
-  </div>
-  <div className="guide-split-copy">
-
-The workspace overview shows latency analytics, user access management, and audit activity in the System section.
-
-  </div>
-</div>
-
-## Latency Overview
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-latency-overview.png" alt="System latency overview" />
-  </div>
-  <div className="guide-split-copy">
-
-The latency overview contains filters, latency KPIs, latency vs throughput chart, and system load.
-
-| Latency control | Behavior |
-|---|---|
-| Range selector | Switches between preset windows and resets manual range state. |
-| From / To date-time | Sets a manual latency range. |
-| Type / account / status | Filters visible latency rows by message type, account, and status. |
-| Symbol / order search | Filters rows by symbol or order id. |
-| Auto refresh 3s | Toggles periodic reload of the latency report. |
-| Chart zoom | Sets a manual range from the selected chart window. |
-
-  </div>
-</div>
-
-## Latency Table
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-latency-table.png" alt="System latency table" />
-  </div>
-  <div className="guide-split-copy">
-
-The latency table lists order timing records with total latency and status.
-
-  </div>
-</div>
-
-## Order Latency Detail
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-order-detail-summary.png" alt="System order latency summary" />
-  </div>
-  <div className="guide-split-copy">
-
-The summary panel displays total latency, bottleneck indicator, account, symbol, and order context for the selected record.
-
-  </div>
-</div>
+![System workspace overview](/images/vero-oms-ui/system-full.png)
 
 ## Users
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users.png" alt="System users" />
-  </div>
-  <div className="guide-split-copy">
+![System users](/images/vero-oms-ui/system-users.png)
 
 Users displays user filters, user table, access overview, login history, and selected user panel. A data unavailable message appears when user information cannot be loaded.
 
 The Users workspace includes a text filter, user-state selector, refresh action, and **NEW USER** action. Selecting a table row updates the selected-user panel with identity, state, roles, allowed features, creation time, last login, login IP, and active session count.
 
-  </div>
-</div>
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users-access-overview.png" alt="System users access overview" />
-  </div>
-  <div className="guide-split-copy">
+![System users access overview](/images/vero-oms-ui/system-users-access-overview.png)
 
 Each user row exposes action buttons for state change, password reset, 2FA reset, and access editing. The state button opens an activate/deactivate confirmation dialog. The password button opens a reset-password dialog that requires an 8-character minimum password. The 2FA button opens a confirmation before removing the current second-factor setup.
-
-| User action | Behavior |
-|---|---|
-| Select user | Updates identity, role, access, login, and session details. |
-| Activate / Deactivate | Opens a confirmation before changing account state. |
-| Reset password | Requires a new password of at least 8 characters. |
-| Reset 2FA | Opens a confirmation before removing the current second-factor setup. |
-| Edit access | Opens role and feature controls for the selected user. |
-| New User | Opens the user provisioning form. |
-
-  </div>
-</div>
 
 ### Edit Access Dialog
 
@@ -128,36 +46,10 @@ Each user row exposes action buttons for state change, password reset, 2FA reset
   </div>
 </div>
 
-<div className="guide-split guide-split--compact">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users-create-user-dialog-browser.jpg" alt="System users create user dialog detail" />
-  </div>
-  <div className="guide-split-copy">
-
-The detail view focuses on the create form fields and role controls.
-
-  </div>
-</div>
-
 ## Audit
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-audit.png" alt="System audit" />
-  </div>
-  <div className="guide-split-copy">
+![System audit](/images/vero-oms-ui/system-audit.png)
 
 Audit displays activity history, filter/search controls, refresh, and the selected record detail panel.
 
-| Audit control | Behavior |
-|---|---|
-| Search all columns | Filters the loaded audit entries by rendered step, request, actor, detail, and request id. |
-| Actor filter | Filters activity by actor when refreshed or submitted with Enter. |
-| Refresh | Reloads audit entries. |
-| Row click | Opens the audit detail panel. |
-| Related activity | Shows the timeline for entries that share the same request id. |
-
 The detail panel displays the step, request title, actor, role, action, affected object, request id, changed values, and related activity when available.
-
-  </div>
-</div>

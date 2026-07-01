@@ -1,31 +1,16 @@
 ---
 title: 'Orders'
-description: 'Hướng dẫn theo dõi lệnh, chi tiết, fill progress, latency và market quality'
+description: 'Orders là workspace theo dõi trạng thái lệnh, fills và latency.'
 mode: 'wide'
 ---
 
-Orders là workspace theo dõi trạng thái lệnh, fills, latency và market quality.
-
 ## Tổng quan workspace
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/orders-full.png" alt="Tổng quan Orders workspace" />
-  </div>
-  <div className="guide-split-copy">
-
-Tổng quan workspace hiển thị Orders blotter, panel chi tiết lệnh, fill progress chart và market quality table.
-
-  </div>
-</div>
+![Tổng quan Orders workspace](/images/vero-oms-ui/orders-full.png)
 
 ## Order Blotter
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/orders-blotter.png" alt="Orders blotter" />
-  </div>
-  <div className="guide-split-copy">
+![Orders blotter](/images/vero-oms-ui/orders-blotter.png)
 
 Bảng Orders liệt kê account, symbol, side, quantity, price, status và thông tin thời gian cho từng lệnh.
 
@@ -40,9 +25,6 @@ Bảng Orders liệt kê account, symbol, side, quantity, price, status và thô
 | Checkbox / Select all | Chọn một hoặc nhiều dòng cho bulk action. |
 
 Khi có dòng được chọn, bulk action bar hiển thị số dòng chọn, số lệnh có thể cancel và estimated notional. `MODIFY ORDER` chỉ bật khi có đúng một lệnh cancellable. `CANCEL ALL` mở confirmation để cancel remaining working quantity.
-
-  </div>
-</div>
 
 ## Order Detail
 
@@ -66,27 +48,3 @@ Modify và cancel bị disable khi lệnh đang chọn không ở trạng thái 
   </div>
 </div>
 
-## Quan hệ lệnh và fills
-
-| Khu vực | Hành vi |
-|---|---|
-| Order chain | Hiển thị order đang chọn, parent, child orders và sibling orders khi có. |
-| Child fills | Liệt kê fills đã execute cùng quantity, price, value và execution time. |
-| Empty fill state | Cho biết order đang chọn chưa có execution được ghi nhận. |
-| Bulk cancel summary | Hiển thị selected, cancellable và skipped orders trước khi confirm. |
-| Action feedback | Hiển thị trạng thái request sent hoặc failure; order list vẫn phản ánh trạng thái hiện hành. |
-
-## Market Quality
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/orders-market-quality.png" alt="Orders market quality" />
-  </div>
-  <div className="guide-split-copy">
-
-Khu vực cuối màn hình hiển thị fill progress và market quality theo market.
-
-Fill progress chart so sánh sent quantity và filled quantity trong intraday series. Hover chart hiển thị timestamp, sent quantity và filled quantity tại điểm gần nhất. Market quality table tổng hợp fill ratio, rejection rate, order count và trade count theo market.
-
-  </div>
-</div>

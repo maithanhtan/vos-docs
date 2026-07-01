@@ -34,3 +34,4 @@ If port `3000` is already in use, start Mintlify on another port supported by th
 ## Publishing changes
 
 Changes are deployed by the configured Mintlify integration after pushing to the deployment branch.
+PATH="/Users/tony/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH" mint dev

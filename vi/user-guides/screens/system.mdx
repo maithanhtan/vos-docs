@@ -1,106 +1,23 @@
 ---
 title: 'System'
-description: 'Hướng dẫn vận hành System cho latency, user access và audit activity'
+description: 'System cung cấp các view về latency, availability, user access và audit activity.'
 mode: 'wide'
 ---
 
-System cung cấp các view về latency, availability, user access và audit activity.
-
 ## Tổng quan workspace
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-full.png" alt="Tổng quan System workspace" />
-  </div>
-  <div className="guide-split-copy">
-
-Tổng quan workspace hiển thị latency analytics, quản lý user access và audit activity trong System.
-
-  </div>
-</div>
-
-## Latency Overview
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-latency-overview.png" alt="System latency overview" />
-  </div>
-  <div className="guide-split-copy">
-
-Latency overview chứa bộ lọc, KPI latency, chart latency vs throughput và system load.
-
-| Latency control | Hành vi |
-|---|---|
-| Range selector | Chuyển preset window và reset manual range state. |
-| From / To date-time | Set manual latency range. |
-| Type / account / status | Lọc latency rows theo message type, account và status. |
-| Symbol / order search | Lọc rows theo symbol hoặc order id. |
-| Auto refresh 3s | Bật/tắt periodic reload của latency report. |
-| Chart zoom | Set manual range từ chart window được chọn. |
-
-  </div>
-</div>
-
-## Latency Table
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-latency-table.png" alt="System latency table" />
-  </div>
-  <div className="guide-split-copy">
-
-Bảng latency liệt kê order timing records cùng total latency và status.
-
-  </div>
-</div>
-
-## Order Latency Detail
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-order-detail-summary.png" alt="System order latency summary" />
-  </div>
-  <div className="guide-split-copy">
-
-Panel tóm tắt hiển thị total latency, bottleneck indicator, account, symbol và order context của record đang chọn.
-
-  </div>
-</div>
+![Tổng quan System workspace](/images/vero-oms-ui/system-full.png)
 
 ## Users
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users.png" alt="System users" />
-  </div>
-  <div className="guide-split-copy">
+![System users](/images/vero-oms-ui/system-users.png)
 
 Users hiển thị bộ lọc user, bảng user, access overview, login history và selected user panel. Thông báo data unavailable xuất hiện khi không load được user information.
 
 Users workspace gồm text filter, bộ lọc trạng thái user, thao tác refresh và **NEW USER**. Khi chọn một dòng trong bảng, panel selected-user cập nhật identity, state, roles, allowed features, thời điểm tạo, last login, login IP và số active session.
-
-  </div>
-</div>
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users-access-overview.png" alt="System users access overview" />
-  </div>
-  <div className="guide-split-copy">
+![System users access overview](/images/vero-oms-ui/system-users-access-overview.png)
 
 Mỗi dòng user có các action button để đổi state, reset password, reset 2FA và chỉnh access. Nút đổi state mở confirmation dialog activate/deactivate. Nút password mở dialog reset password và yêu cầu mật khẩu tối thiểu 8 ký tự. Nút 2FA mở confirmation trước khi xoá second-factor setup hiện tại.
-
-| User action | Hành vi |
-|---|---|
-| Select user | Cập nhật identity, role, access, login và session detail. |
-| Activate / Deactivate | Mở confirmation trước khi đổi account state. |
-| Reset password | Yêu cầu password mới tối thiểu 8 ký tự. |
-| Reset 2FA | Mở confirmation trước khi xoá second-factor setup hiện tại. |
-| Edit access | Mở role và feature controls của user đang chọn. |
-| New User | Mở form provision user. |
-
-  </div>
-</div>
 
 ### Edit Access Dialog
 
@@ -128,36 +45,10 @@ Mỗi dòng user có các action button để đổi state, reset password, rese
   </div>
 </div>
 
-<div className="guide-split guide-split--compact">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-users-create-user-dialog-browser.jpg" alt="System users create user dialog detail" />
-  </div>
-  <div className="guide-split-copy">
-
-Phần chi tiết tập trung vào field tạo user và role controls.
-
-  </div>
-</div>
-
 ## Audit
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/system-audit.png" alt="System audit" />
-  </div>
-  <div className="guide-split-copy">
+![System audit](/images/vero-oms-ui/system-audit.png)
 
 Audit hiển thị activity history, filter/search, refresh và panel chi tiết record đang chọn.
 
-| Audit control | Hành vi |
-|---|---|
-| Search all columns | Lọc audit entries đã load theo step, request, actor, detail và request id đang render. |
-| Actor filter | Lọc activity theo actor khi refresh hoặc nhấn Enter. |
-| Refresh | Reload audit entries. |
-| Row click | Mở audit detail panel. |
-| Related activity | Hiển thị timeline cho các entry cùng request id. |
-
 Detail panel hiển thị step, request title, actor, role, action, affected object, request id, changed values và related activity khi có dữ liệu.
-
-  </div>
-</div>

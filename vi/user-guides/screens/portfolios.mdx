@@ -1,99 +1,25 @@
 ---
 title: 'Portfolios'
-description: 'Hướng dẫn valuation, exposure, vị thế, allocation và concentration danh mục'
+description: 'Portfolios cung cấp valuation, exposure, vị thế, allocation và concentration theo context tài khoản đang chọn.'
 mode: 'wide'
 ---
 
-Portfolios cung cấp valuation, exposure, vị thế, allocation và concentration theo context tài khoản đang chọn.
-
 ## Tổng quan workspace
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-full.png" alt="Tổng quan Portfolios workspace" />
-  </div>
-  <div className="guide-split-copy">
+![Tổng quan Portfolios workspace](/images/vero-oms-ui/portfolios-full.png)
 
-Tổng quan workspace hiển thị KPI danh mục, positions, allocation, concentration và movers theo context tài khoản đang chọn.
+## Cash balance
 
-  </div>
-</div>
+![Portfolio cash balance](/images/vero-oms-ui/portfolios-cash-balance.png)
 
-## Portfolio tabs
-
-| Tab | Mục đích |
-|---|---|
-| Cash Balance | Xem cash, cash hold, exposure và trạng thái cash/stock check theo account. |
-| Positions | Xem holdings, live marks, P&L, allocation, concentration và movers. |
-| What-if · stress | Chạy scenario, Monte Carlo và historical VaR theo book hiện tại. |
-
-## KPI Summary
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-kpis.png" alt="Portfolio KPI summary" />
-  </div>
-  <div className="guide-split-copy">
-
-Dải KPI hiển thị market value, P&L, day P&L, số vị thế mở và available cash.
-
-  </div>
-</div>
+Khung hiển thị cash balance cho biết thông tin cash, cash hold, exposure và trạng thái cash/stock check theo account.
 
 ## Positions Table
 
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-positions-table.png" alt="Portfolio positions table" />
-  </div>
-  <div className="guide-split-copy">
+![Portfolio positions table](/images/vero-oms-ui/portfolios-positions-table.png)
 
 Bảng vị thế liệt kê symbol, account, quantity, sellable, average cost, mark, market value, day P&L và weight.
 
-| Control | Hành vi |
-|---|---|
-| Asset-class tabs | Lọc positions theo all holdings, equities, derivatives, cash-like hoặc class cấu hình khác. |
-| Account search | Lọc positions theo một account. |
-| Sector selector | Lọc positions theo một sector. |
-| Header sort | Sort visible rows theo symbol, name, class, sector, account, quantity, sellable, cost, mark, value, P&L hoặc weight. |
-| Table footer | Hiển thị range đang xem và tổng số positions match filter. |
-
-  </div>
-</div>
-
-## Allocation
-
-<div className="guide-split">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-allocation.png" alt="Portfolio allocation" />
-  </div>
-  <div className="guide-split-copy">
-
-Panel allocation hiển thị exposure theo asset class, account, sector và top concentration.
-
-  </div>
-</div>
-
-## Treemaps
-
-<div className="guide-split guide-split--wide">
-  <div className="guide-split-media">
-    <img src="/images/vero-oms-ui/portfolios-treemaps.png" alt="Portfolio treemaps" />
-  </div>
-  <div className="guide-split-copy">
-
-Treemaps phân loại top decliners và top gainers trong context danh mục đang chọn.
-
-  </div>
-</div>
-
 ## What-if và cash states
 
-| Area | Hành vi |
-|---|---|
-| Cash Balance | Sort account rows theo account, cash balance, cash hold, stock exposure và risk-check flags. |
-| Scenario mode | Chuyển giữa limit-down, limit-up, uniform shock, sector shock, Monte Carlo và historical VaR. |
-| Uniform shock | Áp dụng preset percentage moves cho toàn bộ holdings. |
-| Sector stress | Bật input sector shock editable ở rail bên phải. |
-| Monte Carlo | Đổi volatility và tail assumptions, sau đó hiển thị distribution statistics. |
-| Historical VaR | Đổi lookback period và dùng daily history có sẵn của top holdings. |
+![Portfolio what-if và cash states](/images/vero-oms-ui/portfolios-what-if.png)
