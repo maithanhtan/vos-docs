@@ -5,12 +5,8 @@
   "seo": {
     "indexing": "all",
     "metatags": {
-      "description": "VOS documentation for Vero OMS interface operations, REST APIs, and streaming integration.",
-      "og:title": "Vero OMS Docs",
-      "og:description": "Vero OMS interface documentation, REST API reference, and streaming API guide",
-      "og:site_name": "Vero OMS Docs",
-      "twitter:title": "Vero OMS Docs",
-      "twitter:description": "Vero OMS interface documentation, REST API reference, and streaming API guide"
+      "canonical": "https://docs.vos.verolabs.co",
+      "og:site_name": "Vero OMS Docs"
     }
   },
   "colors": {
