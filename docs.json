@@ -517,11 +517,5 @@
       "openapi.oms.en.json",
       "openapi.oms.vi.json"
     ]
-  },
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/en/user-guides/vero-oms-interface"
-    }
-  ]
+  }
 }
