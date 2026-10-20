@@ -1,0 +1,39 @@
+---
+title: 'Xác minh xác thực hai lớp'
+description: 'Hoàn tất đăng nhập bằng mã trong ứng dụng xác thực hoặc mã dự phòng chưa sử dụng để lấy JWT'
+openapi: '/openapi.oms.vi.json POST /api/auth/mfa/verify'
+---
+
+Gọi endpoint này sau khi [đăng nhập bằng mật khẩu](/vi/apis/rest/auth/post-api-auth-login) hoặc [tiếp tục phiên](/vi/apis/rest/auth/post-api-auth-mfa-resume) trả `status: "mfa_required"`.
+
+## Cookie và phương thức bắt buộc
+
+Gửi cookie `vos_mfa_challenge` nhận được từ yêu cầu trước. Dùng cookie jar cho client dòng lệnh hoặc server. Client trình duyệt phải gửi yêu cầu cùng origin với máy chủ xác thực. Cookie là HttpOnly; coi giá trị cookie là thông tin xác thực và không tự sửa nội dung.
+
+Endpoint không yêu cầu Bearer JWT. Phản hồi yêu cầu xác thực không cung cấp token phiên hoặc mã định danh yêu cầu để gửi trong body.
+
+| `method` | `code` | Điều kiện |
+| --- | --- | --- |
+| `totp` | Mã hiện tại trong ứng dụng xác thực, dưới dạng chuỗi gồm đúng 6 chữ số. Giữ nguyên số 0 ở đầu. | `totp` có trong `methods` của yêu cầu xác thực. |
+| `lookup_secret` | Một mã dự phòng đã lưu và chưa sử dụng, dưới dạng chuỗi. | `lookup_secret` có trong `methods`. Xác minh thành công sẽ tiêu thụ mã này. |
+
+Chỉ gửi `method` và `code`. Các trường body bổ sung bị từ chối. [Quy trình đăng nhập](/vi/apis/rest/auth/post-api-auth-login) có ví dụ cURL đầy đủ với cách giữ cookie.
+
+## Xác minh thành công
+
+HTTP `200` trả `status: "authenticated"`, `sessionToken`, `jwt`, `session`, `identity` và `tokenizedSession`. Cả hai đối tượng phiên có `authenticator_assurance_level: "aal2"`. Phản hồi xoá cookie xác thực đang chờ. Gửi `jwt` qua `Authorization: Bearer <jwt>` khi gọi REST API cần xác thực.
+
+Với [khôi phục mật khẩu](/vi/apis/rest/auth/post-api-auth-recovery-verify), giữ tất cả cookie đã cập nhật và tiếp tục yêu cầu đặt lại mật khẩu sau khi xác minh thành công.
+
+## Xử lý lỗi
+
+| Mã HTTP | Mã lỗi | Bước tiếp theo |
+| --- | --- | --- |
+| `400` | `invalid_code` | Gửi đúng phương thức và định dạng mã. |
+| `400` | `invalid_mfa_request` | Kiểm tra mã và thử lại khi yêu cầu xác thực còn hiệu lực. Không dùng lại mã dự phòng đã tiêu thụ. |
+| `401` | `session_invalid` | Đăng nhập lại. |
+| `403` | `origin_not_allowed` | Gửi yêu cầu cùng origin với máy chủ xác thực hoặc dùng server client. |
+| `403` | `session_invalid`, `session_refresh_required`, `session_aal2_required` | Bắt đầu xác thực lại và hoàn tất các bước bắt buộc. |
+| `410` | `challenge_expired`, `flow_expired` | Đăng nhập hoặc tiếp tục phiên lại để nhận yêu cầu xác thực và cookie mới. |
+| `429` | `rate_limited` | Chờ trước khi thử lại. |
+| `502` | `mfa_incomplete`, `mfa_service_unavailable` | Chưa có JWT được cấp. Thử lại sau. |

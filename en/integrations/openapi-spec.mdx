@@ -12,7 +12,7 @@ Use the OpenAPI files when generating clients, validating payloads, or giving AP
 | [`/openapi.oms.en.json`](/openapi.oms.en.json) | English REST API reference used by the English docs |
 | [`/openapi.oms.vi.json`](/openapi.oms.vi.json) | Vietnamese REST API reference used by the Vietnamese docs |
 
-The OMS REST API reference currently contains 48 HTTP operations.
+The OMS REST API reference currently contains 51 HTTP operations, including password login, two-factor verification, and session resumption.
 
 ## Use with AI tools
 
@@ -22,6 +22,8 @@ Give the model the OpenAPI file plus this instruction:
 Build against the Vero OMS OpenAPI spec.
 Use the operation's method and path exactly.
 Use Bearer authentication for protected endpoints.
+Inspect the login response status before reading jwt.
+For mfa_required, preserve the response cookie and complete two-factor verification.
 Validate all path, query, and body fields against the schema.
 Treat response schemas as authoritative for payload shape and field meanings.
 Handle documented error responses.

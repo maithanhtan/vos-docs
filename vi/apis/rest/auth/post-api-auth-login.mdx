@@ -1,5 +1,100 @@
 ---
-title: 'Login with password'
-description: 'Login with password'
+title: 'Đăng nhập và lấy JWT'
+description: 'Xác thực bằng mật khẩu và hoàn tất xác thực hai lớp khi được yêu cầu'
 openapi: '/openapi.oms.vi.json POST /api/auth/login'
 ---
+
+Gửi yêu cầu xác thực đến `https://platform.verolabs.co`. Dùng JWT nhận được để gọi REST API cần xác thực tại `https://api-oms.verolabs.co`.
+
+## Trạng thái phản hồi
+
+Cả hai trạng thái dưới đây đều trả HTTP `200`. Kiểm tra `status` trước khi đọc `jwt`.
+
+| `status` | Ý nghĩa | Bước tiếp theo |
+| --- | --- | --- |
+| `authenticated` | Đã đáp ứng tất cả yếu tố xác thực bắt buộc. Phản hồi chứa `jwt` và `sessionToken`. | Gửi `jwt` qua `Authorization: Bearer <jwt>` khi gọi REST API. |
+| `mfa_required` | Cần xác thực yếu tố thứ hai. Phản hồi chứa `methods` và `expiresAt`, không chứa `jwt` hoặc `sessionToken`. | Giữ cookie phản hồi và [xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify). |
+
+Khi tài khoản bật xác thực hai lớp, xác minh mật khẩu chưa đủ để cấp JWT. Ví dụ phản hồi yêu cầu xác thực đang chờ:
+
+```json
+{
+  "status": "mfa_required",
+  "methods": ["totp", "lookup_secret"],
+  "expiresAt": "2026-10-20T12:00:00Z"
+}
+```
+
+`methods` liệt kê phương thức khả dụng cho yêu cầu xác thực này. `totp` nhận mã 6 chữ số hiện tại trong ứng dụng xác thực. `lookup_secret` nhận mã dự phòng đã lưu và chưa sử dụng. Chọn phương thức có trong phản hồi API.
+
+## Đăng nhập bằng cURL
+
+Các ví dụ Bash dưới đây cần `curl` và `jq`. Dùng cùng một cookie jar cho bước đăng nhập và xác minh. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực; yêu cầu khác origin bị từ chối.
+
+### 1. Gửi email và mật khẩu
+
+```bash
+AUTH_BASE_URL="https://platform.verolabs.co"
+COOKIE_JAR="$(mktemp)"
+chmod 600 "$COOKIE_JAR"
+read -r -p "Email tài khoản: " IDENTIFIER
+read -r -s -p "Mật khẩu: " PASSWORD
+printf '\n'
+
+AUTH_RESPONSE="$(curl --silent --show-error --fail-with-body \
+  --request POST "$AUTH_BASE_URL/api/auth/login" \
+  --cookie-jar "$COOKIE_JAR" \
+  --header 'Content-Type: application/json' \
+  --data "$(jq -n --arg identifier "$IDENTIFIER" --arg password "$PASSWORD" \
+    '{identifier: $identifier, password: $password}')")"
+unset PASSWORD
+
+printf '%s\n' "$AUTH_RESPONSE" | jq '{status, methods, expiresAt}'
+```
+
+Nếu `status` là `authenticated`, chuyển đến bước 3. Nếu là `mfa_required`, hoàn tất bước 2 trước khi lấy JWT.
+
+### 2. Xác minh yếu tố thứ hai khi được yêu cầu
+
+Với `totp`, nhập mã 6 chữ số hiện tại trong ứng dụng xác thực. Giữ mã dưới dạng chuỗi để không mất số 0 ở đầu.
+
+```bash
+MFA_METHOD="totp"
+read -r -s -p "Mã trong ứng dụng xác thực: " MFA_CODE
+printf '\n'
+
+AUTH_RESPONSE="$(curl --silent --show-error --fail-with-body \
+  --request POST "$AUTH_BASE_URL/api/auth/mfa/verify" \
+  --cookie "$COOKIE_JAR" \
+  --cookie-jar "$COOKIE_JAR" \
+  --header 'Content-Type: application/json' \
+  --data "$(jq -n --arg method "$MFA_METHOD" --arg code "$MFA_CODE" \
+    '{method: $method, code: $code}')")"
+unset MFA_CODE
+
+printf '%s\n' "$AUTH_RESPONSE" | jq '{status, aal: .session.authenticator_assurance_level}'
+```
+
+Để dùng mã dự phòng, đặt `MFA_METHOD="lookup_secret"` và nhập mã dự phòng đã lưu, chưa sử dụng. Chỉ chọn cách này khi `lookup_secret` có trong `methods`. Xác minh thành công sẽ tiêu thụ mã dự phòng đó.
+
+Phản hồi thành công có `status: "authenticated"`, JWT và `authenticator_assurance_level: "aal2"` trong các đối tượng phiên. API xoá cookie xác thực đang chờ.
+
+### 3. Gọi REST API bằng JWT
+
+```bash
+JWT="$(printf '%s\n' "$AUTH_RESPONSE" \
+  | jq -er 'select(.status == "authenticated") | .jwt')"
+
+curl --silent --show-error --fail-with-body \
+  --header "Authorization: Bearer $JWT" \
+  'https://api-oms.verolabs.co/api/v1/oms/risk/accounts'
+
+rm -- "$COOKIE_JAR"
+unset AUTH_RESPONSE JWT
+```
+
+`sessionToken` và `jwt` có mục đích khác nhau. Dùng `jwt` để xác thực REST API. Giữ bí mật `sessionToken`; token này có thể dùng để [tiếp tục phiên hiện có](/vi/apis/rest/auth/post-api-auth-mfa-resume).
+
+## Thử lại và hết hạn
+
+Mã sai trả lỗi và không cấp JWT. Bạn có thể thử xác minh lại khi yêu cầu xác thực còn hiệu lực. Nếu API trả HTTP `410`, đăng nhập lại để nhận yêu cầu xác thực và cookie mới. Không dùng lại mã dự phòng đã tiêu thụ hoặc tự tạo cookie xác thực.

@@ -20,7 +20,7 @@ mode: 'wide'
 
 <Steps>
   <Step title="Authentication">
-    Gọi terminal login API và dùng JWT trả về làm `Authorization: Bearer <jwt>` cho REST API.
+    Thực hiện [quy trình đăng nhập](/vi/apis/rest/auth/post-api-auth-login). Nếu phản hồi là `mfa_required`, giữ cookie và hoàn tất xác minh hai lớp. Dùng `jwt` trong phản hồi `authenticated` làm `Authorization: Bearer <jwt>` khi gọi REST API.
   </Step>
   <Step title="Tài liệu API">
     Xem tài liệu REST API, Streaming API và FIX API để kiểm tra các hợp đồng và quy trình được hỗ trợ.

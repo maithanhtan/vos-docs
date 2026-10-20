@@ -1,0 +1,28 @@
+---
+title: 'Resume an account session'
+description: 'Request a JWT for an existing session and complete two-factor authentication if required'
+openapi: '/openapi.oms.en.json POST /api/auth/mfa/resume'
+---
+
+Use this endpoint when you already hold an account `sessionToken`. Send it in `X-Auth-Session-Token`, without a request body. This value is the account session token, not the REST API JWT.
+
+```bash
+COOKIE_JAR="$(mktemp)"
+chmod 600 "$COOKIE_JAR"
+read -r -s -p "Session token: " SESSION_TOKEN
+printf '\n'
+
+AUTH_RESPONSE="$(curl --silent --show-error --fail-with-body \
+  --request POST 'https://platform.verolabs.co/api/auth/mfa/resume' \
+  --cookie-jar "$COOKIE_JAR" \
+  --header "X-Auth-Session-Token: $SESSION_TOKEN")"
+unset SESSION_TOKEN
+
+printf '%s\n' "$AUTH_RESPONSE" | jq '{status, methods, expiresAt}'
+```
+
+If `status` is `authenticated`, the response includes a JWT for protected REST API requests.
+
+If `status` is `mfa_required`, no JWT is returned. Preserve the cookie jar and complete [two-factor verification](/en/apis/rest/auth/post-api-auth-mfa-verify) with a method listed in `methods`. Use the same verification and JWT-extraction steps as [password login](/en/apis/rest/auth/post-api-auth-login), with `AUTH_BASE_URL="https://platform.verolabs.co"`. Remove the cookie jar when authentication is complete.
+
+A missing token returns HTTP `401` with `session_missing`. If the session is invalid, sign in again. Browser requests must originate from the authentication host.

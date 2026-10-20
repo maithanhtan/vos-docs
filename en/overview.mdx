@@ -20,7 +20,7 @@ mode: 'wide'
 
 <Steps>
   <Step title="Authentication">
-    Call the terminal login API and use the returned JWT as `Authorization: Bearer <jwt>` for REST API calls.
+    Follow the [login procedure](/en/apis/rest/auth/post-api-auth-login). If the response is `mfa_required`, preserve its cookie and complete two-factor verification. Use `jwt` from an `authenticated` response as `Authorization: Bearer <jwt>` for REST API calls.
   </Step>
   <Step title="API references">
     Review the REST API, Streaming API, and FIX API documentation for the supported contracts and workflows.

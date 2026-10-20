@@ -12,7 +12,7 @@ Dùng các file OpenAPI khi generate client, validate payload hoặc đưa conte
 | [`/openapi.oms.en.json`](/openapi.oms.en.json) | REST API reference tiếng Anh dùng cho English docs |
 | [`/openapi.oms.vi.json`](/openapi.oms.vi.json) | REST API reference tiếng Việt dùng cho Vietnamese docs |
 
-OMS REST API reference hiện có 48 HTTP operations.
+Tài liệu REST API hiện có 51 thao tác HTTP, bao gồm đăng nhập bằng mật khẩu, xác minh hai lớp và tiếp tục phiên.
 
 ## Dùng với AI tools
 
@@ -22,6 +22,8 @@ OMS REST API reference hiện có 48 HTTP operations.
 Build against the Vero OMS OpenAPI spec.
 Use the operation's method and path exactly.
 Use Bearer authentication for protected endpoints.
+Inspect the login response status before reading jwt.
+For mfa_required, preserve the response cookie and complete two-factor verification.
 Validate all path, query, and body fields against the schema.
 Treat response schemas as authoritative for payload shape and field meanings.
 Handle documented error responses.

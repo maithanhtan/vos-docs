@@ -18,7 +18,7 @@
   "tags": [
     {
       "name": "Authentication",
-      "description": "Xác thực tài khoản và khôi phục mật khẩu."
+      "description": "Đăng nhập bằng mật khẩu, xác thực hai lớp, tiếp tục phiên và khôi phục mật khẩu."
     },
     {
       "name": "Trading",
@@ -43,8 +43,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Login with password",
-        "description": "Authenticates an email identifier and password, then returns a session token and Bearer JWT for API calls.",
+        "summary": "Đăng nhập bằng mật khẩu",
+        "description": "Xác thực email và mật khẩu tài khoản. Khi không cần yếu tố thứ hai, trả status=authenticated kèm jwt. Khi cần xác thực hai lớp, trả HTTP 200 với status=mfa_required và không trả jwt hoặc sessionToken. Giữ cookie xác thực và gọi POST /api/auth/mfa/verify trước khi sử dụng REST API. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực; yêu cầu khác origin bị từ chối.",
         "operationId": "post_api_auth_login",
         "servers": [
           {
@@ -53,23 +53,104 @@
         ],
         "responses": {
           "200": {
-            "description": "Active session and JWT",
+            "description": "Phiên đã xác thực kèm JWT, hoặc yêu cầu xác thực yếu tố thứ hai đang chờ. Kiểm tra status.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthLoginResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Xác thực hoàn tất",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  },
+                  "mfa_required": {
+                    "summary": "Cần yếu tố xác thực thứ hai; giữ Set-Cookie",
+                    "value": {
+                      "status": "mfa_required",
+                      "methods": [
+                        "totp",
+                        "lookup_secret"
+                      ],
+                      "expiresAt": "2026-10-20T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Khi status là mfa_required, đặt cookie HttpOnly vos_mfa_challenge với Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để gọi POST /api/auth/mfa/verify. Cookie hết hạn tại expiresAt. Khi status là authenticated, xoá cookie xác thực đang chờ.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Nội dung thông tin đăng nhập bị thiếu hoặc không hợp lệ (invalid_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           },
           "401": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Email hoặc mật khẩu bị từ chối (invalid_credentials).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           },
           "502": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Không thể xác thực hoặc không trả về phiên hoạt động/JWT (auth_service_unavailable, inactive_session, missing_jwt).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -82,6 +163,296 @@
             }
           },
           "description": "Email identifier and password credentials."
+        }
+      }
+    },
+    "/api/auth/mfa/verify": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Xác minh xác thực hai lớp",
+        "description": "Hoàn tất yêu cầu xác thực đang chờ bằng mã 6 chữ số trong ứng dụng xác thực hoặc mã dự phòng chưa sử dụng. Gửi cookie từ bước đăng nhập hoặc tiếp tục phiên. Không yêu cầu Bearer JWT. Khi thành công, trả status=authenticated, phiên aal2 và JWT, sau đó xoá cookie xác thực. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực.",
+        "operationId": "post_api_auth_mfa_verify",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "security": [
+          {
+            "mfaChallengeCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Phương thức và mã xác thực yếu tố thứ hai.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthMfaVerifyRequest"
+              },
+              "examples": {
+                "totp": {
+                  "summary": "Mã trong ứng dụng xác thực",
+                  "value": {
+                    "method": "totp",
+                    "code": "012345"
+                  }
+                },
+                "backup_code": {
+                  "summary": "Mã dự phòng đã lưu và chưa sử dụng",
+                  "value": {
+                    "method": "lookup_secret",
+                    "code": "<unused-backup-code>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Xác thực hai lớp hoàn tất; JWT đã được cấp.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthAuthenticatedResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Xác thực hoàn tất",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal2",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal2",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Xoá cookie vos_mfa_challenge đang chờ. Khi khôi phục mật khẩu, đồng thời cập nhật cookie khôi phục cho bước đặt lại mật khẩu.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Định dạng mã không hợp lệ (invalid_code), hoặc mã/yêu cầu bị từ chối (invalid_mfa_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Phiên không còn hợp lệ (session_invalid). Đăng nhập lại.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin hoặc điều kiện xác thực của phiên không được chấp nhận (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Cookie xác thực bị thiếu/hết hạn (challenge_expired), hoặc yêu cầu xác thực không còn hợp lệ (flow_expired). Đăng nhập hoặc tiếp tục phiên lại.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quá nhiều yêu cầu xác thực (rate_limited).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Không thể hoàn tất xác thực hai lớp (mfa_incomplete, mfa_service_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/mfa/resume": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Tiếp tục phiên tài khoản",
+        "description": "Dùng sessionToken hiện có trong X-Auth-Session-Token để yêu cầu JWT mà không gửi lại mật khẩu. Trả authenticated hoặc mfa_required như bước đăng nhập bằng mật khẩu. Nếu cần yếu tố thứ hai, giữ cookie phản hồi và gọi POST /api/auth/mfa/verify. Không yêu cầu body. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực.",
+        "operationId": "post_api_auth_mfa_resume",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "security": [
+          {
+            "authSessionToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Phiên đã xác thực kèm JWT, hoặc yêu cầu xác thực yếu tố thứ hai đang chờ. Kiểm tra status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Xác thực hoàn tất",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  },
+                  "mfa_required": {
+                    "summary": "Cần yếu tố xác thực thứ hai; giữ Set-Cookie",
+                    "value": {
+                      "status": "mfa_required",
+                      "methods": [
+                        "totp",
+                        "lookup_secret"
+                      ],
+                      "expiresAt": "2026-10-20T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Khi status là mfa_required, đặt cookie HttpOnly vos_mfa_challenge với Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để gọi POST /api/auth/mfa/verify. Cookie hết hạn tại expiresAt. Khi status là authenticated, xoá cookie xác thực đang chờ.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Yêu cầu xác thực phiên bị từ chối (invalid_mfa_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Thiếu token phiên (session_missing), hoặc phiên không hợp lệ (session_invalid). Đăng nhập lại.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Origin hoặc điều kiện xác thực của phiên không được chấp nhận (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Cookie xác thực bị thiếu/hết hạn (challenge_expired), hoặc yêu cầu xác thực không còn hợp lệ (flow_expired). Đăng nhập hoặc tiếp tục phiên lại.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Quá nhiều yêu cầu xác thực (rate_limited).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Không thể xác thực hoặc không trả JWT (mfa_service_unavailable, missing_jwt).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -143,7 +514,7 @@
           "Authentication"
         ],
         "summary": "Xác minh mã khôi phục",
-        "description": "Xác minh mã dùng một lần cho phiên khôi phục hiện tại. Gửi cookie phiên khôi phục do yêu cầu bắt đầu trả về.",
+        "description": "Xác minh mã khôi phục một lần gửi qua email. Giữ cookie khôi phục. Nếu status là mfa_required, hoàn tất POST /api/auth/mfa/verify bằng mã trong ứng dụng xác thực hoặc mã dự phòng chưa sử dụng cùng các cookie phản hồi trước khi đặt lại mật khẩu. Xác minh mã email không bỏ qua xác thực hai lớp.",
         "operationId": "post_api_auth_recovery_verify",
         "servers": [
           {
@@ -152,19 +523,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Mã khôi phục đã được xác minh",
-            "headers": {
-              "Set-Cookie": {
-                "description": "Cookie phiên khôi phục đã cập nhật, bắt buộc cho yêu cầu đặt lại mật khẩu.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
+            "description": "Mã khôi phục được chấp nhận; được phép đặt lại mật khẩu hoặc cần xác thực yếu tố thứ hai.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthRecoveryVerifyResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cập nhật cookie khôi phục. Khi mfa_required, đồng thời đặt cookie xác thực hai lớp. Giữ tất cả cookie phản hồi cho các yêu cầu tiếp theo.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -177,6 +548,26 @@
           },
           "502": {
             "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -198,7 +589,7 @@
           "Authentication"
         ],
         "summary": "Đặt lại mật khẩu đã khôi phục",
-        "description": "Đặt mật khẩu mới sau khi xác minh mã. Gửi cookie phiên khôi phục do yêu cầu xác minh trả về. Phản hồi thành công cũng trả về phiên đã xác thực.",
+        "description": "Đặt mật khẩu mới sau khi xác minh mã email và hoàn tất xác thực hai lớp nếu được yêu cầu. Gửi cookie khôi phục mới nhất. Kiểm tra status phản hồi: authenticated chứa JWT; mfa_required yêu cầu hoàn tất endpoint xác thực yếu tố thứ hai trước khi gọi API.",
         "operationId": "post_api_auth_recovery_reset_password",
         "servers": [
           {
@@ -207,11 +598,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Mật khẩu đã được đặt lại và phiên đang hoạt động",
+            "description": "Mật khẩu đã cập nhật; phiên đã xác thực hoặc yêu cầu xác thực yếu tố thứ hai đang chờ.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Xoá cookie khôi phục. Nếu mfa_required, đặt cookie xác thực cần thiết cho bước xác minh yếu tố thứ hai.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -224,6 +623,26 @@
           },
           "502": {
             "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -278,7 +697,7 @@
           "System & Diagnostics"
         ],
         "summary": "Aggregated latency metrics",
-        "description": "Returns count, min, max, avg, p50, p95, p99, and a time-bucketed series.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Returns count, min, max, avg, p50, p95, p99, and a time-bucketed series.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_metrics",
         "servers": [
           {
@@ -339,7 +758,7 @@
           "System & Diagnostics"
         ],
         "summary": "Raw latency records",
-        "description": "Most-recent latency records with paging.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Most-recent latency records with paging.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_raw",
         "servers": [
           {
@@ -397,7 +816,7 @@
           "System & Diagnostics"
         ],
         "summary": "Latency detail records and segments",
-        "description": "Returns matching latency detail records and derived per-segment latencies. When `request_id` is supplied without time parameters, the query uses the request identifier. Otherwise, the query uses the time window.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Returns matching latency detail records and derived per-segment latencies. When `request_id` is supplied without time parameters, the query uses the request identifier. Otherwise, the query uses the time window.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_stages",
         "servers": [
           {
@@ -460,7 +879,7 @@
           "Trading"
         ],
         "summary": "Query orders (caller-scoped)",
-        "description": "Returns order records scoped to the accounts the caller can access. A caller with no account grants receives an empty page. `from_ns` and `to_ns` filter by order creation timestamp (`create_unix_utc_time_ms`).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns order records scoped to the accounts the caller can access. A caller with no account grants receives an empty page. `from_ns` and `to_ns` filter by order creation timestamp (`create_unix_utc_time_ms`).\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_orders",
         "servers": [
           {
@@ -563,7 +982,7 @@
           "Trading"
         ],
         "summary": "Query IOI advertisements (public board data)",
-        "description": "Returns IOI advertisement board data. Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns IOI advertisement board data. Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "listIoiAdvertisements",
         "servers": [
           {
@@ -633,7 +1052,7 @@
           "Administration"
         ],
         "summary": "List the calling user's own per-account permission grants",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_permissions",
         "servers": [
           {
@@ -665,7 +1084,7 @@
           "Administration"
         ],
         "summary": "List permission grants (admin)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -695,7 +1114,7 @@
           "Administration"
         ],
         "summary": "Grant a per-account permission (admin, direct)",
-        "description": "Grants account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Grants account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -736,7 +1155,7 @@
           "Administration"
         ],
         "summary": "Revoke a per-account permission (admin, direct)",
-        "description": "Revokes account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Revokes account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -779,7 +1198,7 @@
           "Administration"
         ],
         "summary": "List account groups",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_groups",
         "servers": [
           {
@@ -809,7 +1228,7 @@
           "Administration"
         ],
         "summary": "Create an account group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_groups",
         "servers": [
           {
@@ -852,7 +1271,7 @@
           "Administration"
         ],
         "summary": "List the members (accounts) of a group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_groups_members",
         "servers": [
           {
@@ -882,7 +1301,7 @@
           "Administration"
         ],
         "summary": "Remove an account from its group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_groups_members",
         "servers": [
           {
@@ -925,7 +1344,7 @@
           "Administration"
         ],
         "summary": "Move an account into a group (single membership)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_groups_move",
         "servers": [
           {
@@ -968,7 +1387,7 @@
           "Administration"
         ],
         "summary": "Caller-scoped account search (backs the terminal CMD search)",
-        "description": "Returns only the accounts the calling user is permitted on whose code matches `q` (case-insensitive substring).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns only the accounts the calling user is permitted on whose code matches `q` (case-insensitive substring).\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_search",
         "servers": [
           {
@@ -1020,7 +1439,7 @@
           "Administration"
         ],
         "summary": "Create a maker-checker workflow request",
-        "description": "Creates a `PENDING` request. The body's `type` selects the request kind, one of:\n`CREATE_RISK_RULE`, `DELETE_RISK_RULE`, `GRANT_PERMISSION`, `REVOKE_PERMISSION`,\n`CREATE_GROUP`, `MOVE_ACCOUNT`, `CREATE_ACCOUNT`, `UPDATE_ACCOUNT`, `DEPOSIT`, `WITHDRAW`,\n`ADD_STOCK`, `REMOVE_STOCK`. The remaining fields are the type-specific payload.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Creates a `PENDING` request. The body's `type` selects the request kind, one of:\n`CREATE_RISK_RULE`, `DELETE_RISK_RULE`, `GRANT_PERMISSION`, `REVOKE_PERMISSION`,\n`CREATE_GROUP`, `MOVE_ACCOUNT`, `CREATE_ACCOUNT`, `UPDATE_ACCOUNT`, `DEPOSIT`, `WITHDRAW`,\n`ADD_STOCK`, `REMOVE_STOCK`. The remaining fields are the type-specific payload.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_requests",
         "servers": [
           {
@@ -1061,7 +1480,7 @@
           "Administration"
         ],
         "summary": "List workflow requests",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_requests",
         "servers": [
           {
@@ -1093,7 +1512,7 @@
           "Administration"
         ],
         "summary": "Get a single workflow request",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_requests_requestId",
         "servers": [
           {
@@ -1130,7 +1549,7 @@
           "Administration"
         ],
         "summary": "Approve a request (reviewer must differ from requester)",
-        "description": "Approves a pending request and records the workflow result.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "description": "Approves a pending request and records the workflow result.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `checker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_approve",
         "servers": [
           {
@@ -1178,7 +1597,7 @@
           "Administration"
         ],
         "summary": "Reject a request (reviewer must differ from requester)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `checker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_reject",
         "servers": [
           {
@@ -1226,7 +1645,7 @@
           "Administration"
         ],
         "summary": "Cancel a request (only the original requester may cancel)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_cancel",
         "servers": [
           {
@@ -1263,7 +1682,7 @@
           "Administration"
         ],
         "summary": "List the admin audit log",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `checker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `checker` or `admin`.",
         "operationId": "get_api_v1_util_audit",
         "servers": [
           {
@@ -1295,7 +1714,7 @@
           "Administration"
         ],
         "summary": "List controlled reference values",
-        "description": "Requires `kind=comp_id` or `kind=sender_sub_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `kind=comp_id` or `kind=sender_sub_id`.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_reference",
         "servers": [
           {
@@ -1343,7 +1762,7 @@
           "Administration"
         ],
         "summary": "Add a controlled reference value",
-        "description": "Adds or upserts a reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Adds or upserts a reference list value.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_reference",
         "servers": [
           {
@@ -1384,7 +1803,7 @@
           "Administration"
         ],
         "summary": "Remove a controlled reference value",
-        "description": "Deletes one reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Deletes one reference list value.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_reference",
         "servers": [
           {
@@ -1430,7 +1849,7 @@
           "Administration"
         ],
         "summary": "List firm trader mappings",
-        "description": "Optionally filter by `firm_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Optionally filter by `firm_id`.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1471,7 +1890,7 @@
           "Administration"
         ],
         "summary": "Add a firm trader mapping",
-        "description": "Adds or upserts one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Adds or upserts one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1512,7 +1931,7 @@
           "Administration"
         ],
         "summary": "Remove a firm trader mapping",
-        "description": "Deletes one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Deletes one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1585,7 +2004,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List order reject rules",
-        "description": "Returns live order-risk reject rules.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns live order-risk reject rules.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_orders_risk_rules",
         "servers": [
           {
@@ -1617,7 +2036,7 @@
           "Trading"
         ],
         "summary": "Submit a new order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_new",
         "servers": [
           {
@@ -1666,7 +2085,7 @@
           "Trading"
         ],
         "summary": "Cancel a working order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_cancel",
         "servers": [
           {
@@ -1715,7 +2134,7 @@
           "Trading"
         ],
         "summary": "Replace a working order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_replace",
         "servers": [
           {
@@ -1764,7 +2183,7 @@
           "Trading"
         ],
         "summary": "Submit a FIX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_quote",
         "servers": [
           {
@@ -1813,7 +2232,7 @@
           "Trading"
         ],
         "summary": "Respond to a quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_quote_response",
         "servers": [
           {
@@ -1862,7 +2281,7 @@
           "Trading"
         ],
         "summary": "Submit a KRX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_kquote",
         "servers": [
           {
@@ -1911,7 +2330,7 @@
           "Trading"
         ],
         "summary": "Cancel a KRX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_kquote_cancel",
         "servers": [
           {
@@ -1960,7 +2379,7 @@
           "Trading"
         ],
         "summary": "Submit an IOI",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_ioi",
         "servers": [
           {
@@ -2036,7 +2455,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List account mappings",
-        "description": "Returns configured account mappings, filtered by permissions when permission filtering is active.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns configured account mappings, filtered by permissions when permission filtering is active.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_admin_mappings",
         "servers": [
           {
@@ -2077,7 +2496,7 @@
           "Portfolio & Risk"
         ],
         "summary": "Get account mapping",
-        "description": "Returns one account mapping by account code.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns one account mapping by account code.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_admin_mappings_account_code",
         "servers": [
           {
@@ -2120,7 +2539,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List account balances and holdings",
-        "description": "Returns current cash balances and stock holdings for every permitted account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns current cash balances and stock holdings for every permitted account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_accounts",
         "servers": [
           {
@@ -2158,7 +2577,7 @@
           "Portfolio & Risk"
         ],
         "summary": "Get account balance and holdings",
-        "description": "Returns one account balance and holdings by engine account id.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns one account balance and holdings by engine account id.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_accounts_account_id",
         "servers": [
           {
@@ -2201,7 +2620,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List risk rules",
-        "description": "Returns active risk rules from the live read model.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns active risk rules from the live read model.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/vi/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_rules",
         "servers": [
           {
@@ -2240,6 +2659,18 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "mfaChallengeCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "vos_mfa_challenge",
+        "description": "Cookie xác thực hai lớp đang chờ, được trả về khi đăng nhập hoặc tiếp tục phiên. Dùng cookie jar; không tự tạo hoặc sửa giá trị cookie."
+      },
+      "authSessionToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Auth-Session-Token",
+        "description": "Token phiên tài khoản hiện có, được trả về trong sessionToken sau khi xác thực. Đây không phải Bearer JWT."
       }
     },
     "parameters": {
@@ -3018,11 +3449,13 @@
         "properties": {
           "identifier": {
             "type": "string",
-            "description": "Email address associated with the Vero OMS account."
+            "description": "Email address associated with the Vero OMS account.",
+            "minLength": 1
           },
           "password": {
             "type": "string",
-            "description": "Current password for the Vero OMS account."
+            "description": "Current password for the Vero OMS account.",
+            "minLength": 1
           }
         },
         "required": [
@@ -3080,21 +3513,22 @@
         "additionalProperties": false
       },
       "AuthRecoveryVerifyResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "verified"
-            ],
-            "description": "Cho biết mã khôi phục đã được xác minh."
+        "description": "Mã khôi phục qua email đã được chấp nhận. verified cho phép đặt lại mật khẩu; mfa_required yêu cầu xác thực hai lớp trước.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthRecoveryCodeVerifiedResponse"
+          },
+          {
+            "$ref": "#/components/schemas/AuthMfaChallenge"
           }
-        },
-        "required": [
-          "status"
         ],
-        "description": "Trạng thái xác minh khôi phục mật khẩu.",
-        "additionalProperties": false
+        "discriminator": {
+          "propertyName": "status",
+          "mapping": {
+            "verified": "#/components/schemas/AuthRecoveryCodeVerifiedResponse",
+            "mfa_required": "#/components/schemas/AuthMfaChallenge"
+          }
+        }
       },
       "AuthRecoveryResetRequest": {
         "type": "object",
@@ -3124,8 +3558,9 @@
             "description": "Account attributes returned with the authenticated session."
           }
         },
-        "description": "Account identity returned by the authenticated session.",
-        "additionalProperties": true
+        "description": "Thông tin danh tính tài khoản của phiên đã xác thực, hoặc null nếu phản hồi không có danh tính.",
+        "additionalProperties": true,
+        "nullable": true
       },
       "AuthSessionDevice": {
         "type": "object",
@@ -3179,39 +3614,36 @@
           "tokenized": {
             "type": "string",
             "description": "Bearer JWT issued for REST API calls."
+          },
+          "authenticator_assurance_level": {
+            "type": "string",
+            "enum": [
+              "aal1",
+              "aal2"
+            ],
+            "description": "Mức xác thực của phiên: aal1 sau khi xác thực yếu tố thứ nhất; aal2 sau khi xác thực hai lớp thành công."
           }
         },
-        "description": "Session object. The `tokenized` field is the Bearer JWT used for API calls.",
+        "description": "Thông tin phiên đã xác thực. tokenized chứa Bearer JWT khi trường này có trong phản hồi.",
         "additionalProperties": true
       },
       "AuthLoginResponse": {
-        "type": "object",
-        "properties": {
-          "sessionToken": {
-            "type": "string",
-            "description": "Session token returned after authentication. Store it securely for session refresh and logout."
+        "description": "Kiểm tra status trong mọi phản hồi HTTP thành công. authenticated chứa JWT; mfa_required yêu cầu gọi POST /api/auth/mfa/verify với cookie từ phản hồi.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthAuthenticatedResponse"
           },
-          "jwt": {
-            "type": "string",
-            "description": "Bearer JWT returned for REST API calls."
-          },
-          "session": {
-            "$ref": "#/components/schemas/AuthSession"
-          },
-          "identity": {
-            "$ref": "#/components/schemas/AuthIdentity"
-          },
-          "tokenizedSession": {
-            "$ref": "#/components/schemas/AuthSession"
+          {
+            "$ref": "#/components/schemas/AuthMfaChallenge"
           }
-        },
-        "required": [
-          "sessionToken",
-          "jwt",
-          "session",
-          "tokenizedSession"
         ],
-        "description": "AuthLoginResponse schema."
+        "discriminator": {
+          "propertyName": "status",
+          "mapping": {
+            "authenticated": "#/components/schemas/AuthAuthenticatedResponse",
+            "mfa_required": "#/components/schemas/AuthMfaChallenge"
+          }
+        }
       },
       "AuthError": {
         "type": "object",
@@ -3227,7 +3659,7 @@
           "status": {
             "type": "integer",
             "format": "int32",
-            "description": "Status value returned by the API."
+            "description": "Mã trạng thái HTTP của phản hồi lỗi này."
           }
         },
         "required": [
@@ -3235,7 +3667,7 @@
           "message",
           "status"
         ],
-        "description": "AuthError schema."
+        "description": "Cấu trúc lỗi xác thực. Dùng mã HTTP và trường error để quyết định bước tiếp theo."
       },
       "RestErrorResponse": {
         "type": "object",
@@ -5156,6 +5588,182 @@
           }
         },
         "description": "Latency detail response."
+      },
+      "AuthAuthenticatedResponse": {
+        "type": "object",
+        "description": "Xác thực hoàn tất. JWT chỉ được cấp sau khi đáp ứng tất cả yếu tố xác thực bắt buộc.",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "authenticated"
+            ],
+            "description": "Cho biết xác thực đã hoàn tất và JWT có thể được sử dụng."
+          },
+          "sessionToken": {
+            "type": "string",
+            "description": "Token phiên tài khoản. Giữ bí mật token này. Dùng để tiếp tục phiên; dùng jwt để xác thực REST API."
+          },
+          "jwt": {
+            "type": "string",
+            "description": "Bearer JWT cho yêu cầu REST API cần xác thực. Gửi bằng Authorization: Bearer <jwt>."
+          },
+          "session": {
+            "description": "Phiên đã xác thực và đang hoạt động.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              }
+            ]
+          },
+          "identity": {
+            "description": "Danh tính tài khoản, hoặc null nếu không có.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthIdentity"
+              }
+            ]
+          },
+          "tokenizedSession": {
+            "description": "Phiên đã xác thực chứa JWT trong trường tokenized.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "sessionToken",
+          "jwt",
+          "session",
+          "identity",
+          "tokenizedSession"
+        ],
+        "additionalProperties": false
+      },
+      "AuthMfaChallenge": {
+        "type": "object",
+        "description": "Mật khẩu hoặc phiên hiện có đã được chấp nhận nhưng cần xác thực yếu tố thứ hai. Phản hồi không chứa jwt hoặc sessionToken.",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "mfa_required"
+            ],
+            "description": "Yêu cầu yếu tố xác thực thứ hai trước khi cấp JWT."
+          },
+          "methods": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Các phương thức đã đăng ký và đang khả dụng. totp dùng mã 6 chữ số trong ứng dụng xác thực; lookup_secret dùng mã dự phòng chưa sử dụng. Chọn phương thức từ danh sách này.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "totp",
+                "lookup_secret"
+              ],
+              "description": "Phương thức xác thực yếu tố thứ hai được hỗ trợ."
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Thời điểm hết hạn yêu cầu xác thực theo UTC. Đăng nhập hoặc tiếp tục phiên lại sau khi hết hạn."
+          }
+        },
+        "required": [
+          "status",
+          "methods",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "AuthTotpVerifyRequest": {
+        "type": "object",
+        "description": "Xác minh mã 6 chữ số hiện tại trong ứng dụng xác thực.",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "totp"
+            ],
+            "description": "Chọn xác minh bằng mã trong ứng dụng xác thực. Phải có trong methods của yêu cầu xác thực."
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "pattern": "^[0-9]{6}$",
+            "example": "012345",
+            "description": "Chuỗi gồm đúng 6 chữ số, giữ nguyên số 0 ở đầu."
+          }
+        },
+        "required": [
+          "method",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "AuthBackupCodeVerifyRequest": {
+        "type": "object",
+        "description": "Xác minh một mã dự phòng đã lưu và chưa sử dụng.",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "lookup_secret"
+            ],
+            "description": "Chọn xác minh bằng mã dự phòng. Phải có trong methods của yêu cầu xác thực."
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Mã dự phòng đã lưu và chưa sử dụng. Gửi nguyên mã dưới dạng chuỗi. Mã sẽ bị tiêu thụ sau khi xác minh thành công."
+          }
+        },
+        "required": [
+          "method",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "AuthMfaVerifyRequest": {
+        "description": "Một bằng chứng xác thực yếu tố thứ hai. Chọn phương thức có trong phản hồi yêu cầu xác thực.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthTotpVerifyRequest"
+          },
+          {
+            "$ref": "#/components/schemas/AuthBackupCodeVerifyRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "method",
+          "mapping": {
+            "totp": "#/components/schemas/AuthTotpVerifyRequest",
+            "lookup_secret": "#/components/schemas/AuthBackupCodeVerifyRequest"
+          }
+        }
+      },
+      "AuthRecoveryCodeVerifiedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified"
+            ],
+            "description": "Cho biết mã khôi phục đã được xác minh."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "Trạng thái xác minh khôi phục mật khẩu.",
+        "additionalProperties": false
       }
     },
     "responses": {

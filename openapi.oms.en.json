@@ -18,7 +18,7 @@
   "tags": [
     {
       "name": "Authentication",
-      "description": "Account authentication and password recovery."
+      "description": "Password login, two-factor authentication, session resumption, and password recovery."
     },
     {
       "name": "Trading",
@@ -43,8 +43,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Login with password",
-        "description": "Authenticates an email identifier and password, then returns a session token and Bearer JWT for API calls.",
+        "summary": "Log in with password",
+        "description": "Authenticates the account email and password. Without a required second factor, returns status=authenticated with jwt. When two-factor authentication is required, returns HTTP 200 with status=mfa_required and no jwt or sessionToken. Preserve the challenge cookie and call POST /api/auth/mfa/verify before using the REST API. Browser requests must originate from this authentication host; cross-origin requests are rejected.",
         "operationId": "post_api_auth_login",
         "servers": [
           {
@@ -53,23 +53,104 @@
         ],
         "responses": {
           "200": {
-            "description": "Active session and JWT",
+            "description": "Authenticated session and JWT, or a pending second-factor challenge. Inspect status.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthLoginResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Authentication complete",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  },
+                  "mfa_required": {
+                    "summary": "Second factor required; preserve Set-Cookie",
+                    "value": {
+                      "status": "mfa_required",
+                      "methods": [
+                        "totp",
+                        "lookup_secret"
+                      ],
+                      "expiresAt": "2026-10-20T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie, scoped to /api/auth with SameSite=Strict and Secure over HTTPS. Preserve this cookie for POST /api/auth/mfa/verify. It expires at expiresAt. For authenticated, clears any pending challenge cookie.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Missing or invalid credentials payload (invalid_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           },
           "401": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Identifier or password rejected (invalid_credentials).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request origin is not allowed (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           },
           "502": {
-            "$ref": "#/components/responses/AuthError"
+            "description": "Authentication unavailable or no active session/JWT returned (auth_service_unavailable, inactive_session, missing_jwt).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -82,6 +163,296 @@
             }
           },
           "description": "Email identifier and password credentials."
+        }
+      }
+    },
+    "/api/auth/mfa/verify": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Verify two-factor authentication",
+        "description": "Completes a pending challenge using a six-digit authenticator code or an unused backup code. Send the challenge cookie from login or session resumption. No Bearer JWT is required. On success, returns status=authenticated and an aal2 session with a JWT, then clears the challenge cookie. Browser requests must use the authentication host origin.",
+        "operationId": "post_api_auth_mfa_verify",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "security": [
+          {
+            "mfaChallengeCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Second-factor method and code.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthMfaVerifyRequest"
+              },
+              "examples": {
+                "totp": {
+                  "summary": "Authenticator code",
+                  "value": {
+                    "method": "totp",
+                    "code": "012345"
+                  }
+                },
+                "backup_code": {
+                  "summary": "Unused saved backup code",
+                  "value": {
+                    "method": "lookup_secret",
+                    "code": "<unused-backup-code>"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Two-factor authentication complete; JWT issued.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthAuthenticatedResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Authentication complete",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal2",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal2",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Clears the pending vos_mfa_challenge cookie. During password recovery, also updates the recovery cookie for the password-reset step.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid code format (invalid_code), or rejected code/request (invalid_mfa_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session is no longer valid (session_invalid). Restart login.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request origin or session authentication requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Challenge cookie missing/expired (challenge_expired), or challenge no longer valid (flow_expired). Restart login or session resumption.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many authentication requests (rate_limited).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Two-factor authentication could not complete (mfa_incomplete, mfa_service_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/mfa/resume": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Resume an account session",
+        "description": "Uses an existing sessionToken in X-Auth-Session-Token to request a JWT without resubmitting the password. Returns the same authenticated or mfa_required response as password login. If a second factor is required, preserve the response cookie and call POST /api/auth/mfa/verify. No request body is required. Browser requests must use the authentication host origin.",
+        "operationId": "post_api_auth_mfa_resume",
+        "servers": [
+          {
+            "url": "https://platform.verolabs.co"
+          }
+        ],
+        "security": [
+          {
+            "authSessionToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated session and JWT, or a pending second-factor challenge. Inspect status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthLoginResponse"
+                },
+                "examples": {
+                  "authenticated": {
+                    "summary": "Authentication complete",
+                    "value": {
+                      "status": "authenticated",
+                      "sessionToken": "<session-token>",
+                      "jwt": "<jwt>",
+                      "session": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      },
+                      "identity": null,
+                      "tokenizedSession": {
+                        "active": true,
+                        "authenticator_assurance_level": "aal1",
+                        "tokenized": "<jwt>"
+                      }
+                    }
+                  },
+                  "mfa_required": {
+                    "summary": "Second factor required; preserve Set-Cookie",
+                    "value": {
+                      "status": "mfa_required",
+                      "methods": [
+                        "totp",
+                        "lookup_secret"
+                      ],
+                      "expiresAt": "2026-10-20T12:00:00Z"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie, scoped to /api/auth with SameSite=Strict and Secure over HTTPS. Preserve this cookie for POST /api/auth/mfa/verify. It expires at expiresAt. For authenticated, clears any pending challenge cookie.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Session authentication request rejected (invalid_mfa_request).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing session token (session_missing), or invalid session (session_invalid). Sign in again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request origin or session authentication requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Challenge cookie missing/expired (challenge_expired), or challenge no longer valid (flow_expired). Restart login or session resumption.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many authentication requests (rate_limited).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Authentication unavailable or JWT not returned (mfa_service_unavailable, missing_jwt).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -143,7 +514,7 @@
           "Authentication"
         ],
         "summary": "Verify recovery code",
-        "description": "Verifies the one-time code for the active recovery session. Send the recovery session cookie returned by the start request.",
+        "description": "Verifies the one-time email recovery code. Preserve the recovery cookie. If status is mfa_required, complete POST /api/auth/mfa/verify with an authenticator or unused backup code and the response cookies before resetting the password. Email-code verification does not bypass two-factor authentication.",
         "operationId": "post_api_auth_recovery_verify",
         "servers": [
           {
@@ -152,19 +523,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Recovery code verified",
-            "headers": {
-              "Set-Cookie": {
-                "description": "Updated recovery session cookie required by the reset-password request.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
+            "description": "Recovery code accepted; password reset permitted or second factor required.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthRecoveryVerifyResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Updates the recovery cookie. For mfa_required, also sets the two-factor challenge cookie. Preserve all response cookies for subsequent requests.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -177,6 +548,26 @@
           },
           "502": {
             "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Request origin is not allowed (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -198,7 +589,7 @@
           "Authentication"
         ],
         "summary": "Reset recovered password",
-        "description": "Sets the new account password after code verification. Send the recovery session cookie returned by the verify request. A successful response also returns an authenticated session.",
+        "description": "Sets a new password after email-code verification and any required two-factor authentication. Send the latest recovery cookie. Inspect the response status: authenticated includes a JWT; mfa_required requires the second-factor verification endpoint before API access.",
         "operationId": "post_api_auth_recovery_reset_password",
         "servers": [
           {
@@ -207,11 +598,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Password reset and active session",
+            "description": "Password updated; authenticated session or pending second-factor challenge.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthLoginResponse"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "description": "Clears the recovery cookie. If mfa_required, sets the challenge cookie required for two-factor verification.",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -224,6 +623,26 @@
           },
           "502": {
             "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "description": "Request origin is not allowed (origin_not_allowed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -278,7 +697,7 @@
           "System & Diagnostics"
         ],
         "summary": "Aggregated latency metrics",
-        "description": "Returns count, min, max, avg, p50, p95, p99, and a time-bucketed series.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Returns count, min, max, avg, p50, p95, p99, and a time-bucketed series.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_metrics",
         "servers": [
           {
@@ -339,7 +758,7 @@
           "System & Diagnostics"
         ],
         "summary": "Raw latency records",
-        "description": "Most-recent latency records with paging.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Most-recent latency records with paging.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_raw",
         "servers": [
           {
@@ -397,7 +816,7 @@
           "System & Diagnostics"
         ],
         "summary": "Latency detail records and segments",
-        "description": "Returns matching latency detail records and derived per-segment latencies. When `request_id` is supplied without time parameters, the query uses the request identifier. Otherwise, the query uses the time window.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `admin`.",
+        "description": "Returns matching latency detail records and derived per-segment latencies. When `request_id` is supplied without time parameters, the query uses the request identifier. Otherwise, the query uses the time window.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `admin`.",
         "operationId": "get_api_v1_util_latency_stages",
         "servers": [
           {
@@ -460,7 +879,7 @@
           "Trading"
         ],
         "summary": "Query orders (caller-scoped)",
-        "description": "Returns order records scoped to the accounts the caller can access. A caller with no account grants receives an empty page. `from_ns` and `to_ns` filter by order creation timestamp (`create_unix_utc_time_ms`).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns order records scoped to the accounts the caller can access. A caller with no account grants receives an empty page. `from_ns` and `to_ns` filter by order creation timestamp (`create_unix_utc_time_ms`).\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_orders",
         "servers": [
           {
@@ -563,7 +982,7 @@
           "Trading"
         ],
         "summary": "Query IOI advertisements (public board data)",
-        "description": "Returns IOI advertisement board data. Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns IOI advertisement board data. Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "listIoiAdvertisements",
         "servers": [
           {
@@ -633,7 +1052,7 @@
           "Administration"
         ],
         "summary": "List the calling user's own per-account permission grants",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_permissions",
         "servers": [
           {
@@ -665,7 +1084,7 @@
           "Administration"
         ],
         "summary": "List permission grants (admin)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -695,7 +1114,7 @@
           "Administration"
         ],
         "summary": "Grant a per-account permission (admin, direct)",
-        "description": "Grants account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Grants account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -736,7 +1155,7 @@
           "Administration"
         ],
         "summary": "Revoke a per-account permission (admin, direct)",
-        "description": "Revokes account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Revokes account permission for the specified user and account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_admin_permissions",
         "servers": [
           {
@@ -779,7 +1198,7 @@
           "Administration"
         ],
         "summary": "List account groups",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_groups",
         "servers": [
           {
@@ -809,7 +1228,7 @@
           "Administration"
         ],
         "summary": "Create an account group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_groups",
         "servers": [
           {
@@ -852,7 +1271,7 @@
           "Administration"
         ],
         "summary": "List the members (accounts) of a group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_groups_members",
         "servers": [
           {
@@ -882,7 +1301,7 @@
           "Administration"
         ],
         "summary": "Remove an account from its group",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_groups_members",
         "servers": [
           {
@@ -925,7 +1344,7 @@
           "Administration"
         ],
         "summary": "Move an account into a group (single membership)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_groups_move",
         "servers": [
           {
@@ -968,7 +1387,7 @@
           "Administration"
         ],
         "summary": "Caller-scoped account search (backs the terminal CMD search)",
-        "description": "Returns only the accounts the calling user is permitted on whose code matches `q` (case-insensitive substring).\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns only the accounts the calling user is permitted on whose code matches `q` (case-insensitive substring).\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_search",
         "servers": [
           {
@@ -1020,7 +1439,7 @@
           "Administration"
         ],
         "summary": "Create a maker-checker workflow request",
-        "description": "Creates a `PENDING` request. The body's `type` selects the request kind, one of:\n`CREATE_RISK_RULE`, `DELETE_RISK_RULE`, `GRANT_PERMISSION`, `REVOKE_PERMISSION`,\n`CREATE_GROUP`, `MOVE_ACCOUNT`, `CREATE_ACCOUNT`, `UPDATE_ACCOUNT`, `DEPOSIT`, `WITHDRAW`,\n`ADD_STOCK`, `REMOVE_STOCK`. The remaining fields are the type-specific payload.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Creates a `PENDING` request. The body's `type` selects the request kind, one of:\n`CREATE_RISK_RULE`, `DELETE_RISK_RULE`, `GRANT_PERMISSION`, `REVOKE_PERMISSION`,\n`CREATE_GROUP`, `MOVE_ACCOUNT`, `CREATE_ACCOUNT`, `UPDATE_ACCOUNT`, `DEPOSIT`, `WITHDRAW`,\n`ADD_STOCK`, `REMOVE_STOCK`. The remaining fields are the type-specific payload.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_requests",
         "servers": [
           {
@@ -1061,7 +1480,7 @@
           "Administration"
         ],
         "summary": "List workflow requests",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_requests",
         "servers": [
           {
@@ -1093,7 +1512,7 @@
           "Administration"
         ],
         "summary": "Get a single workflow request",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_requests_requestId",
         "servers": [
           {
@@ -1130,7 +1549,7 @@
           "Administration"
         ],
         "summary": "Approve a request (reviewer must differ from requester)",
-        "description": "Approves a pending request and records the workflow result.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "description": "Approves a pending request and records the workflow result.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `checker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_approve",
         "servers": [
           {
@@ -1178,7 +1597,7 @@
           "Administration"
         ],
         "summary": "Reject a request (reviewer must differ from requester)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `checker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `checker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_reject",
         "servers": [
           {
@@ -1226,7 +1645,7 @@
           "Administration"
         ],
         "summary": "Cancel a request (only the original requester may cancel)",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_requests_requestId_cancel",
         "servers": [
           {
@@ -1263,7 +1682,7 @@
           "Administration"
         ],
         "summary": "List the admin audit log",
-        "description": "Requires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `checker` or `admin`.",
+        "description": "Requires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `checker` or `admin`.",
         "operationId": "get_api_v1_util_audit",
         "servers": [
           {
@@ -1295,7 +1714,7 @@
           "Administration"
         ],
         "summary": "List controlled reference values",
-        "description": "Requires `kind=comp_id` or `kind=sender_sub_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Requires `kind=comp_id` or `kind=sender_sub_id`.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_reference",
         "servers": [
           {
@@ -1343,7 +1762,7 @@
           "Administration"
         ],
         "summary": "Add a controlled reference value",
-        "description": "Adds or upserts a reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Adds or upserts a reference list value.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_reference",
         "servers": [
           {
@@ -1384,7 +1803,7 @@
           "Administration"
         ],
         "summary": "Remove a controlled reference value",
-        "description": "Deletes one reference list value.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Deletes one reference list value.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_reference",
         "servers": [
           {
@@ -1430,7 +1849,7 @@
           "Administration"
         ],
         "summary": "List firm trader mappings",
-        "description": "Optionally filter by `firm_id`.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Optionally filter by `firm_id`.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1471,7 +1890,7 @@
           "Administration"
         ],
         "summary": "Add a firm trader mapping",
-        "description": "Adds or upserts one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Adds or upserts one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "post_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1512,7 +1931,7 @@
           "Administration"
         ],
         "summary": "Remove a firm trader mapping",
-        "description": "Deletes one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.\n\nRequired JWT role: `maker` or `admin`.",
+        "description": "Deletes one firm to trader ID mapping.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.\n\nRequired JWT role: `maker` or `admin`.",
         "operationId": "delete_api_v1_util_firms_traders",
         "servers": [
           {
@@ -1585,7 +2004,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List order reject rules",
-        "description": "Returns live order-risk reject rules.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns live order-risk reject rules.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_orders_risk_rules",
         "servers": [
           {
@@ -1617,7 +2036,7 @@
           "Trading"
         ],
         "summary": "Submit a new order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_new",
         "servers": [
           {
@@ -1666,7 +2085,7 @@
           "Trading"
         ],
         "summary": "Cancel a working order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_cancel",
         "servers": [
           {
@@ -1715,7 +2134,7 @@
           "Trading"
         ],
         "summary": "Replace a working order",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_replace",
         "servers": [
           {
@@ -1764,7 +2183,7 @@
           "Trading"
         ],
         "summary": "Submit a FIX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_quote",
         "servers": [
           {
@@ -1813,7 +2232,7 @@
           "Trading"
         ],
         "summary": "Respond to a quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_quote_response",
         "servers": [
           {
@@ -1862,7 +2281,7 @@
           "Trading"
         ],
         "summary": "Submit a KRX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_kquote",
         "servers": [
           {
@@ -1911,7 +2330,7 @@
           "Trading"
         ],
         "summary": "Cancel a KRX quote",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_kquote_cancel",
         "servers": [
           {
@@ -1960,7 +2379,7 @@
           "Trading"
         ],
         "summary": "Submit an IOI",
-        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Unknown request body keys are rejected.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "post_api_v1_orders_ioi",
         "servers": [
           {
@@ -2036,7 +2455,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List account mappings",
-        "description": "Returns configured account mappings, filtered by permissions when permission filtering is active.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns configured account mappings, filtered by permissions when permission filtering is active.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_admin_mappings",
         "servers": [
           {
@@ -2077,7 +2496,7 @@
           "Portfolio & Risk"
         ],
         "summary": "Get account mapping",
-        "description": "Returns one account mapping by account code.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns one account mapping by account code.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_admin_mappings_account_code",
         "servers": [
           {
@@ -2120,7 +2539,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List account balances and holdings",
-        "description": "Returns current cash balances and stock holdings for every permitted account.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns current cash balances and stock holdings for every permitted account.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_accounts",
         "servers": [
           {
@@ -2158,7 +2577,7 @@
           "Portfolio & Risk"
         ],
         "summary": "Get account balance and holdings",
-        "description": "Returns one account balance and holdings by engine account id.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns one account balance and holdings by engine account id.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_accounts_account_id",
         "servers": [
           {
@@ -2201,7 +2620,7 @@
           "Portfolio & Risk"
         ],
         "summary": "List risk rules",
-        "description": "Returns active risk rules from the live read model.\n\nRequires `Authorization: Bearer <jwt>` from `POST /api/auth/login`.",
+        "description": "Returns active risk rules from the live read model.\n\nRequires `Authorization: Bearer <jwt>` after completing [login](/en/apis/rest/auth/post-api-auth-login) and any required two-factor authentication.",
         "operationId": "get_api_v1_oms_risk_rules",
         "servers": [
           {
@@ -2240,6 +2659,18 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "mfaChallengeCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "vos_mfa_challenge",
+        "description": "Pending two-factor challenge cookie returned by login or session resumption. Use a cookie jar; do not construct or modify its value."
+      },
+      "authSessionToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Auth-Session-Token",
+        "description": "Existing account session token returned as sessionToken after authentication. This is not the Bearer JWT."
       }
     },
     "parameters": {
@@ -3018,11 +3449,13 @@
         "properties": {
           "identifier": {
             "type": "string",
-            "description": "Email address associated with the Vero OMS account."
+            "description": "Email address associated with the Vero OMS account.",
+            "minLength": 1
           },
           "password": {
             "type": "string",
-            "description": "Current password for the Vero OMS account."
+            "description": "Current password for the Vero OMS account.",
+            "minLength": 1
           }
         },
         "required": [
@@ -3080,21 +3513,22 @@
         "additionalProperties": false
       },
       "AuthRecoveryVerifyResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "verified"
-            ],
-            "description": "Indicates that the recovery code was verified."
+        "description": "Email recovery code accepted. verified permits password reset; mfa_required requires two-factor verification first.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthRecoveryCodeVerifiedResponse"
+          },
+          {
+            "$ref": "#/components/schemas/AuthMfaChallenge"
           }
-        },
-        "required": [
-          "status"
         ],
-        "description": "Password-recovery verification status.",
-        "additionalProperties": false
+        "discriminator": {
+          "propertyName": "status",
+          "mapping": {
+            "verified": "#/components/schemas/AuthRecoveryCodeVerifiedResponse",
+            "mfa_required": "#/components/schemas/AuthMfaChallenge"
+          }
+        }
       },
       "AuthRecoveryResetRequest": {
         "type": "object",
@@ -3124,8 +3558,9 @@
             "description": "Account attributes returned with the authenticated session."
           }
         },
-        "description": "Account identity returned by the authenticated session.",
-        "additionalProperties": true
+        "description": "Account identity returned with the authenticated session, or null if no identity is returned.",
+        "additionalProperties": true,
+        "nullable": true
       },
       "AuthSessionDevice": {
         "type": "object",
@@ -3179,39 +3614,36 @@
           "tokenized": {
             "type": "string",
             "description": "Bearer JWT issued for REST API calls."
+          },
+          "authenticator_assurance_level": {
+            "type": "string",
+            "enum": [
+              "aal1",
+              "aal2"
+            ],
+            "description": "Authentication assurance level: aal1 after first-factor authentication; aal2 after successful two-factor authentication."
           }
         },
-        "description": "Session object. The `tokenized` field is the Bearer JWT used for API calls.",
+        "description": "Authenticated session details. tokenized contains the Bearer JWT when present.",
         "additionalProperties": true
       },
       "AuthLoginResponse": {
-        "type": "object",
-        "properties": {
-          "sessionToken": {
-            "type": "string",
-            "description": "Session token returned after authentication. Store it securely for session refresh and logout."
+        "description": "Check status on every successful HTTP response. authenticated includes the JWT; mfa_required requires POST /api/auth/mfa/verify with the response cookie.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthAuthenticatedResponse"
           },
-          "jwt": {
-            "type": "string",
-            "description": "Bearer JWT returned for REST API calls."
-          },
-          "session": {
-            "$ref": "#/components/schemas/AuthSession"
-          },
-          "identity": {
-            "$ref": "#/components/schemas/AuthIdentity"
-          },
-          "tokenizedSession": {
-            "$ref": "#/components/schemas/AuthSession"
+          {
+            "$ref": "#/components/schemas/AuthMfaChallenge"
           }
-        },
-        "required": [
-          "sessionToken",
-          "jwt",
-          "session",
-          "tokenizedSession"
         ],
-        "description": "AuthLoginResponse schema."
+        "discriminator": {
+          "propertyName": "status",
+          "mapping": {
+            "authenticated": "#/components/schemas/AuthAuthenticatedResponse",
+            "mfa_required": "#/components/schemas/AuthMfaChallenge"
+          }
+        }
       },
       "AuthError": {
         "type": "object",
@@ -3227,7 +3659,7 @@
           "status": {
             "type": "integer",
             "format": "int32",
-            "description": "Status value returned by the API."
+            "description": "HTTP status code of this error response."
           }
         },
         "required": [
@@ -3235,7 +3667,7 @@
           "message",
           "status"
         ],
-        "description": "AuthError schema."
+        "description": "Authentication error envelope. Use the HTTP status and error code to select the next action."
       },
       "RestErrorResponse": {
         "type": "object",
@@ -5156,6 +5588,182 @@
           }
         },
         "description": "Latency detail response."
+      },
+      "AuthAuthenticatedResponse": {
+        "type": "object",
+        "description": "Completed authentication. The JWT is issued only after all required authentication factors pass.",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "authenticated"
+            ],
+            "description": "Indicates that authentication is complete and the JWT can be used."
+          },
+          "sessionToken": {
+            "type": "string",
+            "description": "Account session token. Keep it confidential. Use it for session resumption; use jwt for REST API authorization."
+          },
+          "jwt": {
+            "type": "string",
+            "description": "Bearer JWT for protected REST API requests. Send it as Authorization: Bearer <jwt>."
+          },
+          "session": {
+            "description": "Active authenticated session.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              }
+            ]
+          },
+          "identity": {
+            "description": "Account identity, or null if absent.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthIdentity"
+              }
+            ]
+          },
+          "tokenizedSession": {
+            "description": "Authenticated session containing the JWT in tokenized.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthSession"
+              }
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "sessionToken",
+          "jwt",
+          "session",
+          "identity",
+          "tokenizedSession"
+        ],
+        "additionalProperties": false
+      },
+      "AuthMfaChallenge": {
+        "type": "object",
+        "description": "Password or existing session accepted, but a second factor is required. This response does not contain jwt or sessionToken.",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "mfa_required"
+            ],
+            "description": "Requires a second factor before issuing a JWT."
+          },
+          "methods": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Available enrolled methods. totp uses the six-digit authenticator code; lookup_secret uses an unused backup code. Submit a method from this list.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "totp",
+                "lookup_secret"
+              ],
+              "description": "Supported second-factor method."
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Challenge expiration time in UTC. Restart login or session resumption after it expires."
+          }
+        },
+        "required": [
+          "status",
+          "methods",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "AuthTotpVerifyRequest": {
+        "type": "object",
+        "description": "Verify the current six-digit authenticator code.",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "totp"
+            ],
+            "description": "Select authenticator-code verification. Must be available in the challenge methods."
+          },
+          "code": {
+            "type": "string",
+            "minLength": 6,
+            "maxLength": 6,
+            "pattern": "^[0-9]{6}$",
+            "example": "012345",
+            "description": "Exactly six digits as a string, including any leading zeros."
+          }
+        },
+        "required": [
+          "method",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "AuthBackupCodeVerifyRequest": {
+        "type": "object",
+        "description": "Verify an unused saved backup code.",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "lookup_secret"
+            ],
+            "description": "Select backup-code verification. Must be available in the challenge methods."
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "description": "An unused saved backup code. Submit the complete code as a string. A successful verification consumes it."
+          }
+        },
+        "required": [
+          "method",
+          "code"
+        ],
+        "additionalProperties": false
+      },
+      "AuthMfaVerifyRequest": {
+        "description": "One second-factor proof. Choose a method listed in the challenge response.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthTotpVerifyRequest"
+          },
+          {
+            "$ref": "#/components/schemas/AuthBackupCodeVerifyRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "method",
+          "mapping": {
+            "totp": "#/components/schemas/AuthTotpVerifyRequest",
+            "lookup_secret": "#/components/schemas/AuthBackupCodeVerifyRequest"
+          }
+        }
+      },
+      "AuthRecoveryCodeVerifiedResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified"
+            ],
+            "description": "Indicates that the recovery code was verified."
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "description": "Password-recovery verification status.",
+        "additionalProperties": false
       }
     },
     "responses": {
