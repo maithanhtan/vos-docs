@@ -40,6 +40,13 @@
     "style": "minimal",
     "tabs": [
       {
+        "tab": "Get started",
+        "icon": "house",
+        "pages": [
+          "index"
+        ]
+      },
+      {
         "tab": "User Guide",
         "icon": "book-open",
         "languages": [
@@ -479,7 +486,8 @@
   },
   "logo": {
     "light": "/logo/vero-logo.png",
-    "dark": "/logo/vero-logo-white.png"
+    "dark": "/logo/vero-logo-white.png",
+    "href": "/"
   },
   "navbar": {},
   "footer": {},
