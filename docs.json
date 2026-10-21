@@ -155,9 +155,7 @@
                 "group": "Authentication",
                 "expanded": true,
                 "pages": [
-                  "en/apis/rest/auth/post-api-auth-login",
-                  "en/apis/rest/auth/post-api-auth-mfa-verify",
-                  "en/apis/rest/auth/post-api-auth-mfa-resume"
+                  "en/apis/rest/auth/post-api-auth-login"
                 ]
               },
               {
@@ -328,9 +326,7 @@
                 "group": "Authentication",
                 "expanded": true,
                 "pages": [
-                  "vi/apis/rest/auth/post-api-auth-login",
-                  "vi/apis/rest/auth/post-api-auth-mfa-verify",
-                  "vi/apis/rest/auth/post-api-auth-mfa-resume"
+                  "vi/apis/rest/auth/post-api-auth-login"
                 ]
               },
               {

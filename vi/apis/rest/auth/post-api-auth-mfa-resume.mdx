@@ -1,19 +1,24 @@
 ---
 title: 'Tiếp tục phiên tài khoản'
-description: 'Yêu cầu JWT cho phiên hiện có và hoàn tất xác thực hai lớp nếu được yêu cầu'
+description: 'Nhận JWT để gọi REST API bằng token phiên tài khoản hiện có'
 openapi: '/openapi.oms.vi.json POST /api/auth/mfa/resume'
 ---
 
-Dùng endpoint này khi bạn đã có `sessionToken` của tài khoản. Gửi token trong `X-Auth-Session-Token`, không cần body. Giá trị này là token phiên tài khoản, không phải JWT dùng cho REST API.
+Gửi `sessionToken` hiện có qua header `X-Auth-Session-Token`, không gửi nội dung yêu cầu. Dùng token phiên tài khoản nhận được sau khi xác thực.
+
+## Tiếp tục phiên
+
+Chạy ví dụ Bash với `curl` và `jq`.
 
 ```bash
+AUTH_BASE_URL="https://platform.verolabs.co"
 COOKIE_JAR="$(mktemp)"
 chmod 600 "$COOKIE_JAR"
 read -r -s -p "Token phiên: " SESSION_TOKEN
 printf '\n'
 
 AUTH_RESPONSE="$(curl --silent --show-error --fail-with-body \
-  --request POST 'https://platform.verolabs.co/api/auth/mfa/resume' \
+  --request POST "$AUTH_BASE_URL/api/auth/mfa/resume" \
   --cookie-jar "$COOKIE_JAR" \
   --header "X-Auth-Session-Token: $SESSION_TOKEN")"
 unset SESSION_TOKEN
@@ -21,8 +26,13 @@ unset SESSION_TOKEN
 printf '%s\n' "$AUTH_RESPONSE" | jq '{status, methods, expiresAt}'
 ```
 
-Nếu `status` là `authenticated`, phản hồi chứa JWT để gọi REST API cần xác thực.
+## Xử lý phản hồi
 
-Nếu `status` là `mfa_required`, phản hồi chưa có JWT. Giữ cookie jar và hoàn tất [xác minh hai lớp](/vi/apis/rest/auth/post-api-auth-mfa-verify) bằng phương thức có trong `methods`. Dùng lại bước xác minh và lấy JWT trong [quy trình đăng nhập bằng mật khẩu](/vi/apis/rest/auth/post-api-auth-login), với `AUTH_BASE_URL="https://platform.verolabs.co"`. Xoá cookie jar khi hoàn tất xác thực.
+Phản hồi tuân theo [luồng đăng nhập](/vi/apis/rest/auth/post-api-auth-login#luồng-đăng-nhập):
 
-Thiếu token trả HTTP `401` với `session_missing`. Nếu phiên không còn hợp lệ, đăng nhập lại. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực.
+- `authenticated`: dùng `jwt` để gọi REST API.
+- `mfa_required`: giữ cookie jar và [xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify) bằng phương thức có trong `methods`. API chưa cấp JWT.
+
+Tiếp tục bước 2 hoặc 3 trong [quy trình đăng nhập](/vi/apis/rest/auth/post-api-auth-login), tùy trạng thái phản hồi. Dùng cùng phiên lệnh và cookie jar. Xoá cookie jar khi hoàn tất xác thực.
+
+Thiếu token trả HTTP `401` với `session_missing`. Đăng nhập lại nếu phiên không còn hợp lệ. Yêu cầu từ trình duyệt phải có origin là `https://platform.verolabs.co`.

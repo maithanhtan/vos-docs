@@ -1,39 +1,39 @@
 ---
 title: 'Verify two-factor authentication'
-description: 'Complete login with an authenticator code or an unused backup code to obtain a JWT'
+description: 'Complete a pending second-factor challenge with an authenticator or backup code'
 openapi: '/openapi.oms.en.json POST /api/auth/mfa/verify'
 ---
 
-Call this endpoint after [password login](/en/apis/rest/auth/post-api-auth-login) or [session resumption](/en/apis/rest/auth/post-api-auth-mfa-resume) returns `status: "mfa_required"`.
+Call this endpoint when [login](/en/apis/rest/auth/post-api-auth-login), [session resumption](/en/apis/rest/auth/post-api-auth-mfa-resume), or [password recovery](/en/apis/rest/auth/post-api-auth-recovery-verify) returns `status: "mfa_required"`.
 
-## Required cookie and method
+## Verification requirements
 
-Send the `vos_mfa_challenge` cookie returned by the preceding request. Preserve it with a cookie jar for command-line or server clients. Browser clients must send requests from the authentication host origin. The cookie is HttpOnly and must be treated as an opaque credential.
+Send the `vos_mfa_challenge` cookie from the preceding response. Use a cookie jar for command-line or server requests. Browser requests must use the `https://platform.verolabs.co` origin. The cookie is HttpOnly; do not read or modify its value.
 
-This endpoint does not require a Bearer JWT. The challenge response does not expose a session token or a challenge identifier to submit in the body.
+Send only `method` and `code` in the body. Additional fields are rejected. No Bearer JWT is required.
 
 | `method` | `code` | Condition |
 | --- | --- | --- |
-| `totp` | Current authenticator code as a string containing exactly six digits. Preserve leading zeros. | `totp` is listed in the challenge `methods`. |
-| `lookup_secret` | One unused saved backup code as a string. | `lookup_secret` is listed in the challenge `methods`. Successful verification consumes the code. |
+| `totp` | Current authenticator code as a six-digit string, including leading zeros. | `totp` appears in `methods`. |
+| `lookup_secret` | An unused saved backup code as a string. | `lookup_secret` appears in `methods`. Each code can be used once. |
 
-Send only `method` and `code`. Additional body fields are rejected. See the [login procedure](/en/apis/rest/auth/post-api-auth-login#2-verify-the-second-factor-when-required) for a complete cURL example with cookie handling.
+The [login procedure](/en/apis/rest/auth/post-api-auth-login#2-verify-the-second-factor-when-required) contains a cURL example with cookie handling.
 
 ## Successful verification
 
-HTTP `200` returns `status: "authenticated"`, `sessionToken`, `jwt`, `session`, `identity`, and `tokenizedSession`. Both session objects report `authenticator_assurance_level: "aal2"`. The response clears the pending challenge cookie. Send `jwt` as `Authorization: Bearer <jwt>` to protected REST API endpoints.
+HTTP `200` returns `status: "authenticated"`, `jwt`, `sessionToken`, and session details. Both `session` and `tokenizedSession` report `authenticator_assurance_level: "aal2"`. The response clears the challenge cookie. Use `jwt` for REST API requests.
 
-For [password recovery](/en/apis/rest/auth/post-api-auth-recovery-verify), preserve all updated cookies and continue to the password-reset request after successful verification.
+During password recovery, preserve all updated cookies and [set the new password](/en/apis/rest/auth/post-api-auth-recovery-reset-password) after verification.
 
 ## Error handling
 
 | HTTP status | Error code | Next action |
 | --- | --- | --- |
-| `400` | `invalid_code` | Send a valid method and code format. |
-| `400` | `invalid_mfa_request` | Check the code and retry while the challenge remains valid. A consumed backup code cannot be reused. |
-| `401` | `session_invalid` | Sign in again. |
-| `403` | `origin_not_allowed` | Send the request from the authentication host origin or use a server client. |
-| `403` | `session_invalid`, `session_refresh_required`, `session_aal2_required` | Restart authentication and complete its required steps. |
-| `410` | `challenge_expired`, `flow_expired` | Restart login or session resumption to obtain a new challenge and cookie. |
+| `400` | `invalid_code` | Correct the method or code format. |
+| `400` | `invalid_mfa_request` | Check the code and retry while the challenge is valid. |
+| `401` | `session_invalid` | Log in again. |
+| `403` | `origin_not_allowed` | Use the authentication origin for browser requests. |
+| `403` | `session_invalid`, `session_refresh_required`, `session_aal2_required` | Restart authentication and complete the required steps. |
+| `410` | `challenge_expired`, `flow_expired` | Restart login or session resumption to obtain a new cookie. |
 | `429` | `rate_limited` | Wait before retrying. |
-| `502` | `mfa_incomplete`, `mfa_service_unavailable` | No JWT was issued. Retry later. |
+| `502` | `mfa_incomplete`, `mfa_service_unavailable` | Authentication did not complete. Retry later. |

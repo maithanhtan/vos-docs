@@ -1,10 +1,34 @@
 ---
 title: 'Log in and obtain a JWT'
-description: 'Authenticate with a password and complete two-factor authentication when required'
+description: 'Obtain a REST API JWT using your password and any required second factor'
 openapi: '/openapi.oms.en.json POST /api/auth/login'
 ---
 
 Send authentication requests to `https://platform.verolabs.co`. Use the resulting JWT for protected REST API requests to `https://api-oms.verolabs.co`.
+
+## Login flow
+
+If your account requires two-factor authentication (MFA), verify the second factor before using the REST API.
+
+```mermaid
+sequenceDiagram
+    participant Client as Your application
+    participant Auth as Vero OMS authentication
+    participant API as REST API
+    Client->>Auth: POST /api/auth/login<br/>identifier + password
+    alt No second factor required
+        Auth-->>Client: 200 · authenticated<br/>jwt + sessionToken
+    else Second factor required
+        Auth-->>Client: 200 · mfa_required<br/>methods + expiresAt + Set-Cookie
+        Note over Client: Preserve the cookie<br/>Select a method from methods
+        Client->>Auth: POST /api/auth/mfa/verify<br/>Cookie + method + code
+        Auth-->>Client: 200 · authenticated<br/>jwt + sessionToken<br/>Challenge cookie cleared
+    end
+    Client->>API: Protected request<br/>Authorization: Bearer JWT
+    API-->>Client: REST API response
+```
+
+The MFA branch shows successful verification. If verification fails, follow [error handling](/en/apis/rest/auth/post-api-auth-mfa-verify#error-handling) before continuing.
 
 ## Response states
 
@@ -12,24 +36,12 @@ Both states below use HTTP `200`. Check `status` before reading `jwt`.
 
 | `status` | Meaning | Next action |
 | --- | --- | --- |
-| `authenticated` | All required authentication factors passed. The response contains `jwt` and `sessionToken`. | Send `jwt` as `Authorization: Bearer <jwt>` to the REST API. |
-| `mfa_required` | A second factor is required. The response contains `methods` and `expiresAt`, without `jwt` or `sessionToken`. | Preserve the response cookie and [verify a second factor](/en/apis/rest/auth/post-api-auth-mfa-verify). |
-
-When two-factor authentication is enabled, password verification alone does not issue a JWT. For example, a pending challenge can return:
-
-```json
-{
-  "status": "mfa_required",
-  "methods": ["totp", "lookup_secret"],
-  "expiresAt": "2026-10-20T12:00:00Z"
-}
-```
-
-`methods` lists the available methods for this challenge. `totp` accepts the current six-digit authenticator code. `lookup_secret` accepts an unused saved backup code. Select a method returned by the API.
+| `authenticated` | Authentication is complete. The response includes `jwt` and `sessionToken`. | Use `jwt` for REST API requests. |
+| `mfa_required` | A second factor is required. The response includes `methods` and `expiresAt`, without `jwt` or `sessionToken`. | Preserve the cookie and [verify a second factor](/en/apis/rest/auth/post-api-auth-mfa-verify). |
 
 ## Log in with cURL
 
-These Bash examples require `curl` and `jq`. Keep the same cookie jar through login and verification. Browser requests must originate from the authentication host; cross-origin requests are rejected.
+Run these Bash examples in the same shell with `curl` and `jq`. Preserve cookies through login and verification. Browser requests must use the `https://platform.verolabs.co` origin.
 
 ### 1. Submit the email and password
 
@@ -75,9 +87,9 @@ unset MFA_CODE
 printf '%s\n' "$AUTH_RESPONSE" | jq '{status, aal: .session.authenticator_assurance_level}'
 ```
 
-To use a backup code, set `MFA_METHOD="lookup_secret"` and enter an unused saved backup code instead. Use this option only when `lookup_secret` is listed in `methods`. Successful verification consumes that backup code.
+Use a method listed in `methods`. For a backup code, set `MFA_METHOD="lookup_secret"` and enter an unused code. Each backup code can be used once.
 
-The successful response has `status: "authenticated"`, a JWT, and `authenticator_assurance_level: "aal2"` in its session objects. The API clears the pending challenge cookie.
+Successful verification returns `status: "authenticated"` and a JWT. The API clears the challenge cookie.
 
 ### 3. Call the REST API with the JWT
 
@@ -93,8 +105,8 @@ rm -- "$COOKIE_JAR"
 unset AUTH_RESPONSE JWT
 ```
 
-`sessionToken` and `jwt` serve different purposes. Use `jwt` for REST API authorization. Keep `sessionToken` confidential; it can be used to [resume an existing session](/en/apis/rest/auth/post-api-auth-mfa-resume).
+Use `jwt` for REST API authorization and `sessionToken` to [resume a session](/en/apis/rest/auth/post-api-auth-mfa-resume). Keep both tokens confidential.
 
 ## Retry and expiration
 
-An incorrect code returns an error; no JWT is issued. You can retry verification while the challenge remains valid. If the API returns HTTP `410`, restart login to obtain a new challenge and cookie. Do not reuse a consumed backup code or construct a challenge cookie yourself.
+An incorrect code returns an error without a JWT. Retry while the challenge is valid. HTTP `410` requires a new login and cookie. Do not modify the challenge cookie or reuse a backup code.

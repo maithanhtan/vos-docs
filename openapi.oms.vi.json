@@ -43,8 +43,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Đăng nhập bằng mật khẩu",
-        "description": "Xác thực email và mật khẩu tài khoản. Khi không cần yếu tố thứ hai, trả status=authenticated kèm jwt. Khi cần xác thực hai lớp, trả HTTP 200 với status=mfa_required và không trả jwt hoặc sessionToken. Giữ cookie xác thực và gọi POST /api/auth/mfa/verify trước khi sử dụng REST API. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực; yêu cầu khác origin bị từ chối.",
+        "summary": "Đăng nhập và lấy JWT",
+        "description": "Gửi email và mật khẩu tài khoản. HTTP 200 trả authenticated kèm JWT, hoặc mfa_required không chứa jwt hay sessionToken. Với mfa_required, giữ cookie và gọi POST /api/auth/mfa/verify. Yêu cầu từ trình duyệt phải có origin là https://platform.verolabs.co.",
         "operationId": "post_api_auth_login",
         "servers": [
           {
@@ -53,7 +53,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Phiên đã xác thực kèm JWT, hoặc yêu cầu xác thực yếu tố thứ hai đang chờ. Kiểm tra status.",
+            "description": "Kiểm tra status: authenticated chứa JWT; mfa_required yêu cầu xác minh yếu tố thứ hai.",
             "content": {
               "application/json": {
                 "schema": {
@@ -80,7 +80,7 @@
                     }
                   },
                   "mfa_required": {
-                    "summary": "Cần yếu tố xác thực thứ hai; giữ Set-Cookie",
+                    "summary": "Cần yếu tố xác thực thứ hai",
                     "value": {
                       "status": "mfa_required",
                       "methods": [
@@ -95,7 +95,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Khi status là mfa_required, đặt cookie HttpOnly vos_mfa_challenge với Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để gọi POST /api/auth/mfa/verify. Cookie hết hạn tại expiresAt. Khi status là authenticated, xoá cookie xác thực đang chờ.",
+                "description": "Với mfa_required, đặt cookie HttpOnly vos_mfa_challenge có Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để xác minh trước expiresAt. Với authenticated, xoá cookie xác thực đang chờ.",
                 "schema": {
                   "type": "string"
                 }
@@ -103,7 +103,7 @@
             }
           },
           "400": {
-            "description": "Nội dung thông tin đăng nhập bị thiếu hoặc không hợp lệ (invalid_request).",
+            "description": "Trường đăng nhập bị thiếu hoặc không hợp lệ (invalid_request).",
             "content": {
               "application/json": {
                 "schema": {
@@ -123,7 +123,7 @@
             }
           },
           "403": {
-            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "description": "Origin của yêu cầu từ trình duyệt không được phép (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -133,7 +133,7 @@
             }
           },
           "409": {
-            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "description": "Không có yếu tố xác thực thứ hai khả dụng được hỗ trợ (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -143,7 +143,7 @@
             }
           },
           "502": {
-            "description": "Không thể xác thực hoặc không trả về phiên hoạt động/JWT (auth_service_unavailable, inactive_session, missing_jwt).",
+            "description": "Không thể xác thực, phiên không hoạt động hoặc thiếu JWT (auth_service_unavailable, inactive_session, missing_jwt).",
             "content": {
               "application/json": {
                 "schema": {
@@ -162,7 +162,7 @@
               }
             }
           },
-          "description": "Email identifier and password credentials."
+          "description": "Email và mật khẩu tài khoản."
         }
       }
     },
@@ -171,8 +171,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Xác minh xác thực hai lớp",
-        "description": "Hoàn tất yêu cầu xác thực đang chờ bằng mã 6 chữ số trong ứng dụng xác thực hoặc mã dự phòng chưa sử dụng. Gửi cookie từ bước đăng nhập hoặc tiếp tục phiên. Không yêu cầu Bearer JWT. Khi thành công, trả status=authenticated, phiên aal2 và JWT, sau đó xoá cookie xác thực. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực.",
+        "summary": "Xác minh yếu tố thứ hai",
+        "description": "Gửi method, code và cookie từ yêu cầu xác thực đang chờ khi đăng nhập, tiếp tục phiên hoặc khôi phục mật khẩu. Không yêu cầu Bearer JWT. Thành công trả authenticated kèm JWT và xoá cookie xác thực đang chờ. Yêu cầu từ trình duyệt phải có origin là https://platform.verolabs.co.",
         "operationId": "post_api_auth_mfa_verify",
         "servers": [
           {
@@ -201,7 +201,7 @@
                   }
                 },
                 "backup_code": {
-                  "summary": "Mã dự phòng đã lưu và chưa sử dụng",
+                  "summary": "Mã dự phòng chưa sử dụng",
                   "value": {
                     "method": "lookup_secret",
                     "code": "<unused-backup-code>"
@@ -213,7 +213,7 @@
         },
         "responses": {
           "200": {
-            "description": "Xác thực hai lớp hoàn tất; JWT đã được cấp.",
+            "description": "Xác minh yếu tố thứ hai hoàn tất; JWT đã được cấp.",
             "content": {
               "application/json": {
                 "schema": {
@@ -244,7 +244,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Xoá cookie vos_mfa_challenge đang chờ. Khi khôi phục mật khẩu, đồng thời cập nhật cookie khôi phục cho bước đặt lại mật khẩu.",
+                "description": "Xoá vos_mfa_challenge. Khi khôi phục mật khẩu, đồng thời cập nhật cookie khôi phục cho bước đặt lại mật khẩu.",
                 "schema": {
                   "type": "string"
                 }
@@ -252,7 +252,7 @@
             }
           },
           "400": {
-            "description": "Định dạng mã không hợp lệ (invalid_code), hoặc mã/yêu cầu bị từ chối (invalid_mfa_request).",
+            "description": "Định dạng mã không hợp lệ (invalid_code), hoặc mã hay yêu cầu bị từ chối (invalid_mfa_request).",
             "content": {
               "application/json": {
                 "schema": {
@@ -262,7 +262,7 @@
             }
           },
           "401": {
-            "description": "Phiên không còn hợp lệ (session_invalid). Đăng nhập lại.",
+            "description": "Phiên không hợp lệ (session_invalid). Đăng nhập lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -272,7 +272,7 @@
             }
           },
           "403": {
-            "description": "Origin hoặc điều kiện xác thực của phiên không được chấp nhận (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "description": "Origin hoặc điều kiện của phiên bị từ chối (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
             "content": {
               "application/json": {
                 "schema": {
@@ -282,7 +282,7 @@
             }
           },
           "410": {
-            "description": "Cookie xác thực bị thiếu/hết hạn (challenge_expired), hoặc yêu cầu xác thực không còn hợp lệ (flow_expired). Đăng nhập hoặc tiếp tục phiên lại.",
+            "description": "Cookie xác thực bị thiếu hoặc hết hạn (challenge_expired), hoặc yêu cầu xác thực không hợp lệ (flow_expired). Bắt đầu xác thực lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -292,7 +292,7 @@
             }
           },
           "429": {
-            "description": "Quá nhiều yêu cầu xác thực (rate_limited).",
+            "description": "Quá nhiều yêu cầu xác thực (rate_limited). Chờ trước khi thử lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -302,7 +302,7 @@
             }
           },
           "502": {
-            "description": "Không thể hoàn tất xác thực hai lớp (mfa_incomplete, mfa_service_unavailable).",
+            "description": "Xác minh yếu tố thứ hai chưa hoàn tất (mfa_incomplete, mfa_service_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -320,7 +320,7 @@
           "Authentication"
         ],
         "summary": "Tiếp tục phiên tài khoản",
-        "description": "Dùng sessionToken hiện có trong X-Auth-Session-Token để yêu cầu JWT mà không gửi lại mật khẩu. Trả authenticated hoặc mfa_required như bước đăng nhập bằng mật khẩu. Nếu cần yếu tố thứ hai, giữ cookie phản hồi và gọi POST /api/auth/mfa/verify. Không yêu cầu body. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực.",
+        "description": "Gửi sessionToken hiện có qua X-Auth-Session-Token, không gửi nội dung yêu cầu. HTTP 200 trả authenticated kèm JWT, hoặc mfa_required. Với mfa_required, giữ cookie và gọi POST /api/auth/mfa/verify. Yêu cầu từ trình duyệt phải có origin là https://platform.verolabs.co.",
         "operationId": "post_api_auth_mfa_resume",
         "servers": [
           {
@@ -334,7 +334,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Phiên đã xác thực kèm JWT, hoặc yêu cầu xác thực yếu tố thứ hai đang chờ. Kiểm tra status.",
+            "description": "Kiểm tra status: authenticated chứa JWT; mfa_required yêu cầu xác minh yếu tố thứ hai.",
             "content": {
               "application/json": {
                 "schema": {
@@ -361,7 +361,7 @@
                     }
                   },
                   "mfa_required": {
-                    "summary": "Cần yếu tố xác thực thứ hai; giữ Set-Cookie",
+                    "summary": "Cần yếu tố xác thực thứ hai",
                     "value": {
                       "status": "mfa_required",
                       "methods": [
@@ -376,7 +376,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Khi status là mfa_required, đặt cookie HttpOnly vos_mfa_challenge với Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để gọi POST /api/auth/mfa/verify. Cookie hết hạn tại expiresAt. Khi status là authenticated, xoá cookie xác thực đang chờ.",
+                "description": "Với mfa_required, đặt cookie HttpOnly vos_mfa_challenge có Path=/api/auth, SameSite=Strict và Secure trên HTTPS. Giữ cookie để xác minh trước expiresAt. Với authenticated, xoá cookie xác thực đang chờ.",
                 "schema": {
                   "type": "string"
                 }
@@ -394,7 +394,7 @@
             }
           },
           "401": {
-            "description": "Thiếu token phiên (session_missing), hoặc phiên không hợp lệ (session_invalid). Đăng nhập lại.",
+            "description": "Thiếu token phiên (session_missing) hoặc phiên không hợp lệ (session_invalid). Đăng nhập lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -404,7 +404,7 @@
             }
           },
           "403": {
-            "description": "Origin hoặc điều kiện xác thực của phiên không được chấp nhận (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "description": "Origin hoặc điều kiện của phiên bị từ chối (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
             "content": {
               "application/json": {
                 "schema": {
@@ -414,7 +414,7 @@
             }
           },
           "409": {
-            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "description": "Không có yếu tố xác thực thứ hai khả dụng được hỗ trợ (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -424,7 +424,7 @@
             }
           },
           "410": {
-            "description": "Cookie xác thực bị thiếu/hết hạn (challenge_expired), hoặc yêu cầu xác thực không còn hợp lệ (flow_expired). Đăng nhập hoặc tiếp tục phiên lại.",
+            "description": "Cookie xác thực bị thiếu hoặc hết hạn (challenge_expired), hoặc yêu cầu xác thực không hợp lệ (flow_expired). Bắt đầu xác thực lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -434,7 +434,7 @@
             }
           },
           "429": {
-            "description": "Quá nhiều yêu cầu xác thực (rate_limited).",
+            "description": "Quá nhiều yêu cầu xác thực (rate_limited). Chờ trước khi thử lại.",
             "content": {
               "application/json": {
                 "schema": {
@@ -444,7 +444,7 @@
             }
           },
           "502": {
-            "description": "Không thể xác thực hoặc không trả JWT (mfa_service_unavailable, missing_jwt).",
+            "description": "Không thể xác thực hoặc thiếu JWT (mfa_service_unavailable, missing_jwt).",
             "content": {
               "application/json": {
                 "schema": {
@@ -462,7 +462,7 @@
           "Authentication"
         ],
         "summary": "Bắt đầu khôi phục mật khẩu",
-        "description": "Gửi mã khôi phục dùng một lần đến email của tài khoản và tạo phiên khôi phục ngắn hạn. Lưu cookie trong phản hồi để gửi cùng các yêu cầu xác minh và đặt lại mật khẩu.",
+        "description": "Yêu cầu mã dùng một lần gửi đến email tài khoản. Giữ cookie phản hồi cho bước xác minh mã và đặt lại mật khẩu.",
         "operationId": "post_api_auth_recovery_start",
         "servers": [
           {
@@ -471,10 +471,10 @@
         ],
         "responses": {
           "200": {
-            "description": "Yêu cầu gửi mã khôi phục đã được chấp nhận",
+            "description": "Yêu cầu gửi mã khôi phục đã được chấp nhận.",
             "headers": {
               "Set-Cookie": {
-                "description": "Cookie phiên khôi phục ngắn hạn bắt buộc cho yêu cầu khôi phục tiếp theo.",
+                "description": "Cookie khôi phục bắt buộc cho bước xác minh mã và đặt lại mật khẩu.",
                 "schema": {
                   "type": "string"
                 }
@@ -497,7 +497,7 @@
         },
         "requestBody": {
           "required": true,
-          "description": "Địa chỉ email của tài khoản.",
+          "description": "Địa chỉ email tài khoản.",
           "content": {
             "application/json": {
               "schema": {
@@ -514,7 +514,7 @@
           "Authentication"
         ],
         "summary": "Xác minh mã khôi phục",
-        "description": "Xác minh mã khôi phục một lần gửi qua email. Giữ cookie khôi phục. Nếu status là mfa_required, hoàn tất POST /api/auth/mfa/verify bằng mã trong ứng dụng xác thực hoặc mã dự phòng chưa sử dụng cùng các cookie phản hồi trước khi đặt lại mật khẩu. Xác minh mã email không bỏ qua xác thực hai lớp.",
+        "description": "Gửi mã email và cookie khôi phục. Phản hồi verified cho phép đặt lại mật khẩu. Với mfa_required, hoàn tất POST /api/auth/mfa/verify trước. Giữ tất cả cookie phản hồi. Xác minh mã email không thay thế yếu tố xác thực thứ hai bắt buộc.",
         "operationId": "post_api_auth_recovery_verify",
         "servers": [
           {
@@ -523,7 +523,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Mã khôi phục được chấp nhận; được phép đặt lại mật khẩu hoặc cần xác thực yếu tố thứ hai.",
+            "description": "Đã xác minh mã email. Kiểm tra status trước khi đặt lại mật khẩu.",
             "content": {
               "application/json": {
                 "schema": {
@@ -533,7 +533,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Cập nhật cookie khôi phục. Khi mfa_required, đồng thời đặt cookie xác thực hai lớp. Giữ tất cả cookie phản hồi cho các yêu cầu tiếp theo.",
+                "description": "Cập nhật cookie khôi phục. Với mfa_required, đồng thời đặt cookie xác thực đang chờ. Giữ tất cả cookie phản hồi.",
                 "schema": {
                   "type": "string"
                 }
@@ -550,7 +550,7 @@
             "$ref": "#/components/responses/AuthError"
           },
           "403": {
-            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "description": "Origin của yêu cầu từ trình duyệt không được phép (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -560,7 +560,7 @@
             }
           },
           "409": {
-            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "description": "Không có yếu tố xác thực thứ hai khả dụng được hỗ trợ (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -572,7 +572,7 @@
         },
         "requestBody": {
           "required": true,
-          "description": "Mã khôi phục dùng một lần.",
+          "description": "Mã khôi phục qua email dùng một lần.",
           "content": {
             "application/json": {
               "schema": {
@@ -588,8 +588,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Đặt lại mật khẩu đã khôi phục",
-        "description": "Đặt mật khẩu mới sau khi xác minh mã email và hoàn tất xác thực hai lớp nếu được yêu cầu. Gửi cookie khôi phục mới nhất. Kiểm tra status phản hồi: authenticated chứa JWT; mfa_required yêu cầu hoàn tất endpoint xác thực yếu tố thứ hai trước khi gọi API.",
+        "summary": "Đặt mật khẩu mới",
+        "description": "Gửi mật khẩu mới và cookie khôi phục mới nhất sau khi hoàn tất các bước xác minh bắt buộc. Kiểm tra status: authenticated chứa JWT; mfa_required yêu cầu gọi POST /api/auth/mfa/verify trước khi truy cập REST API.",
         "operationId": "post_api_auth_recovery_reset_password",
         "servers": [
           {
@@ -598,7 +598,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Mật khẩu đã cập nhật; phiên đã xác thực hoặc yêu cầu xác thực yếu tố thứ hai đang chờ.",
+            "description": "Đã cập nhật mật khẩu. Kiểm tra status trước khi gọi REST API.",
             "content": {
               "application/json": {
                 "schema": {
@@ -608,7 +608,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Xoá cookie khôi phục. Nếu mfa_required, đặt cookie xác thực cần thiết cho bước xác minh yếu tố thứ hai.",
+                "description": "Xoá cookie khôi phục. Với mfa_required, đặt cookie xác thực cho bước xác minh yếu tố thứ hai.",
                 "schema": {
                   "type": "string"
                 }
@@ -625,7 +625,7 @@
             "$ref": "#/components/responses/AuthError"
           },
           "403": {
-            "description": "Origin của yêu cầu không được phép (origin_not_allowed).",
+            "description": "Origin của yêu cầu từ trình duyệt không được phép (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -635,7 +635,7 @@
             }
           },
           "409": {
-            "description": "Không có yếu tố xác thực thứ hai đã đăng ký và được hỗ trợ (mfa_unavailable).",
+            "description": "Không có yếu tố xác thực thứ hai khả dụng được hỗ trợ (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2664,13 +2664,13 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "vos_mfa_challenge",
-        "description": "Cookie xác thực hai lớp đang chờ, được trả về khi đăng nhập hoặc tiếp tục phiên. Dùng cookie jar; không tự tạo hoặc sửa giá trị cookie."
+        "description": "Cookie của yêu cầu xác thực yếu tố thứ hai đang chờ. Giữ cookie phản hồi trong cookie jar; không sửa giá trị."
       },
       "authSessionToken": {
         "type": "apiKey",
         "in": "header",
         "name": "X-Auth-Session-Token",
-        "description": "Token phiên tài khoản hiện có, được trả về trong sessionToken sau khi xác thực. Đây không phải Bearer JWT."
+        "description": "Token phiên tài khoản trả về trong sessionToken. Dùng header này để tiếp tục phiên."
       }
     },
     "parameters": {
@@ -3449,12 +3449,12 @@
         "properties": {
           "identifier": {
             "type": "string",
-            "description": "Email address associated with the Vero OMS account.",
+            "description": "Địa chỉ email của tài khoản Vero OMS.",
             "minLength": 1
           },
           "password": {
             "type": "string",
-            "description": "Current password for the Vero OMS account.",
+            "description": "Mật khẩu hiện tại của tài khoản.",
             "minLength": 1
           }
         },
@@ -3462,7 +3462,7 @@
           "identifier",
           "password"
         ],
-        "description": "Password login request. Set identifier to the account email address.",
+        "description": "Email và mật khẩu tài khoản dùng để đăng nhập.",
         "additionalProperties": false
       },
       "AuthRecoveryStartRequest": {
@@ -3471,13 +3471,13 @@
           "email": {
             "type": "string",
             "format": "email",
-            "description": "Địa chỉ email liên kết với tài khoản Vero OMS."
+            "description": "Địa chỉ email của tài khoản Vero OMS."
           }
         },
         "required": [
           "email"
         ],
-        "description": "Yêu cầu gửi mã khôi phục mật khẩu dùng một lần.",
+        "description": "Email tài khoản dùng để khôi phục mật khẩu.",
         "additionalProperties": false
       },
       "AuthRecoveryStartResponse": {
@@ -3488,13 +3488,13 @@
             "enum": [
               "code_sent"
             ],
-            "description": "Cho biết yêu cầu gửi mã khôi phục đã được chấp nhận."
+            "description": "code_sent xác nhận yêu cầu gửi mã khôi phục đã được chấp nhận."
           }
         },
         "required": [
           "status"
         ],
-        "description": "Trạng thái bắt đầu khôi phục mật khẩu.",
+        "description": "Xác nhận yêu cầu gửi mã khôi phục đã được chấp nhận.",
         "additionalProperties": false
       },
       "AuthRecoveryVerifyRequest": {
@@ -3503,17 +3503,17 @@
           "code": {
             "type": "string",
             "minLength": 1,
-            "description": "Mã khôi phục dùng một lần được gửi đến email của tài khoản."
+            "description": "Mã khôi phục dùng một lần gửi đến email của tài khoản."
           }
         },
         "required": [
           "code"
         ],
-        "description": "Yêu cầu xác minh mã khôi phục mật khẩu dùng một lần.",
+        "description": "Mã khôi phục qua email dùng một lần.",
         "additionalProperties": false
       },
       "AuthRecoveryVerifyResponse": {
-        "description": "Mã khôi phục qua email đã được chấp nhận. verified cho phép đặt lại mật khẩu; mfa_required yêu cầu xác thực hai lớp trước.",
+        "description": "Kiểm tra status: verified cho phép đặt lại mật khẩu; mfa_required yêu cầu xác minh yếu tố thứ hai trước.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthRecoveryCodeVerifiedResponse"
@@ -3536,13 +3536,13 @@
           "password": {
             "type": "string",
             "minLength": 1,
-            "description": "Mật khẩu mới của tài khoản Vero OMS."
+            "description": "Mật khẩu mới của tài khoản."
           }
         },
         "required": [
           "password"
         ],
-        "description": "Yêu cầu đặt mật khẩu mới sau khi xác minh mã khôi phục.",
+        "description": "Mật khẩu mới sau các bước xác minh khôi phục bắt buộc.",
         "additionalProperties": false
       },
       "AuthIdentity": {
@@ -3550,15 +3550,15 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique identifier for the record."
+            "description": "Mã định danh tài khoản."
           },
           "traits": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Account attributes returned with the authenticated session."
+            "description": "Thuộc tính tài khoản trả về cùng phiên."
           }
         },
-        "description": "Thông tin danh tính tài khoản của phiên đã xác thực, hoặc null nếu phản hồi không có danh tính.",
+        "description": "Danh tính tài khoản, hoặc null nếu không có.",
         "additionalProperties": true,
         "nullable": true
       },
@@ -3567,53 +3567,58 @@
         "properties": {
           "ip_address": {
             "type": "string",
-            "description": "IP address reported for the session device."
+            "description": "Địa chỉ IP ghi nhận cho thiết bị."
           },
           "location": {
             "type": "string",
-            "description": "Location metadata reported for the session device."
+            "description": "Thông tin vị trí ghi nhận cho thiết bị."
           },
           "user_agent": {
             "type": "string",
-            "description": "User agent reported for the session device."
+            "description": "Thông tin user agent ghi nhận cho thiết bị."
           }
         },
-        "description": "AuthSessionDevice schema."
+        "description": "Thông tin thiết bị gắn với phiên."
       },
       "AuthSession": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique identifier for the record."
+            "description": "Mã định danh phiên."
           },
           "active": {
             "type": "boolean",
-            "description": "Indicates whether the session is active."
+            "description": "Cho biết phiên có đang hoạt động hay không."
           },
           "authenticated_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the session was authenticated."
+            "description": "Thời điểm phiên được xác thực."
           },
           "expires_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the session expires."
+            "description": "Thời điểm phiên hết hạn."
           },
           "devices": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuthSessionDevice"
             },
-            "description": "Devices associated with the authenticated session."
+            "description": "Các thiết bị gắn với phiên."
           },
           "identity": {
-            "$ref": "#/components/schemas/AuthIdentity"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthIdentity"
+              }
+            ],
+            "description": "Danh tính tài khoản gắn với phiên."
           },
           "tokenized": {
             "type": "string",
-            "description": "Bearer JWT issued for REST API calls."
+            "description": "Bearer JWT để gọi REST API, nếu có."
           },
           "authenticator_assurance_level": {
             "type": "string",
@@ -3621,14 +3626,14 @@
               "aal1",
               "aal2"
             ],
-            "description": "Mức xác thực của phiên: aal1 sau khi xác thực yếu tố thứ nhất; aal2 sau khi xác thực hai lớp thành công."
+            "description": "aal1 cho biết đã xác thực yếu tố thứ nhất; aal2 cho biết đã hoàn tất xác thực hai lớp."
           }
         },
-        "description": "Thông tin phiên đã xác thực. tokenized chứa Bearer JWT khi trường này có trong phản hồi.",
+        "description": "Thông tin phiên đã xác thực.",
         "additionalProperties": true
       },
       "AuthLoginResponse": {
-        "description": "Kiểm tra status trong mọi phản hồi HTTP thành công. authenticated chứa JWT; mfa_required yêu cầu gọi POST /api/auth/mfa/verify với cookie từ phản hồi.",
+        "description": "Kiểm tra status: authenticated chứa JWT; mfa_required yêu cầu xác minh yếu tố thứ hai bằng cookie phản hồi.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthAuthenticatedResponse"
@@ -3650,16 +3655,16 @@
         "properties": {
           "error": {
             "type": "string",
-            "description": "Machine-readable error code or error category."
+            "description": "Mã lỗi để chương trình xử lý."
           },
           "message": {
             "type": "string",
-            "description": "Human-readable error message."
+            "description": "Mô tả lỗi."
           },
           "status": {
             "type": "integer",
             "format": "int32",
-            "description": "Mã trạng thái HTTP của phản hồi lỗi này."
+            "description": "Mã trạng thái HTTP của phản hồi lỗi."
           }
         },
         "required": [
@@ -3667,7 +3672,7 @@
           "message",
           "status"
         ],
-        "description": "Cấu trúc lỗi xác thực. Dùng mã HTTP và trường error để quyết định bước tiếp theo."
+        "description": "Lỗi xác thực. Dùng mã HTTP và mã lỗi để xác định bước tiếp theo."
       },
       "RestErrorResponse": {
         "type": "object",
@@ -5591,22 +5596,22 @@
       },
       "AuthAuthenticatedResponse": {
         "type": "object",
-        "description": "Xác thực hoàn tất. JWT chỉ được cấp sau khi đáp ứng tất cả yếu tố xác thực bắt buộc.",
+        "description": "Xác thực hoàn tất, kèm token phiên tài khoản và JWT để gọi REST API.",
         "properties": {
           "status": {
             "type": "string",
             "enum": [
               "authenticated"
             ],
-            "description": "Cho biết xác thực đã hoàn tất và JWT có thể được sử dụng."
+            "description": "authenticated xác nhận xác thực đã hoàn tất."
           },
           "sessionToken": {
             "type": "string",
-            "description": "Token phiên tài khoản. Giữ bí mật token này. Dùng để tiếp tục phiên; dùng jwt để xác thực REST API."
+            "description": "Token phiên tài khoản dùng để tiếp tục phiên. Giữ bí mật token này."
           },
           "jwt": {
             "type": "string",
-            "description": "Bearer JWT cho yêu cầu REST API cần xác thực. Gửi bằng Authorization: Bearer <jwt>."
+            "description": "JWT để gọi REST API. Gửi qua `Authorization: Bearer <jwt>`."
           },
           "session": {
             "description": "Phiên đã xác thực và đang hoạt động.",
@@ -5625,7 +5630,7 @@
             ]
           },
           "tokenizedSession": {
-            "description": "Phiên đã xác thực chứa JWT trong trường tokenized.",
+            "description": "Phiên đã xác thực, chứa JWT trong tokenized.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/AuthSession"
@@ -5645,33 +5650,33 @@
       },
       "AuthMfaChallenge": {
         "type": "object",
-        "description": "Mật khẩu hoặc phiên hiện có đã được chấp nhận nhưng cần xác thực yếu tố thứ hai. Phản hồi không chứa jwt hoặc sessionToken.",
+        "description": "Đang chờ xác minh yếu tố thứ hai. Phản hồi không chứa jwt hoặc sessionToken.",
         "properties": {
           "status": {
             "type": "string",
             "enum": [
               "mfa_required"
             ],
-            "description": "Yêu cầu yếu tố xác thực thứ hai trước khi cấp JWT."
+            "description": "mfa_required yêu cầu yếu tố xác thực thứ hai trước khi cấp JWT."
           },
           "methods": {
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
-            "description": "Các phương thức đã đăng ký và đang khả dụng. totp dùng mã 6 chữ số trong ứng dụng xác thực; lookup_secret dùng mã dự phòng chưa sử dụng. Chọn phương thức từ danh sách này.",
+            "description": "Phương thức khả dụng: totp dùng mã trong ứng dụng xác thực; lookup_secret dùng mã dự phòng chưa sử dụng. Chọn phương thức từ danh sách này.",
             "items": {
               "type": "string",
               "enum": [
                 "totp",
                 "lookup_secret"
               ],
-              "description": "Phương thức xác thực yếu tố thứ hai được hỗ trợ."
+              "description": "Phương thức xác thực yếu tố thứ hai khả dụng."
             }
           },
           "expiresAt": {
             "type": "string",
             "format": "date-time",
-            "description": "Thời điểm hết hạn yêu cầu xác thực theo UTC. Đăng nhập hoặc tiếp tục phiên lại sau khi hết hạn."
+            "description": "Thời điểm yêu cầu xác thực hết hạn theo UTC. Bắt đầu xác thực lại sau thời điểm này."
           }
         },
         "required": [
@@ -5683,14 +5688,14 @@
       },
       "AuthTotpVerifyRequest": {
         "type": "object",
-        "description": "Xác minh mã 6 chữ số hiện tại trong ứng dụng xác thực.",
+        "description": "Xác minh bằng mã hiện tại trong ứng dụng xác thực.",
         "properties": {
           "method": {
             "type": "string",
             "enum": [
               "totp"
             ],
-            "description": "Chọn xác minh bằng mã trong ứng dụng xác thực. Phải có trong methods của yêu cầu xác thực."
+            "description": "Dùng totp khi phương thức này có trong methods."
           },
           "code": {
             "type": "string",
@@ -5698,7 +5703,7 @@
             "maxLength": 6,
             "pattern": "^[0-9]{6}$",
             "example": "012345",
-            "description": "Chuỗi gồm đúng 6 chữ số, giữ nguyên số 0 ở đầu."
+            "description": "Mã hiện tại trong ứng dụng xác thực, dạng chuỗi 6 chữ số. Giữ nguyên số 0 ở đầu."
           }
         },
         "required": [
@@ -5709,19 +5714,19 @@
       },
       "AuthBackupCodeVerifyRequest": {
         "type": "object",
-        "description": "Xác minh một mã dự phòng đã lưu và chưa sử dụng.",
+        "description": "Xác minh bằng mã dự phòng đã lưu và chưa sử dụng.",
         "properties": {
           "method": {
             "type": "string",
             "enum": [
               "lookup_secret"
             ],
-            "description": "Chọn xác minh bằng mã dự phòng. Phải có trong methods của yêu cầu xác thực."
+            "description": "Dùng lookup_secret khi phương thức này có trong methods."
           },
           "code": {
             "type": "string",
             "minLength": 1,
-            "description": "Mã dự phòng đã lưu và chưa sử dụng. Gửi nguyên mã dưới dạng chuỗi. Mã sẽ bị tiêu thụ sau khi xác minh thành công."
+            "description": "Mã dự phòng đầy đủ, chưa sử dụng, dạng chuỗi. Mỗi mã chỉ dùng được một lần."
           }
         },
         "required": [
@@ -5731,7 +5736,7 @@
         "additionalProperties": false
       },
       "AuthMfaVerifyRequest": {
-        "description": "Một bằng chứng xác thực yếu tố thứ hai. Chọn phương thức có trong phản hồi yêu cầu xác thực.",
+        "description": "Phương thức và mã xác thực yếu tố thứ hai. Chọn phương thức trong phản hồi yêu cầu xác thực.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthTotpVerifyRequest"
@@ -5756,13 +5761,13 @@
             "enum": [
               "verified"
             ],
-            "description": "Cho biết mã khôi phục đã được xác minh."
+            "description": "verified cho phép gửi yêu cầu đặt lại mật khẩu."
           }
         },
         "required": [
           "status"
         ],
-        "description": "Trạng thái xác minh khôi phục mật khẩu.",
+        "description": "Xác nhận mã khôi phục qua email đã được xác minh.",
         "additionalProperties": false
       }
     },
@@ -5799,7 +5804,7 @@
         }
       },
       "AuthError": {
-        "description": "Authentication error",
+        "description": "Xác thực thất bại. Kiểm tra error, message và status.",
         "content": {
           "application/json": {
             "schema": {

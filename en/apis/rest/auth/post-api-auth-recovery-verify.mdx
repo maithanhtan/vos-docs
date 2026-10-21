@@ -1,7 +1,18 @@
 ---
-title: 'Verify a password-recovery code'
-description: 'Verify a password-recovery code'
+title: 'Verify a recovery code'
+description: 'Verify the email recovery code before resetting your password'
 openapi: '/openapi.oms.en.json POST /api/auth/recovery/verify'
 ---
 
-Check `status` after verifying the email recovery code. `verified` permits the password-reset request. `mfa_required` requires [two-factor verification](/en/apis/rest/auth/post-api-auth-mfa-verify) first. Preserve all response cookies across these steps. Email-code verification does not bypass two-factor authentication.
+Send the one-time email code in `code`, together with the cookie from [recovery initiation](/en/apis/rest/auth/post-api-auth-recovery-start).
+
+## Response states
+
+HTTP `200` requires you to check `status`:
+
+| `status` | Next action |
+| --- | --- |
+| `verified` | [Set the new password](/en/apis/rest/auth/post-api-auth-recovery-reset-password). |
+| `mfa_required` | [Verify a second factor](/en/apis/rest/auth/post-api-auth-mfa-verify) using a method in `methods`, then set the new password. |
+
+Preserve all updated cookies through verification and password reset. Email-code verification does not replace a required second factor.

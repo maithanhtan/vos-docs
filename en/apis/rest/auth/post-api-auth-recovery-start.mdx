@@ -1,5 +1,17 @@
 ---
 title: 'Start password recovery'
-description: 'Start password recovery'
+description: 'Request a one-time recovery code for your account email'
 openapi: '/openapi.oms.en.json POST /api/auth/recovery/start'
 ---
+
+Send the account email in `email` to `https://platform.verolabs.co/api/auth/recovery/start`.
+
+HTTP `200` with `status: "code_sent"` confirms that the request was accepted. Preserve the response cookie for the remaining recovery steps.
+
+## Recovery sequence
+
+1. [Verify the email code](/en/apis/rest/auth/post-api-auth-recovery-verify).
+2. If the response is `mfa_required`, [verify a second factor](/en/apis/rest/auth/post-api-auth-mfa-verify).
+3. [Set the new password](/en/apis/rest/auth/post-api-auth-recovery-reset-password).
+
+Use the same cookie jar for all requests and preserve each response cookie. Email-code verification does not replace a required second factor.

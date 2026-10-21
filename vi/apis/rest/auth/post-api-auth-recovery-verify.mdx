@@ -1,7 +1,18 @@
 ---
-title: 'Xác minh mã khôi phục mật khẩu'
-description: 'Xác minh mã khôi phục mật khẩu'
+title: 'Xác minh mã khôi phục'
+description: 'Xác minh mã khôi phục qua email trước khi đặt lại mật khẩu'
 openapi: '/openapi.oms.vi.json POST /api/auth/recovery/verify'
 ---
 
-Kiểm tra `status` sau khi xác minh mã khôi phục qua email. `verified` cho phép gửi yêu cầu đặt lại mật khẩu. `mfa_required` yêu cầu [xác minh hai lớp](/vi/apis/rest/auth/post-api-auth-mfa-verify) trước. Giữ tất cả cookie phản hồi qua các bước. Xác minh mã email không bỏ qua xác thực hai lớp.
+Gửi mã email dùng một lần trong `code`, kèm cookie từ bước [bắt đầu khôi phục](/vi/apis/rest/auth/post-api-auth-recovery-start).
+
+## Trạng thái phản hồi
+
+Khi nhận HTTP `200`, kiểm tra `status`:
+
+| `status` | Bước tiếp theo |
+| --- | --- |
+| `verified` | [Đặt mật khẩu mới](/vi/apis/rest/auth/post-api-auth-recovery-reset-password). |
+| `mfa_required` | [Xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify) bằng phương thức có trong `methods`, sau đó đặt mật khẩu mới. |
+
+Giữ tất cả cookie đã cập nhật qua bước xác minh và đặt lại mật khẩu. Xác minh mã email không thay thế yếu tố xác thực thứ hai bắt buộc.

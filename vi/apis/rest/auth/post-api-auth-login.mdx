@@ -1,10 +1,34 @@
 ---
 title: 'Đăng nhập và lấy JWT'
-description: 'Xác thực bằng mật khẩu và hoàn tất xác thực hai lớp khi được yêu cầu'
+description: 'Nhận JWT để gọi REST API bằng mật khẩu và yếu tố xác thực thứ hai khi cần'
 openapi: '/openapi.oms.vi.json POST /api/auth/login'
 ---
 
 Gửi yêu cầu xác thực đến `https://platform.verolabs.co`. Dùng JWT nhận được để gọi REST API cần xác thực tại `https://api-oms.verolabs.co`.
+
+## Luồng đăng nhập
+
+Nếu tài khoản yêu cầu xác thực hai lớp (MFA), hoàn tất xác minh yếu tố thứ hai trước khi gọi REST API.
+
+```mermaid
+sequenceDiagram
+    participant Client as Ứng dụng của bạn
+    participant Auth as Xác thực Vero OMS
+    participant API as REST API
+    Client->>Auth: POST /api/auth/login<br/>identifier + password
+    alt Không yêu cầu yếu tố thứ hai
+        Auth-->>Client: 200 · authenticated<br/>jwt + sessionToken
+    else Yêu cầu yếu tố thứ hai
+        Auth-->>Client: 200 · mfa_required<br/>methods + expiresAt + Set-Cookie
+        Note over Client: Giữ cookie<br/>Chọn phương thức trong methods
+        Client->>Auth: POST /api/auth/mfa/verify<br/>Cookie + method + code
+        Auth-->>Client: 200 · authenticated<br/>jwt + sessionToken<br/>Xoá cookie xác thực đang chờ
+    end
+    Client->>API: Yêu cầu cần xác thực<br/>Authorization: Bearer JWT
+    API-->>Client: Phản hồi REST API
+```
+
+Nhánh MFA minh họa trường hợp xác minh thành công. Nếu xác minh thất bại, thực hiện bước [xử lý lỗi](/vi/apis/rest/auth/post-api-auth-mfa-verify#xử-lý-lỗi) trước khi tiếp tục.
 
 ## Trạng thái phản hồi
 
@@ -12,24 +36,12 @@ Cả hai trạng thái dưới đây đều trả HTTP `200`. Kiểm tra `status
 
 | `status` | Ý nghĩa | Bước tiếp theo |
 | --- | --- | --- |
-| `authenticated` | Đã đáp ứng tất cả yếu tố xác thực bắt buộc. Phản hồi chứa `jwt` và `sessionToken`. | Gửi `jwt` qua `Authorization: Bearer <jwt>` khi gọi REST API. |
-| `mfa_required` | Cần xác thực yếu tố thứ hai. Phản hồi chứa `methods` và `expiresAt`, không chứa `jwt` hoặc `sessionToken`. | Giữ cookie phản hồi và [xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify). |
-
-Khi tài khoản bật xác thực hai lớp, xác minh mật khẩu chưa đủ để cấp JWT. Ví dụ phản hồi yêu cầu xác thực đang chờ:
-
-```json
-{
-  "status": "mfa_required",
-  "methods": ["totp", "lookup_secret"],
-  "expiresAt": "2026-10-20T12:00:00Z"
-}
-```
-
-`methods` liệt kê phương thức khả dụng cho yêu cầu xác thực này. `totp` nhận mã 6 chữ số hiện tại trong ứng dụng xác thực. `lookup_secret` nhận mã dự phòng đã lưu và chưa sử dụng. Chọn phương thức có trong phản hồi API.
+| `authenticated` | Xác thực hoàn tất. Phản hồi chứa `jwt` và `sessionToken`. | Dùng `jwt` để gọi REST API. |
+| `mfa_required` | Cần yếu tố xác thực thứ hai. Phản hồi chứa `methods` và `expiresAt`, không chứa `jwt` hoặc `sessionToken`. | Giữ cookie và [xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify). |
 
 ## Đăng nhập bằng cURL
 
-Các ví dụ Bash dưới đây cần `curl` và `jq`. Dùng cùng một cookie jar cho bước đăng nhập và xác minh. Yêu cầu từ trình duyệt phải cùng origin với máy chủ xác thực; yêu cầu khác origin bị từ chối.
+Chạy các ví dụ Bash trong cùng phiên lệnh với `curl` và `jq`. Giữ cookie qua bước đăng nhập và xác minh. Yêu cầu từ trình duyệt phải có origin là `https://platform.verolabs.co`.
 
 ### 1. Gửi email và mật khẩu
 
@@ -75,9 +87,9 @@ unset MFA_CODE
 printf '%s\n' "$AUTH_RESPONSE" | jq '{status, aal: .session.authenticator_assurance_level}'
 ```
 
-Để dùng mã dự phòng, đặt `MFA_METHOD="lookup_secret"` và nhập mã dự phòng đã lưu, chưa sử dụng. Chỉ chọn cách này khi `lookup_secret` có trong `methods`. Xác minh thành công sẽ tiêu thụ mã dự phòng đó.
+Chọn phương thức có trong `methods`. Với mã dự phòng, đặt `MFA_METHOD="lookup_secret"` và nhập mã chưa sử dụng. Mỗi mã dự phòng chỉ dùng được một lần.
 
-Phản hồi thành công có `status: "authenticated"`, JWT và `authenticator_assurance_level: "aal2"` trong các đối tượng phiên. API xoá cookie xác thực đang chờ.
+Xác minh thành công trả `status: "authenticated"` và JWT. API xoá cookie xác thực đang chờ.
 
 ### 3. Gọi REST API bằng JWT
 
@@ -93,8 +105,8 @@ rm -- "$COOKIE_JAR"
 unset AUTH_RESPONSE JWT
 ```
 
-`sessionToken` và `jwt` có mục đích khác nhau. Dùng `jwt` để xác thực REST API. Giữ bí mật `sessionToken`; token này có thể dùng để [tiếp tục phiên hiện có](/vi/apis/rest/auth/post-api-auth-mfa-resume).
+Dùng `jwt` để cấp quyền truy cập REST API và `sessionToken` để [tiếp tục phiên](/vi/apis/rest/auth/post-api-auth-mfa-resume). Giữ bí mật cả hai token.
 
 ## Thử lại và hết hạn
 
-Mã sai trả lỗi và không cấp JWT. Bạn có thể thử xác minh lại khi yêu cầu xác thực còn hiệu lực. Nếu API trả HTTP `410`, đăng nhập lại để nhận yêu cầu xác thực và cookie mới. Không dùng lại mã dự phòng đã tiêu thụ hoặc tự tạo cookie xác thực.
+Mã sai trả lỗi và không cấp JWT. Thử lại khi yêu cầu xác thực còn hiệu lực. HTTP `410` yêu cầu đăng nhập lại để nhận cookie mới. Không sửa cookie xác thực hoặc dùng lại mã dự phòng.

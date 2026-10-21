@@ -43,8 +43,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Log in with password",
-        "description": "Authenticates the account email and password. Without a required second factor, returns status=authenticated with jwt. When two-factor authentication is required, returns HTTP 200 with status=mfa_required and no jwt or sessionToken. Preserve the challenge cookie and call POST /api/auth/mfa/verify before using the REST API. Browser requests must originate from this authentication host; cross-origin requests are rejected.",
+        "summary": "Log in and obtain a JWT",
+        "description": "Send your account email and password. HTTP 200 returns authenticated with a JWT, or mfa_required without jwt or sessionToken. For mfa_required, preserve the cookie and call POST /api/auth/mfa/verify. Browser requests must use the https://platform.verolabs.co origin.",
         "operationId": "post_api_auth_login",
         "servers": [
           {
@@ -53,7 +53,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Authenticated session and JWT, or a pending second-factor challenge. Inspect status.",
+            "description": "Check status: authenticated includes a JWT; mfa_required requires second-factor verification.",
             "content": {
               "application/json": {
                 "schema": {
@@ -80,7 +80,7 @@
                     }
                   },
                   "mfa_required": {
-                    "summary": "Second factor required; preserve Set-Cookie",
+                    "summary": "Second factor required",
                     "value": {
                       "status": "mfa_required",
                       "methods": [
@@ -95,7 +95,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie, scoped to /api/auth with SameSite=Strict and Secure over HTTPS. Preserve this cookie for POST /api/auth/mfa/verify. It expires at expiresAt. For authenticated, clears any pending challenge cookie.",
+                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie with Path=/api/auth, SameSite=Strict, and Secure over HTTPS. Preserve it for verification until expiresAt. For authenticated, clears the challenge cookie.",
                 "schema": {
                   "type": "string"
                 }
@@ -103,7 +103,7 @@
             }
           },
           "400": {
-            "description": "Missing or invalid credentials payload (invalid_request).",
+            "description": "Missing or invalid login fields (invalid_request).",
             "content": {
               "application/json": {
                 "schema": {
@@ -113,7 +113,7 @@
             }
           },
           "401": {
-            "description": "Identifier or password rejected (invalid_credentials).",
+            "description": "Email or password rejected (invalid_credentials).",
             "content": {
               "application/json": {
                 "schema": {
@@ -123,7 +123,7 @@
             }
           },
           "403": {
-            "description": "Request origin is not allowed (origin_not_allowed).",
+            "description": "Browser request origin is not allowed (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -133,7 +133,7 @@
             }
           },
           "409": {
-            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "description": "No supported second factor is available (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -143,7 +143,7 @@
             }
           },
           "502": {
-            "description": "Authentication unavailable or no active session/JWT returned (auth_service_unavailable, inactive_session, missing_jwt).",
+            "description": "Authentication unavailable, session inactive, or JWT absent (auth_service_unavailable, inactive_session, missing_jwt).",
             "content": {
               "application/json": {
                 "schema": {
@@ -162,7 +162,7 @@
               }
             }
           },
-          "description": "Email identifier and password credentials."
+          "description": "Account email and password."
         }
       }
     },
@@ -172,7 +172,7 @@
           "Authentication"
         ],
         "summary": "Verify two-factor authentication",
-        "description": "Completes a pending challenge using a six-digit authenticator code or an unused backup code. Send the challenge cookie from login or session resumption. No Bearer JWT is required. On success, returns status=authenticated and an aal2 session with a JWT, then clears the challenge cookie. Browser requests must use the authentication host origin.",
+        "description": "Send method, code, and the cookie from a pending login, session resumption, or recovery challenge. No Bearer JWT is required. Success returns authenticated with a JWT and clears the challenge cookie. Browser requests must use the https://platform.verolabs.co origin.",
         "operationId": "post_api_auth_mfa_verify",
         "servers": [
           {
@@ -201,7 +201,7 @@
                   }
                 },
                 "backup_code": {
-                  "summary": "Unused saved backup code",
+                  "summary": "Unused backup code",
                   "value": {
                     "method": "lookup_secret",
                     "code": "<unused-backup-code>"
@@ -213,7 +213,7 @@
         },
         "responses": {
           "200": {
-            "description": "Two-factor authentication complete; JWT issued.",
+            "description": "Second-factor verification complete; JWT issued.",
             "content": {
               "application/json": {
                 "schema": {
@@ -244,7 +244,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Clears the pending vos_mfa_challenge cookie. During password recovery, also updates the recovery cookie for the password-reset step.",
+                "description": "Clears vos_mfa_challenge. During password recovery, also updates the recovery cookie for password reset.",
                 "schema": {
                   "type": "string"
                 }
@@ -252,7 +252,7 @@
             }
           },
           "400": {
-            "description": "Invalid code format (invalid_code), or rejected code/request (invalid_mfa_request).",
+            "description": "Invalid code format (invalid_code), or code or request rejected (invalid_mfa_request).",
             "content": {
               "application/json": {
                 "schema": {
@@ -262,7 +262,7 @@
             }
           },
           "401": {
-            "description": "Session is no longer valid (session_invalid). Restart login.",
+            "description": "Session invalid (session_invalid). Log in again.",
             "content": {
               "application/json": {
                 "schema": {
@@ -272,7 +272,7 @@
             }
           },
           "403": {
-            "description": "Request origin or session authentication requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "description": "Request origin or session requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
             "content": {
               "application/json": {
                 "schema": {
@@ -282,7 +282,7 @@
             }
           },
           "410": {
-            "description": "Challenge cookie missing/expired (challenge_expired), or challenge no longer valid (flow_expired). Restart login or session resumption.",
+            "description": "Challenge cookie missing or expired (challenge_expired), or challenge invalid (flow_expired). Restart authentication.",
             "content": {
               "application/json": {
                 "schema": {
@@ -292,7 +292,7 @@
             }
           },
           "429": {
-            "description": "Too many authentication requests (rate_limited).",
+            "description": "Too many authentication requests (rate_limited). Wait before retrying.",
             "content": {
               "application/json": {
                 "schema": {
@@ -302,7 +302,7 @@
             }
           },
           "502": {
-            "description": "Two-factor authentication could not complete (mfa_incomplete, mfa_service_unavailable).",
+            "description": "Second-factor verification did not complete (mfa_incomplete, mfa_service_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -320,7 +320,7 @@
           "Authentication"
         ],
         "summary": "Resume an account session",
-        "description": "Uses an existing sessionToken in X-Auth-Session-Token to request a JWT without resubmitting the password. Returns the same authenticated or mfa_required response as password login. If a second factor is required, preserve the response cookie and call POST /api/auth/mfa/verify. No request body is required. Browser requests must use the authentication host origin.",
+        "description": "Send an existing sessionToken in X-Auth-Session-Token, without a body. HTTP 200 returns authenticated with a JWT, or mfa_required. For mfa_required, preserve the cookie and call POST /api/auth/mfa/verify. Browser requests must use the https://platform.verolabs.co origin.",
         "operationId": "post_api_auth_mfa_resume",
         "servers": [
           {
@@ -334,7 +334,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Authenticated session and JWT, or a pending second-factor challenge. Inspect status.",
+            "description": "Check status: authenticated includes a JWT; mfa_required requires second-factor verification.",
             "content": {
               "application/json": {
                 "schema": {
@@ -361,7 +361,7 @@
                     }
                   },
                   "mfa_required": {
-                    "summary": "Second factor required; preserve Set-Cookie",
+                    "summary": "Second factor required",
                     "value": {
                       "status": "mfa_required",
                       "methods": [
@@ -376,7 +376,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie, scoped to /api/auth with SameSite=Strict and Secure over HTTPS. Preserve this cookie for POST /api/auth/mfa/verify. It expires at expiresAt. For authenticated, clears any pending challenge cookie.",
+                "description": "For mfa_required, sets the HttpOnly vos_mfa_challenge cookie with Path=/api/auth, SameSite=Strict, and Secure over HTTPS. Preserve it for verification until expiresAt. For authenticated, clears the challenge cookie.",
                 "schema": {
                   "type": "string"
                 }
@@ -394,7 +394,7 @@
             }
           },
           "401": {
-            "description": "Missing session token (session_missing), or invalid session (session_invalid). Sign in again.",
+            "description": "Session token missing (session_missing) or session invalid (session_invalid). Log in again.",
             "content": {
               "application/json": {
                 "schema": {
@@ -404,7 +404,7 @@
             }
           },
           "403": {
-            "description": "Request origin or session authentication requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
+            "description": "Request origin or session requirements rejected (origin_not_allowed, session_invalid, session_refresh_required, session_aal2_required).",
             "content": {
               "application/json": {
                 "schema": {
@@ -414,7 +414,7 @@
             }
           },
           "409": {
-            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "description": "No supported second factor is available (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -424,7 +424,7 @@
             }
           },
           "410": {
-            "description": "Challenge cookie missing/expired (challenge_expired), or challenge no longer valid (flow_expired). Restart login or session resumption.",
+            "description": "Challenge cookie missing or expired (challenge_expired), or challenge invalid (flow_expired). Restart authentication.",
             "content": {
               "application/json": {
                 "schema": {
@@ -434,7 +434,7 @@
             }
           },
           "429": {
-            "description": "Too many authentication requests (rate_limited).",
+            "description": "Too many authentication requests (rate_limited). Wait before retrying.",
             "content": {
               "application/json": {
                 "schema": {
@@ -444,7 +444,7 @@
             }
           },
           "502": {
-            "description": "Authentication unavailable or JWT not returned (mfa_service_unavailable, missing_jwt).",
+            "description": "Authentication unavailable or JWT absent (mfa_service_unavailable, missing_jwt).",
             "content": {
               "application/json": {
                 "schema": {
@@ -462,7 +462,7 @@
           "Authentication"
         ],
         "summary": "Start password recovery",
-        "description": "Sends a one-time recovery code to the account email address and creates a short-lived recovery session. Preserve the response cookie for the verify and reset requests.",
+        "description": "Request a one-time code for the account email. Preserve the response cookie for code verification and password reset.",
         "operationId": "post_api_auth_recovery_start",
         "servers": [
           {
@@ -471,10 +471,10 @@
         ],
         "responses": {
           "200": {
-            "description": "Recovery code accepted for delivery",
+            "description": "Recovery-code request accepted.",
             "headers": {
               "Set-Cookie": {
-                "description": "Short-lived recovery session cookie required by the next recovery request.",
+                "description": "Recovery cookie required for code verification and password reset.",
                 "schema": {
                   "type": "string"
                 }
@@ -513,8 +513,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Verify recovery code",
-        "description": "Verifies the one-time email recovery code. Preserve the recovery cookie. If status is mfa_required, complete POST /api/auth/mfa/verify with an authenticator or unused backup code and the response cookies before resetting the password. Email-code verification does not bypass two-factor authentication.",
+        "summary": "Verify a recovery code",
+        "description": "Send the email code and recovery cookie. A verified response permits password reset. For mfa_required, complete POST /api/auth/mfa/verify first. Preserve all response cookies. Email-code verification does not replace a required second factor.",
         "operationId": "post_api_auth_recovery_verify",
         "servers": [
           {
@@ -523,7 +523,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Recovery code accepted; password reset permitted or second factor required.",
+            "description": "Email code verified. Check status before resetting the password.",
             "content": {
               "application/json": {
                 "schema": {
@@ -533,7 +533,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Updates the recovery cookie. For mfa_required, also sets the two-factor challenge cookie. Preserve all response cookies for subsequent requests.",
+                "description": "Updates the recovery cookie. For mfa_required, also sets the challenge cookie. Preserve all response cookies.",
                 "schema": {
                   "type": "string"
                 }
@@ -550,7 +550,7 @@
             "$ref": "#/components/responses/AuthError"
           },
           "403": {
-            "description": "Request origin is not allowed (origin_not_allowed).",
+            "description": "Browser request origin is not allowed (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -560,7 +560,7 @@
             }
           },
           "409": {
-            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "description": "No supported second factor is available (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -572,7 +572,7 @@
         },
         "requestBody": {
           "required": true,
-          "description": "One-time recovery code.",
+          "description": "One-time email recovery code.",
           "content": {
             "application/json": {
               "schema": {
@@ -588,8 +588,8 @@
         "tags": [
           "Authentication"
         ],
-        "summary": "Reset recovered password",
-        "description": "Sets a new password after email-code verification and any required two-factor authentication. Send the latest recovery cookie. Inspect the response status: authenticated includes a JWT; mfa_required requires the second-factor verification endpoint before API access.",
+        "summary": "Set a new password",
+        "description": "Send the new password and latest recovery cookie after completing all required recovery checks. Check status: authenticated includes a JWT; mfa_required requires POST /api/auth/mfa/verify before REST API access.",
         "operationId": "post_api_auth_recovery_reset_password",
         "servers": [
           {
@@ -598,7 +598,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Password updated; authenticated session or pending second-factor challenge.",
+            "description": "Password updated. Check status before using the REST API.",
             "content": {
               "application/json": {
                 "schema": {
@@ -608,7 +608,7 @@
             },
             "headers": {
               "Set-Cookie": {
-                "description": "Clears the recovery cookie. If mfa_required, sets the challenge cookie required for two-factor verification.",
+                "description": "Clears the recovery cookie. For mfa_required, sets the challenge cookie for second-factor verification.",
                 "schema": {
                   "type": "string"
                 }
@@ -625,7 +625,7 @@
             "$ref": "#/components/responses/AuthError"
           },
           "403": {
-            "description": "Request origin is not allowed (origin_not_allowed).",
+            "description": "Browser request origin is not allowed (origin_not_allowed).",
             "content": {
               "application/json": {
                 "schema": {
@@ -635,7 +635,7 @@
             }
           },
           "409": {
-            "description": "No supported enrolled second factor is available (mfa_unavailable).",
+            "description": "No supported second factor is available (mfa_unavailable).",
             "content": {
               "application/json": {
                 "schema": {
@@ -2664,13 +2664,13 @@
         "type": "apiKey",
         "in": "cookie",
         "name": "vos_mfa_challenge",
-        "description": "Pending two-factor challenge cookie returned by login or session resumption. Use a cookie jar; do not construct or modify its value."
+        "description": "Pending second-factor challenge cookie. Preserve the response cookie in a cookie jar; do not modify its value."
       },
       "authSessionToken": {
         "type": "apiKey",
         "in": "header",
         "name": "X-Auth-Session-Token",
-        "description": "Existing account session token returned as sessionToken after authentication. This is not the Bearer JWT."
+        "description": "Account session token returned as sessionToken. Use this header for session resumption."
       }
     },
     "parameters": {
@@ -3449,12 +3449,12 @@
         "properties": {
           "identifier": {
             "type": "string",
-            "description": "Email address associated with the Vero OMS account.",
+            "description": "Email address of your Vero OMS account.",
             "minLength": 1
           },
           "password": {
             "type": "string",
-            "description": "Current password for the Vero OMS account.",
+            "description": "Current account password.",
             "minLength": 1
           }
         },
@@ -3462,7 +3462,7 @@
           "identifier",
           "password"
         ],
-        "description": "Password login request. Set identifier to the account email address.",
+        "description": "Account email and password for login.",
         "additionalProperties": false
       },
       "AuthRecoveryStartRequest": {
@@ -3471,13 +3471,13 @@
           "email": {
             "type": "string",
             "format": "email",
-            "description": "Email address associated with the Vero OMS account."
+            "description": "Email address of your Vero OMS account."
           }
         },
         "required": [
           "email"
         ],
-        "description": "Request to send a one-time password-recovery code.",
+        "description": "Account email for password recovery.",
         "additionalProperties": false
       },
       "AuthRecoveryStartResponse": {
@@ -3488,13 +3488,13 @@
             "enum": [
               "code_sent"
             ],
-            "description": "Indicates that the recovery code request was accepted."
+            "description": "code_sent confirms that the recovery-code request was accepted."
           }
         },
         "required": [
           "status"
         ],
-        "description": "Password-recovery start status.",
+        "description": "Confirmation that the recovery-code request was accepted.",
         "additionalProperties": false
       },
       "AuthRecoveryVerifyRequest": {
@@ -3503,17 +3503,17 @@
           "code": {
             "type": "string",
             "minLength": 1,
-            "description": "One-time recovery code delivered to the account email address."
+            "description": "One-time recovery code sent to the account email."
           }
         },
         "required": [
           "code"
         ],
-        "description": "Request to verify a one-time password-recovery code.",
+        "description": "One-time email recovery code.",
         "additionalProperties": false
       },
       "AuthRecoveryVerifyResponse": {
-        "description": "Email recovery code accepted. verified permits password reset; mfa_required requires two-factor verification first.",
+        "description": "Check status: verified permits password reset; mfa_required requires second-factor verification first.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthRecoveryCodeVerifiedResponse"
@@ -3536,13 +3536,13 @@
           "password": {
             "type": "string",
             "minLength": 1,
-            "description": "New password for the Vero OMS account."
+            "description": "New account password."
           }
         },
         "required": [
           "password"
         ],
-        "description": "Request to set a new password after recovery-code verification.",
+        "description": "New password after the required recovery checks.",
         "additionalProperties": false
       },
       "AuthIdentity": {
@@ -3550,15 +3550,15 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique identifier for the record."
+            "description": "Account identity identifier."
           },
           "traits": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Account attributes returned with the authenticated session."
+            "description": "Account attributes returned with the session."
           }
         },
-        "description": "Account identity returned with the authenticated session, or null if no identity is returned.",
+        "description": "Account identity, or null if absent.",
         "additionalProperties": true,
         "nullable": true
       },
@@ -3567,53 +3567,58 @@
         "properties": {
           "ip_address": {
             "type": "string",
-            "description": "IP address reported for the session device."
+            "description": "IP address reported for the device."
           },
           "location": {
             "type": "string",
-            "description": "Location metadata reported for the session device."
+            "description": "Location information reported for the device."
           },
           "user_agent": {
             "type": "string",
-            "description": "User agent reported for the session device."
+            "description": "User agent reported for the device."
           }
         },
-        "description": "AuthSessionDevice schema."
+        "description": "Device details associated with the session."
       },
       "AuthSession": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Unique identifier for the record."
+            "description": "Session identifier."
           },
           "active": {
             "type": "boolean",
-            "description": "Indicates whether the session is active."
+            "description": "Whether the session is active."
           },
           "authenticated_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the session was authenticated."
+            "description": "Time when the session was authenticated."
           },
           "expires_at": {
             "type": "string",
             "format": "date-time",
-            "description": "Timestamp when the session expires."
+            "description": "Session expiration time."
           },
           "devices": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuthSessionDevice"
             },
-            "description": "Devices associated with the authenticated session."
+            "description": "Devices associated with the session."
           },
           "identity": {
-            "$ref": "#/components/schemas/AuthIdentity"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthIdentity"
+              }
+            ],
+            "description": "Account identity associated with the session."
           },
           "tokenized": {
             "type": "string",
-            "description": "Bearer JWT issued for REST API calls."
+            "description": "Bearer JWT for REST API requests, when present."
           },
           "authenticator_assurance_level": {
             "type": "string",
@@ -3621,14 +3626,14 @@
               "aal1",
               "aal2"
             ],
-            "description": "Authentication assurance level: aal1 after first-factor authentication; aal2 after successful two-factor authentication."
+            "description": "aal1 indicates first-factor authentication; aal2 indicates completed two-factor authentication."
           }
         },
-        "description": "Authenticated session details. tokenized contains the Bearer JWT when present.",
+        "description": "Authenticated session details.",
         "additionalProperties": true
       },
       "AuthLoginResponse": {
-        "description": "Check status on every successful HTTP response. authenticated includes the JWT; mfa_required requires POST /api/auth/mfa/verify with the response cookie.",
+        "description": "Check status: authenticated includes a JWT; mfa_required requires second-factor verification with the response cookie.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthAuthenticatedResponse"
@@ -3650,16 +3655,16 @@
         "properties": {
           "error": {
             "type": "string",
-            "description": "Machine-readable error code or error category."
+            "description": "Error code for programmatic handling."
           },
           "message": {
             "type": "string",
-            "description": "Human-readable error message."
+            "description": "Description of the error."
           },
           "status": {
             "type": "integer",
             "format": "int32",
-            "description": "HTTP status code of this error response."
+            "description": "HTTP status code of the error response."
           }
         },
         "required": [
@@ -3667,7 +3672,7 @@
           "message",
           "status"
         ],
-        "description": "Authentication error envelope. Use the HTTP status and error code to select the next action."
+        "description": "Authentication error. Use the HTTP status and error code to determine the next action."
       },
       "RestErrorResponse": {
         "type": "object",
@@ -5591,22 +5596,22 @@
       },
       "AuthAuthenticatedResponse": {
         "type": "object",
-        "description": "Completed authentication. The JWT is issued only after all required authentication factors pass.",
+        "description": "Completed authentication with an account session token and REST API JWT.",
         "properties": {
           "status": {
             "type": "string",
             "enum": [
               "authenticated"
             ],
-            "description": "Indicates that authentication is complete and the JWT can be used."
+            "description": "authenticated confirms that authentication is complete."
           },
           "sessionToken": {
             "type": "string",
-            "description": "Account session token. Keep it confidential. Use it for session resumption; use jwt for REST API authorization."
+            "description": "Account session token for session resumption. Keep it confidential."
           },
           "jwt": {
             "type": "string",
-            "description": "Bearer JWT for protected REST API requests. Send it as Authorization: Bearer <jwt>."
+            "description": "JWT for REST API requests. Send as `Authorization: Bearer <jwt>`."
           },
           "session": {
             "description": "Active authenticated session.",
@@ -5625,7 +5630,7 @@
             ]
           },
           "tokenizedSession": {
-            "description": "Authenticated session containing the JWT in tokenized.",
+            "description": "Authenticated session with the JWT in tokenized.",
             "allOf": [
               {
                 "$ref": "#/components/schemas/AuthSession"
@@ -5645,33 +5650,33 @@
       },
       "AuthMfaChallenge": {
         "type": "object",
-        "description": "Password or existing session accepted, but a second factor is required. This response does not contain jwt or sessionToken.",
+        "description": "Pending second-factor verification. No jwt or sessionToken is returned.",
         "properties": {
           "status": {
             "type": "string",
             "enum": [
               "mfa_required"
             ],
-            "description": "Requires a second factor before issuing a JWT."
+            "description": "mfa_required requires a second factor before a JWT can be issued."
           },
           "methods": {
             "type": "array",
             "minItems": 1,
             "uniqueItems": true,
-            "description": "Available enrolled methods. totp uses the six-digit authenticator code; lookup_secret uses an unused backup code. Submit a method from this list.",
+            "description": "Available methods: totp for an authenticator code; lookup_secret for an unused backup code. Select a method from this list.",
             "items": {
               "type": "string",
               "enum": [
                 "totp",
                 "lookup_secret"
               ],
-              "description": "Supported second-factor method."
+              "description": "Available second-factor method."
             }
           },
           "expiresAt": {
             "type": "string",
             "format": "date-time",
-            "description": "Challenge expiration time in UTC. Restart login or session resumption after it expires."
+            "description": "Challenge expiration time in UTC. Restart authentication after expiration."
           }
         },
         "required": [
@@ -5683,14 +5688,14 @@
       },
       "AuthTotpVerifyRequest": {
         "type": "object",
-        "description": "Verify the current six-digit authenticator code.",
+        "description": "Verification with the current authenticator code.",
         "properties": {
           "method": {
             "type": "string",
             "enum": [
               "totp"
             ],
-            "description": "Select authenticator-code verification. Must be available in the challenge methods."
+            "description": "Use totp when it appears in methods."
           },
           "code": {
             "type": "string",
@@ -5698,7 +5703,7 @@
             "maxLength": 6,
             "pattern": "^[0-9]{6}$",
             "example": "012345",
-            "description": "Exactly six digits as a string, including any leading zeros."
+            "description": "Current authenticator code as a six-digit string. Preserve leading zeros."
           }
         },
         "required": [
@@ -5709,19 +5714,19 @@
       },
       "AuthBackupCodeVerifyRequest": {
         "type": "object",
-        "description": "Verify an unused saved backup code.",
+        "description": "Verification with an unused saved backup code.",
         "properties": {
           "method": {
             "type": "string",
             "enum": [
               "lookup_secret"
             ],
-            "description": "Select backup-code verification. Must be available in the challenge methods."
+            "description": "Use lookup_secret when it appears in methods."
           },
           "code": {
             "type": "string",
             "minLength": 1,
-            "description": "An unused saved backup code. Submit the complete code as a string. A successful verification consumes it."
+            "description": "Complete unused backup code as a string. Each code can be used once."
           }
         },
         "required": [
@@ -5731,7 +5736,7 @@
         "additionalProperties": false
       },
       "AuthMfaVerifyRequest": {
-        "description": "One second-factor proof. Choose a method listed in the challenge response.",
+        "description": "Second-factor method and code. Select a method from the challenge response.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/AuthTotpVerifyRequest"
@@ -5756,13 +5761,13 @@
             "enum": [
               "verified"
             ],
-            "description": "Indicates that the recovery code was verified."
+            "description": "verified permits the password-reset request."
           }
         },
         "required": [
           "status"
         ],
-        "description": "Password-recovery verification status.",
+        "description": "Confirmation that the email recovery code was verified.",
         "additionalProperties": false
       }
     },
@@ -5799,7 +5804,7 @@
         }
       },
       "AuthError": {
-        "description": "Authentication error",
+        "description": "Authentication failed. Inspect error, message, and status.",
         "content": {
           "application/json": {
             "schema": {

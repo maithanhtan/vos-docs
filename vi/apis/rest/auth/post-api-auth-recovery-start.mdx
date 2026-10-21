@@ -1,5 +1,17 @@
 ---
 title: 'Bắt đầu khôi phục mật khẩu'
-description: 'Bắt đầu khôi phục mật khẩu'
+description: 'Yêu cầu mã khôi phục dùng một lần gửi đến email của tài khoản'
 openapi: '/openapi.oms.vi.json POST /api/auth/recovery/start'
 ---
+
+Gửi email tài khoản trong `email` đến `https://platform.verolabs.co/api/auth/recovery/start`.
+
+HTTP `200` với `status: "code_sent"` xác nhận yêu cầu đã được chấp nhận. Giữ cookie phản hồi cho các bước khôi phục tiếp theo.
+
+## Trình tự khôi phục
+
+1. [Xác minh mã email](/vi/apis/rest/auth/post-api-auth-recovery-verify).
+2. Nếu phản hồi là `mfa_required`, [xác minh yếu tố thứ hai](/vi/apis/rest/auth/post-api-auth-mfa-verify).
+3. [Đặt mật khẩu mới](/vi/apis/rest/auth/post-api-auth-recovery-reset-password).
+
+Dùng cùng cookie jar cho mọi yêu cầu và giữ cookie từ từng phản hồi. Xác minh mã email không thay thế yếu tố xác thực thứ hai bắt buộc.
